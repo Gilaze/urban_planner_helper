@@ -8,9 +8,9 @@ export const MODES = [
 ];
 
 export const VACANCY_CLASSES = [
-  { code: 2, key: 'vacant', label: 'Vacant lot', color: '#FF5A4F' },
-  { code: 3, key: 'closed', label: 'Closed businesses', color: '#FFA43A' },
-  { code: 1, key: 'not_vacant', label: 'Occupied', color: '#CFE2F3' },
+  { code: 2, key: 'vacant', label: 'Vacant lot', color: '#E02424' },
+  { code: 3, key: 'closed', label: 'Closed businesses', color: '#1C1D21' },
+  { code: 1, key: 'not_vacant', label: 'Occupied', color: '#E4E6E9' },
   { code: 0, key: 'unknown', label: 'Unknown / no parcel', color: '#E9E4DB' },
 ];
 

@@ -133,8 +133,8 @@ html, body {
 .bcard-row .k { color: var(--ink-2); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
 .bcard-sub { font-size: 12px; color: var(--ink-2); margin-top: 3px; text-align: right; }
 .pill { font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 99px; }
-.pill.vacant { background: #fff1c2; color: #8a5a00; box-shadow: inset 0 0 0 1px #f2c94c; }
-.pill.closed { background: #ffe6cc; color: #8a4b00; box-shadow: inset 0 0 0 1px #ffa43a; }
+.pill.vacant { background: #fde2e2; color: #b01818; box-shadow: inset 0 0 0 1px #e02424; }
+.pill.closed { background: #1c1d21; color: #fff; box-shadow: none; }
 .pill.occupied { background: #e3f2e6; color: #23683a; }
 .pill.unknown { background: rgba(31, 42, 55, 0.07); color: var(--ink-2); }
 .pill.edited { margin-left: 8px; font-size: 10px; padding: 1px 7px; background: #fff1c2; color: #8a5a00; }

@@ -33,7 +33,7 @@ export function createShared(meta, terrain) {
     uVacancyMode: { value: 0 },
     // user edits: one texel per building (red > 0 = original hidden, deleted or replaced)
     uEdited: { value: createEditTexture(meta.buildingCount) },
-    uVacColors: { value: [new THREE.Color('#E9E4DB'), new THREE.Color('#CFE2F3'), new THREE.Color('#FF5A4F'), new THREE.Color('#FFA43A')] },
+    uVacColors: { value: [new THREE.Color('#E9E4DB'), new THREE.Color('#E4E6E9'), new THREE.Color('#E02424'), new THREE.Color('#1C1D21')] },
     uHiddenVac: { value: new Float32Array(4) },
     uVacant: { value: null },
   };
