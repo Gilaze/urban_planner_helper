@@ -1,5 +1,6 @@
 # Source downloads, derived artifacts, model binaries, credentials
 /data/
+artifacts/
 *.joblib
 *.pkl
 .env

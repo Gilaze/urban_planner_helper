@@ -1,0 +1,98 @@
+{
+  "data_version": "synthetic-sf-1",
+  "features": [
+    {
+      "geometry": {
+        "coordinates": [
+          -122.415,
+          37.772
+        ],
+        "type": "Point"
+      },
+      "id": "fixture-service-1",
+      "properties": {
+        "categories": [
+          "bank_credit_union"
+        ],
+        "place_id": "fixture-service-1",
+        "status": "active"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -122.414,
+          37.778
+        ],
+        "type": "Point"
+      },
+      "id": "fixture-service-2",
+      "properties": {
+        "categories": [
+          "clinic"
+        ],
+        "place_id": "fixture-service-2",
+        "status": "active"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -122.417,
+          37.774
+        ],
+        "type": "Point"
+      },
+      "id": "fixture-service-3",
+      "properties": {
+        "categories": [
+          "grocery"
+        ],
+        "place_id": "fixture-service-3",
+        "status": "active"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -122.428,
+          37.776
+        ],
+        "type": "Point"
+      },
+      "id": "fixture-service-4",
+      "properties": {
+        "categories": [
+          "pharmacy"
+        ],
+        "place_id": "fixture-service-4",
+        "status": "active"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -122.425,
+          37.77
+        ],
+        "type": "Point"
+      },
+      "id": "fixture-service-5",
+      "properties": {
+        "categories": [
+          "school"
+        ],
+        "place_id": "fixture-service-5",
+        "status": "active"
+      },
+      "type": "Feature"
+    }
+  ],
+  "limit": 500,
+  "truncated": false,
+  "type": "FeatureCollection"
+}

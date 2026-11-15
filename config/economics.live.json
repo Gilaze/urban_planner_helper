@@ -1,0 +1,52 @@
+{
+  "version": "sf-unavailable-1",
+  "mode": "live",
+  "seed": 42,
+  "categories": {
+    "bank_credit_union": {
+      "taxable_sales_usd_per_year": null,
+      "local_retention": null,
+      "operating_fte": null,
+      "source": "https://data.sf.gov/d/wv5m-vpq2",
+      "geography": "San Francisco",
+      "year": null,
+      "notes": "The assessor roll supplies dated property valuation context. Category-level taxable sales, local sales-tax retention and operating FTE require separate evidence."
+    },
+    "clinic": {
+      "taxable_sales_usd_per_year": null,
+      "local_retention": null,
+      "operating_fte": null,
+      "source": "https://data.sf.gov/d/wv5m-vpq2",
+      "geography": "San Francisco",
+      "year": null,
+      "notes": "The assessor roll supplies dated property valuation context. Category-level taxable sales, local sales-tax retention and operating FTE require separate evidence."
+    },
+    "grocery": {
+      "taxable_sales_usd_per_year": null,
+      "local_retention": null,
+      "operating_fte": null,
+      "source": "https://data.sf.gov/d/wv5m-vpq2",
+      "geography": "San Francisco",
+      "year": null,
+      "notes": "The assessor roll supplies dated property valuation context. Category-level taxable sales, local sales-tax retention and operating FTE require separate evidence."
+    },
+    "pharmacy": {
+      "taxable_sales_usd_per_year": null,
+      "local_retention": null,
+      "operating_fte": null,
+      "source": "https://data.sf.gov/d/wv5m-vpq2",
+      "geography": "San Francisco",
+      "year": null,
+      "notes": "The assessor roll supplies dated property valuation context. Category-level taxable sales, local sales-tax retention and operating FTE require separate evidence."
+    },
+    "school": {
+      "taxable_sales_usd_per_year": null,
+      "local_retention": null,
+      "operating_fte": null,
+      "source": "https://data.sf.gov/d/wv5m-vpq2",
+      "geography": "San Francisco",
+      "year": null,
+      "notes": "The assessor roll supplies dated property valuation context. Category-level taxable sales, local sales-tax retention and operating FTE require separate evidence."
+    }
+  }
+}

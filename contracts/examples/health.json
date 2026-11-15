@@ -1,0 +1,10 @@
+{
+  "mode": "fixture",
+  "ready": true,
+  "versions": {
+    "assumption_version": "synthetic-economics-1",
+    "data_version": "synthetic-sf-1",
+    "model_version": "synthetic-review-1",
+    "schema_version": "1.0"
+  }
+}
