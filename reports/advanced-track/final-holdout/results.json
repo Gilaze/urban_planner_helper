@@ -1,0 +1,469 @@
+{
+  "protocol_version": "final-geographic-holdout-1",
+  "protocol_sha256": "128de7d088137387f816c07b08d81f0d705415378e5e29dfb7b5a4cda1602b7e",
+  "evaluated_at_utc": "2026-11-15T20:12:39.577442+00:00",
+  "data_version": "0.1.1+2026-11-15.1+bfa9e1e005fb",
+  "n": 10480,
+  "n_cities": 50,
+  "fit_or_tuning_performed": false,
+  "prior_split_overlap": 0,
+  "cohort_place_id_sha256": "a8068e04be4fca6429b0662a209d088d8fb5ade20a26e96840f2b26839892e8b",
+  "primary": {
+    "model_macro_rmse": 1.872633420092436,
+    "baseline_macro_rmse": 1.9192871367739275,
+    "relative_rmse_improvement": 0.02430783585613483
+  },
+  "categories": {
+    "clinic": {
+      "model": {
+        "n": 8667,
+        "n_predicted": 8667,
+        "rmse": 1.3566384635149722,
+        "mae": 0.8121412313987465,
+        "spearman": 0.034867359645940024
+      },
+      "baseline": {
+        "n": 8667,
+        "n_predicted": 8667,
+        "rmse": 1.4624223597198311,
+        "mae": 0.6812589791140713,
+        "spearman": null
+      },
+      "deployment_policy": {
+        "n": 8667,
+        "n_predicted": 8667,
+        "rmse": 1.3566384635149722,
+        "mae": 0.8121412313987465,
+        "spearman": 0.034867359645940024
+      }
+    },
+    "pharmacy": {
+      "model": {
+        "n": 426,
+        "n_predicted": 0,
+        "rmse": null,
+        "mae": null,
+        "spearman": null
+      },
+      "baseline": {
+        "n": 426,
+        "n_predicted": 426,
+        "rmse": 1.584713285448136,
+        "mae": 1.4491779358394756,
+        "spearman": null
+      },
+      "deployment_policy": {
+        "n": 426,
+        "n_predicted": 426,
+        "rmse": 1.584713285448136,
+        "mae": 1.4491779358394756,
+        "spearman": null
+      }
+    },
+    "grocery": {
+      "model": {
+        "n": 781,
+        "n_predicted": 781,
+        "rmse": 2.3886283766699,
+        "mae": 2.0330514355531553,
+        "spearman": 0.112157391300091
+      },
+      "baseline": {
+        "n": 781,
+        "n_predicted": 781,
+        "rmse": 2.376151913828024,
+        "mae": 2.0615843216550767,
+        "spearman": null
+      },
+      "deployment_policy": {
+        "n": 781,
+        "n_predicted": 781,
+        "rmse": 2.3886283766699,
+        "mae": 2.0330514355531553,
+        "spearman": 0.112157391300091
+      }
+    },
+    "bank_credit_union": {
+      "model": {
+        "n": 606,
+        "n_predicted": 0,
+        "rmse": null,
+        "mae": null,
+        "spearman": null
+      },
+      "baseline": {
+        "n": 606,
+        "n_predicted": 606,
+        "rmse": 1.3872949315825867,
+        "mae": 1.0301137540704757,
+        "spearman": null
+      },
+      "deployment_policy": {
+        "n": 606,
+        "n_predicted": 606,
+        "rmse": 1.3872949315825867,
+        "mae": 1.0301137540704757,
+        "spearman": null
+      }
+    }
+  },
+  "subgroups": {
+    "county:001": {
+      "n": 3229,
+      "status": "reported",
+      "deployment_policy": {
+        "n": 3229,
+        "n_predicted": 3229,
+        "rmse": 1.507725172935655,
+        "mae": 1.0021084679292156,
+        "spearman": 0.43503134960141265
+      },
+      "baseline": {
+        "n": 3229,
+        "n_predicted": 3229,
+        "rmse": 1.6365706935007753,
+        "mae": 0.9099330028975418,
+        "spearman": 0.5558828016186375
+      },
+      "learned_model": {
+        "n": 2909,
+        "n_predicted": 2909,
+        "rmse": 1.5168850179730595,
+        "mae": 0.9847129068861048,
+        "spearman": 0.3230727308059947
+      }
+    },
+    "county:013": {
+      "n": 3557,
+      "status": "reported",
+      "deployment_policy": {
+        "n": 3557,
+        "n_predicted": 3557,
+        "rmse": 1.3738072672237704,
+        "mae": 0.8343025967715834,
+        "spearman": 0.34920279568922663
+      },
+      "baseline": {
+        "n": 3557,
+        "n_predicted": 3557,
+        "rmse": 1.390630455466964,
+        "mae": 0.7147350382757786,
+        "spearman": 0.5761176966084626
+      },
+      "learned_model": {
+        "n": 3220,
+        "n_predicted": 3220,
+        "rmse": 1.368729911472361,
+        "mae": 0.7995777886691371,
+        "spearman": 0.20459768493997105
+      }
+    },
+    "county:041": {
+      "n": 1020,
+      "status": "reported",
+      "deployment_policy": {
+        "n": 1020,
+        "n_predicted": 1020,
+        "rmse": 1.5923089294705588,
+        "mae": 0.9789451471967437,
+        "spearman": 0.27092745302046184
+      },
+      "baseline": {
+        "n": 1020,
+        "n_predicted": 1020,
+        "rmse": 1.6489914775016004,
+        "mae": 0.8798724735340828,
+        "spearman": 0.41231170019847574
+      },
+      "learned_model": {
+        "n": 928,
+        "n_predicted": 928,
+        "rmse": 1.592850206486298,
+        "mae": 0.9450086409652495,
+        "spearman": 0.1773390911546924
+      }
+    },
+    "county:081": {
+      "n": 2674,
+      "status": "reported",
+      "deployment_policy": {
+        "n": 2674,
+        "n_predicted": 2674,
+        "rmse": 1.4984113722341508,
+        "mae": 0.997117924283335,
+        "spearman": 0.32980326574992425
+      },
+      "baseline": {
+        "n": 2674,
+        "n_predicted": 2674,
+        "rmse": 1.604144247501213,
+        "mae": 0.889383523680151,
+        "spearman": 0.5113978373635597
+      },
+      "learned_model": {
+        "n": 2391,
+        "n_predicted": 2391,
+        "rmse": 1.4926305423591817,
+        "mae": 0.9663332828263898,
+        "spearman": 0.21114030476516404
+      }
+    },
+    "median_household_income_usd:low": {
+      "n": 2906,
+      "status": "reported",
+      "deployment_policy": {
+        "n": 2906,
+        "n_predicted": 2906,
+        "rmse": 1.3817054089369236,
+        "mae": 0.8999827382739101,
+        "spearman": 0.4807023635433022
+      },
+      "baseline": {
+        "n": 2906,
+        "n_predicted": 2906,
+        "rmse": 1.4212476000598475,
+        "mae": 0.7416978201526544,
+        "spearman": 0.6367800873139022
+      },
+      "learned_model": {
+        "n": 2626,
+        "n_predicted": 2626,
+        "rmse": 1.3784493131428346,
+        "mae": 0.8725778093382809,
+        "spearman": 0.3650721463812915
+      }
+    },
+    "median_household_income_usd:high": {
+      "n": 7573,
+      "status": "reported",
+      "deployment_policy": {
+        "n": 7573,
+        "n_predicted": 7573,
+        "rmse": 1.5024258277599478,
+        "mae": 0.9575850402246961,
+        "spearman": 0.3348115251263913
+      },
+      "baseline": {
+        "n": 7573,
+        "n_predicted": 7573,
+        "rmse": 1.5968446096169013,
+        "mae": 0.8714769820647449,
+        "spearman": 0.4982285285890524
+      },
+      "learned_model": {
+        "n": 6822,
+        "n_predicted": 6822,
+        "rmse": 1.5033259722070311,
+        "mae": 0.9286502340043424,
+        "spearman": 0.21428002114285014
+      }
+    },
+    "median_household_income_usd:missing": {
+      "n": 1,
+      "status": "insufficient (<30)"
+    },
+    "population_density_per_km2:low": {
+      "n": 9661,
+      "status": "reported",
+      "deployment_policy": {
+        "n": 9661,
+        "n_predicted": 9661,
+        "rmse": 1.4422768558073664,
+        "mae": 0.9142807137830403,
+        "spearman": 0.3605557485392015
+      },
+      "baseline": {
+        "n": 9661,
+        "n_predicted": 9661,
+        "rmse": 1.513173239893725,
+        "mae": 0.8067487100278107,
+        "spearman": 0.5383057116633029
+      },
+      "learned_model": {
+        "n": 8695,
+        "n_predicted": 8695,
+        "rmse": 1.4405828663357703,
+        "mae": 0.8839652513879779,
+        "spearman": 0.2291378494471388
+      }
+    },
+    "population_density_per_km2:high": {
+      "n": 818,
+      "status": "reported",
+      "deployment_policy": {
+        "n": 818,
+        "n_predicted": 818,
+        "rmse": 1.7641602936545453,
+        "mae": 1.2643953193003115,
+        "spearman": 0.3718868415226108
+      },
+      "baseline": {
+        "n": 818,
+        "n_predicted": 818,
+        "rmse": 1.9340349596846858,
+        "mae": 1.1749019107105707,
+        "spearman": 0.5314560831426649
+      },
+      "learned_model": {
+        "n": 753,
+        "n_predicted": 753,
+        "rmse": 1.7714032303344527,
+        "mae": 1.2490881313167101,
+        "spearman": 0.3223071493320214
+      }
+    },
+    "population_density_per_km2:missing": {
+      "n": 1,
+      "status": "insufficient (<30)"
+    }
+  },
+  "failures": [
+    {
+      "place_id": "ChIJb7m2TcSPj4ARhJfp8b1W6cc",
+      "city": "San Leandro",
+      "county_fips": "001",
+      "category": "clinic",
+      "target_log1p_reviews_count": 8.015327309,
+      "pred_model": 0.6479440611,
+      "pred_baseline": 0.0,
+      "pred_selected": 0.6479440611,
+      "prediction_source": "model",
+      "absolute_error": 7.3673832479,
+      "median_household_income_usd": 105750.0,
+      "population_density_per_km2": 5040.6710892807
+    },
+    {
+      "place_id": "ChIJxUdhG7ZmhYARvVhZX8rSEBs",
+      "city": "Concord",
+      "county_fips": "013",
+      "category": "clinic",
+      "target_log1p_reviews_count": 7.2991214627,
+      "pred_model": 0.002443524,
+      "pred_baseline": 0.0,
+      "pred_selected": 0.002443524,
+      "prediction_source": "model",
+      "absolute_error": 7.2966779387,
+      "median_household_income_usd": 102675.0,
+      "population_density_per_km2": 534.8524019994
+    },
+    {
+      "place_id": "ChIJoRIhgVGij4ARjTaLK7DQ6Vg",
+      "city": "San Carlos",
+      "county_fips": "081",
+      "category": "clinic",
+      "target_log1p_reviews_count": 7.0039741367,
+      "pred_model": 0.0483428984,
+      "pred_baseline": 0.0,
+      "pred_selected": 0.0483428984,
+      "prediction_source": "model",
+      "absolute_error": 6.9556312383,
+      "median_household_income_usd": 242750.0,
+      "population_density_per_km2": 462.6109207999
+    },
+    {
+      "place_id": "ChIJWcIsoVdghYARoDToWx2Apk0",
+      "city": "Walnut Creek",
+      "county_fips": "013",
+      "category": "clinic",
+      "target_log1p_reviews_count": 6.8554087986,
+      "pred_model": 0.1404005581,
+      "pred_baseline": 0.0,
+      "pred_selected": 0.1404005581,
+      "prediction_source": "model",
+      "absolute_error": 6.7150082405,
+      "median_household_income_usd": 213929.0,
+      "population_density_per_km2": 1091.8981752065
+    },
+    {
+      "place_id": "ChIJK94GK6vrj4ARWUO4pi3En_I",
+      "city": "Pleasanton",
+      "county_fips": "001",
+      "category": "clinic",
+      "target_log1p_reviews_count": 6.7129562007,
+      "pred_model": 0.0385228687,
+      "pred_baseline": 0.0,
+      "pred_selected": 0.0385228687,
+      "prediction_source": "model",
+      "absolute_error": 6.674433332,
+      "median_household_income_usd": 169415.0,
+      "population_density_per_km2": 1779.9353885324
+    },
+    {
+      "place_id": "ChIJ86q0oDSXhYARzm6PvIsfsCw",
+      "city": "San Rafael",
+      "county_fips": "041",
+      "category": "clinic",
+      "target_log1p_reviews_count": 6.5930445341,
+      "pred_model": 0.0,
+      "pred_baseline": 0.0,
+      "pred_selected": 0.0,
+      "prediction_source": "model",
+      "absolute_error": 6.5930445341,
+      "median_household_income_usd": 174444.0,
+      "population_density_per_km2": 953.6615445214
+    },
+    {
+      "place_id": "ChIJMah-I1XHj4AR3DDC9-RTNtM",
+      "city": "Newark",
+      "county_fips": "001",
+      "category": "clinic",
+      "target_log1p_reviews_count": 6.7867169506,
+      "pred_model": 0.2336055702,
+      "pred_baseline": 0.0,
+      "pred_selected": 0.2336055702,
+      "prediction_source": "model",
+      "absolute_error": 6.5531113805,
+      "median_household_income_usd": 202619.0,
+      "population_density_per_km2": 908.8961121244
+    },
+    {
+      "place_id": "ChIJTdkitVNghYAR4Gw6T0JdTaI",
+      "city": "Walnut Creek",
+      "county_fips": "013",
+      "category": "clinic",
+      "target_log1p_reviews_count": 6.5806391373,
+      "pred_model": 0.0300986688,
+      "pred_baseline": 0.0,
+      "pred_selected": 0.0300986688,
+      "prediction_source": "model",
+      "absolute_error": 6.5505404684,
+      "median_household_income_usd": 213929.0,
+      "population_density_per_km2": 1091.8981752065
+    },
+    {
+      "place_id": "ChIJfR5Vvs_5j4ARZ1tK1x8SbkI",
+      "city": "Brentwood",
+      "county_fips": "013",
+      "category": "clinic",
+      "target_log1p_reviews_count": 6.5012896705,
+      "pred_model": 0.0,
+      "pred_baseline": 0.0,
+      "pred_selected": 0.0,
+      "prediction_source": "model",
+      "absolute_error": 6.5012896705,
+      "median_household_income_usd": 141950.0,
+      "population_density_per_km2": 1399.3986197449
+    },
+    {
+      "place_id": "ChIJ0fJjcy_5j4AREGPe32_flrI",
+      "city": "Brentwood",
+      "county_fips": "013",
+      "category": "clinic",
+      "target_log1p_reviews_count": 6.4982821495,
+      "pred_model": 0.0,
+      "pred_baseline": 0.0,
+      "pred_selected": 0.0,
+      "prediction_source": "model",
+      "absolute_error": 6.4982821495,
+      "median_household_income_usd": 141950.0,
+      "population_density_per_km2": 1399.3986197449
+    }
+  ],
+  "limitations": [
+    "Bay Area business coordinates and non-target service tags were already used as spatial context. New holdout review-count labels and performance were excluded from the original three-city feature/fit/evaluation pipeline. This is label-held-out evaluation in known geographic context, not wholly unseen source data.",
+    "Prior global category rules were frozen after SF development; SF remains exposed.",
+    "Geographic transfer evaluation of review activity, not validated demand or causal social impact.",
+    "Judges determine Advanced Track eligibility."
+  ],
+  "predictions_sha256": "71a0b008d6c95eb469df78944e1cca2d1b281fa860c3aa333f1b2f09df58629e"
+}
