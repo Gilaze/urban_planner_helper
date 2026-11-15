@@ -1,0 +1,22 @@
+{
+  "feature_names": [
+    "peer_count_400m",
+    "peer_count_800m",
+    "peer_count_1600m",
+    "other_service_count_400m",
+    "other_service_count_800m",
+    "other_service_count_1600m",
+    "transit_count_400m",
+    "transit_count_800m",
+    "nearest_peer_m",
+    "population_density_per_km2",
+    "income_usd",
+    "rent_usd",
+    "category_id",
+    "density_missing",
+    "income_missing",
+    "rent_missing"
+  ],
+  "distance_crs": "EPSG:26910",
+  "note": "Synthetic checker inputs, not a real spatial release."
+}

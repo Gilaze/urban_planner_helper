@@ -1,0 +1,82 @@
+{
+  "pipeline_version": "checker-synthetic-v1",
+  "fixture_mode": true,
+  "sources": [
+    {
+      "url": "https://github.com/Gilaze/urban_planner_helper/blob/main/IMPLEMENTATION_PLAN.md",
+      "retrieved_at": "2026-11-15T00:00:00+00:00",
+      "vintage": "synthetic-2026",
+      "checksum": "ba44058f86cc96631c550325b56b774cb71b0776df4cd206ed5ec76832b9a005",
+      "counts": {
+        "places": 20
+      }
+    }
+  ],
+  "artifacts": {
+    "parcels": {
+      "file": "parcels.json",
+      "row_count": 1,
+      "sha256": "e687e4232572ca04e469c0ff8b483f95858b0839b3897feed3332b7c1a2b9679"
+    },
+    "places": {
+      "file": "places.json",
+      "row_count": 20,
+      "sha256": "ef7c0dea8e4a6dd9e18c699f4fd1cb07ba0f6c06fc113e44e356bc0c514c3e57"
+    },
+    "review_summary": {
+      "file": "review_summary.json",
+      "row_count": 15,
+      "sha256": "d6cfe4df2e5a61577b5d5ae33cbb7f846e8a954446c945e97c108c23262e704f"
+    },
+    "place_features": {
+      "file": "place_features.json",
+      "row_count": 20,
+      "sha256": "012dc345c93c692beaf1072f14fd4585ef67fda39c85f6f793c05d5b69ab383e"
+    },
+    "parcel_features": {
+      "file": "parcel_features.json",
+      "row_count": 5,
+      "sha256": "8289618c61e7ef32db9622dd184d41f00dda7321864d4a0b2380b0a2767d7787"
+    },
+    "demographics": {
+      "file": "demographics.json",
+      "row_count": 1,
+      "sha256": "c6b6fce8a9c0555e18d5175594f90321970f31a06d7d5106ad8e9753173e32fc"
+    }
+  },
+  "geometry_crs": {
+    "parcels": "EPSG:4326",
+    "demographics": "EPSG:4326"
+  },
+  "units": {
+    "area": "m2",
+    "distance": "m",
+    "retained_tax": "USD/year",
+    "jobs": "operating FTE"
+  },
+  "coverage": {
+    "population_service_buffer_m": 1600,
+    "city_edges_preserved": true,
+    "places_by_city_category": {
+      "Berkeley:bank_credit_union": 1,
+      "Berkeley:clinic": 1,
+      "Berkeley:grocery": 1,
+      "Berkeley:pharmacy": 1,
+      "Berkeley:school": 1,
+      "Oakland:bank_credit_union": 2,
+      "Oakland:clinic": 2,
+      "Oakland:grocery": 2,
+      "Oakland:pharmacy": 2,
+      "Oakland:school": 2,
+      "San Francisco:bank_credit_union": 1,
+      "San Francisco:clinic": 1,
+      "San Francisco:grocery": 1,
+      "San Francisco:pharmacy": 1,
+      "San Francisco:school": 1
+    },
+    "closure_counts": {
+      "open": 20
+    },
+    "note": "Synthetic declaration; real spatial coverage is not established."
+  }
+}

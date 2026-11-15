@@ -1,0 +1,50 @@
+[
+  {
+    "parcel_id": "sf:checker-0001",
+    "source_apns": [
+      "0001001"
+    ],
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -122.42,
+            37.775
+          ],
+          [
+            -122.4198,
+            37.775
+          ],
+          [
+            -122.4198,
+            37.7752
+          ],
+          [
+            -122.42,
+            37.7752
+          ],
+          [
+            -122.42,
+            37.775
+          ]
+        ]
+      ]
+    },
+    "representative_point": {
+      "type": "Point",
+      "coordinates": [
+        -122.4199,
+        37.7751
+      ]
+    },
+    "area_m2": 390.8489704842616,
+    "existing_use": "unknown",
+    "vacancy_status": "unknown",
+    "vacancy_evidence": null,
+    "hypothetical": true,
+    "zoning": null,
+    "source_vintage": "synthetic-2026",
+    "geometry_hash": "checker-geometry-v1"
+  }
+]

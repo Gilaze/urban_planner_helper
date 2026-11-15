@@ -1,0 +1,107 @@
+[
+  {
+    "place_id": "clinic-a",
+    "sampled_review_count": 2,
+    "mean_rating": 4.0,
+    "valid_date_start": "2024-01-01",
+    "valid_date_end": "2025-01-01"
+  },
+  {
+    "place_id": "pharmacy-a",
+    "sampled_review_count": 2,
+    "mean_rating": 4.0,
+    "valid_date_start": "2024-01-01",
+    "valid_date_end": "2025-01-01"
+  },
+  {
+    "place_id": "grocery-a",
+    "sampled_review_count": 2,
+    "mean_rating": 4.0,
+    "valid_date_start": "2024-01-01",
+    "valid_date_end": "2025-01-01"
+  },
+  {
+    "place_id": "bank_credit_union-a",
+    "sampled_review_count": 2,
+    "mean_rating": 4.0,
+    "valid_date_start": "2024-01-01",
+    "valid_date_end": "2025-01-01"
+  },
+  {
+    "place_id": "school-a",
+    "sampled_review_count": 2,
+    "mean_rating": 4.0,
+    "valid_date_start": "2024-01-01",
+    "valid_date_end": "2025-01-01"
+  },
+  {
+    "place_id": "clinic-b",
+    "sampled_review_count": 2,
+    "mean_rating": 4.0,
+    "valid_date_start": "2024-01-01",
+    "valid_date_end": "2025-01-01"
+  },
+  {
+    "place_id": "pharmacy-b",
+    "sampled_review_count": 2,
+    "mean_rating": 4.0,
+    "valid_date_start": "2024-01-01",
+    "valid_date_end": "2025-01-01"
+  },
+  {
+    "place_id": "grocery-b",
+    "sampled_review_count": 2,
+    "mean_rating": 4.0,
+    "valid_date_start": "2024-01-01",
+    "valid_date_end": "2025-01-01"
+  },
+  {
+    "place_id": "bank_credit_union-b",
+    "sampled_review_count": 2,
+    "mean_rating": 4.0,
+    "valid_date_start": "2024-01-01",
+    "valid_date_end": "2025-01-01"
+  },
+  {
+    "place_id": "school-b",
+    "sampled_review_count": 2,
+    "mean_rating": 4.0,
+    "valid_date_start": "2024-01-01",
+    "valid_date_end": "2025-01-01"
+  },
+  {
+    "place_id": "clinic-v",
+    "sampled_review_count": 2,
+    "mean_rating": 4.0,
+    "valid_date_start": "2024-01-01",
+    "valid_date_end": "2025-01-01"
+  },
+  {
+    "place_id": "pharmacy-v",
+    "sampled_review_count": 2,
+    "mean_rating": 4.0,
+    "valid_date_start": "2024-01-01",
+    "valid_date_end": "2025-01-01"
+  },
+  {
+    "place_id": "grocery-v",
+    "sampled_review_count": 2,
+    "mean_rating": 4.0,
+    "valid_date_start": "2024-01-01",
+    "valid_date_end": "2025-01-01"
+  },
+  {
+    "place_id": "bank_credit_union-v",
+    "sampled_review_count": 2,
+    "mean_rating": 4.0,
+    "valid_date_start": "2024-01-01",
+    "valid_date_end": "2025-01-01"
+  },
+  {
+    "place_id": "school-v",
+    "sampled_review_count": 2,
+    "mean_rating": 4.0,
+    "valid_date_start": "2024-01-01",
+    "valid_date_end": "2025-01-01"
+  }
+]

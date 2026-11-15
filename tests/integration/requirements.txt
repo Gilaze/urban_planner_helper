@@ -1,0 +1,5 @@
+# Python 3.11+; install the complete lock for reproducible verification.
+pytest==8.3.5
+pyarrow==19.0.1
+shapely==2.0.7
+pyproj==3.7.1

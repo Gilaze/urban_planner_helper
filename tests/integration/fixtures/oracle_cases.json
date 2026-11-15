@@ -1,0 +1,26 @@
+[
+  {
+    "parcel_id": "sf:checker-0001",
+    "category_id": "clinic",
+    "populations": [
+      100,
+      200
+    ],
+    "existing_distances_m": [
+      [
+        400
+      ],
+      [
+        800
+      ]
+    ],
+    "proposed_distances_m": [
+      800,
+      400
+    ],
+    "baseline_distances_m": [
+      400,
+      800
+    ]
+  }
+]
