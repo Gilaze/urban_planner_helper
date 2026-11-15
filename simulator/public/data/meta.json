@@ -1,0 +1,135 @@
+{
+ "origin": {
+  "lon": -122.435,
+  "lat": 37.77,
+  "metersPerDegLon": 88106.15470887098,
+  "metersPerDegLat": 110992.13570760419
+ },
+ "axes": "+x east, +z south, +y up, metres",
+ "extent": 9600.0,
+ "grid": 20.0,
+ "terrainSize": 961,
+ "quantum": 0.25,
+ "towerThresholdM": 50.0,
+ "types": [
+  {
+   "id": "tower",
+   "label": "Tower / high-rise",
+   "color": "#86A9F7",
+   "count": 323
+  },
+  {
+   "id": "office",
+   "label": "Office",
+   "color": "#67D2DE",
+   "count": 1892
+  },
+  {
+   "id": "apartment",
+   "label": "Apartment / condo",
+   "color": "#FFAA70",
+   "count": 7352
+  },
+  {
+   "id": "flats",
+   "label": "Flats (2-4 units)",
+   "color": "#FFD56E",
+   "count": 25524
+  },
+  {
+   "id": "house",
+   "label": "Single-family house",
+   "color": "#FFF0A8",
+   "count": 88065
+  },
+  {
+   "id": "mixed",
+   "label": "Mixed-use (homes over shops)",
+   "color": "#CCA8F4",
+   "count": 24766
+  },
+  {
+   "id": "retail",
+   "label": "Retail / commercial",
+   "color": "#FF8E8E",
+   "count": 4684
+  },
+  {
+   "id": "hotel",
+   "label": "Hotel",
+   "color": "#F9A6D6",
+   "count": 120
+  },
+  {
+   "id": "civic",
+   "label": "Civic / school / culture",
+   "color": "#8DDD96",
+   "count": 1352
+  },
+  {
+   "id": "medical",
+   "label": "Medical",
+   "color": "#D4F1F6",
+   "count": 198
+  },
+  {
+   "id": "industrial",
+   "label": "Industrial / PDR",
+   "color": "#CDB79F",
+   "count": 600
+  },
+  {
+   "id": "other",
+   "label": "Other / accessory / unknown",
+   "color": "#E4E1DB",
+   "count": 18448
+  },
+  {
+   "id": "pier",
+   "label": "Pier / wharf",
+   "color": "#D9C6A5",
+   "count": 114
+  }
+ ],
+ "vacancy": {
+  "source": "Parcel Planner data release (team Google Drive): parcels.geoparquet vacancy_status, places.parquet closure_status",
+  "rule": "vacant lot = team vacancy_status source_indicated_vacant; closed businesses = every Google Maps place matched to the building is closed (permanently or temporarily); occupied = team not_vacant; unknown = team unknown or no parcel match",
+  "buildings": {
+   "vacant": 853,
+   "closed": 510,
+   "not_vacant": 165589,
+   "unknown": 6486
+  },
+  "lots": {
+   "vacant": 4581,
+   "not_vacant": 148285,
+   "unknown": 2161
+  },
+  "placesMatched": 21773,
+  "vacantLotShapes": 4581
+ },
+ "buildingCount": 173438,
+ "heightsUpdatedFromOSM": 47,
+ "buildingsAddedFromOSM": 124,
+ "roadCount": 19152,
+ "treeCount": 40132,
+ "lakeCount": 104,
+ "sources": [
+  {
+   "name": "DataSF Building Footprints (LiDAR heights)",
+   "url": "https://data.sfgov.org/d/ynuv-fyni"
+  },
+  {
+   "name": "Parcel Planner data release: parcels + Google Maps Places (team Drive)",
+   "url": "https://github.com/Gilaze/urban_planner_helper"
+  },
+  {
+   "name": "OpenStreetMap contributors (ODbL)",
+   "url": "https://www.openstreetmap.org/copyright"
+  },
+  {
+   "name": "AWS Terrain Tiles (Mapzen Terrarium; USGS 3DEP, NOAA)",
+   "url": "https://registry.opendata.aws/terrain-tiles/"
+  }
+ ]
+}

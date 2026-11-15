@@ -1,6 +1,6 @@
 node_modules/
 dist/
-# downloaded sources and generated binaries (rebuild with: npm run data)
+# downloaded sources (rebuild with: npm run data)
+# public/data/ is committed so Vercel deploys from git include the map data.
 pipeline/cache/
 pipeline/__pycache__/
-public/data/
