@@ -36,6 +36,9 @@ from ..settings import METRIC_CRS, WGS84
 log = logging.getLogger(__name__)
 
 PARCELS_ID = "acdm-wktn"
+HEIGHT_ID = "h9wh-cg3m"  # Zoning Map - Height and Bulk Districts (Planning Code height limits, feet)
+HEIGHT_FIELDS = ["height", "gen_hght", "the_geom"]
+FT_TO_M = 0.3048
 ASSESSOR_ID = "wv5m-vpq2"
 LANDUSE_ID = "fdfd-xptc"
 LANDUSE_VINTAGE = "2023"
@@ -131,6 +134,29 @@ def _flag(v: object) -> bool:
     return str(v).strip().lower() in {"true", "1", "yes"}
 
 
+def parse_height_records(records: Iterable[dict]) -> gpd.GeoDataFrame:
+    """Height and Bulk Districts -> district label, numeric limit in feet, open-space flag.
+
+    `gen_hght` is the generalized limit in feet. Repeated-digit codes (2222 ... 9999) are not
+    heights: they mark districts whose height is set elsewhere - OS open space (9999),
+    Candlestick Point (5555), Hunters Point (7777), Special Height Districts (4444) and similar.
+    Those get a null limit, `height_special_plan` true, and `height_open_space` for OS.
+    """
+    rows = []
+    for r in records:
+        g = _geom(r.get("the_geom"))
+        if g is None:
+            continue
+        label = (r.get("height") or "").strip() or None
+        ft = _num(r.get("gen_hght"))
+        special = ft is not None and ft >= 1111 and ft % 1111 == 0
+        open_space = (label or "").upper().startswith("OS") or ft == 9999
+        rows.append({"height_district": label, "height_limit_ft": None if (special or open_space) else ft,
+                     "height_open_space": open_space, "height_special_plan": special or open_space, "geometry": g})
+    cols = ["height_district", "height_limit_ft", "height_open_space", "height_special_plan", "geometry"]
+    return gpd.GeoDataFrame(pd.DataFrame(rows, columns=cols), geometry="geometry", crs=WGS84)
+
+
 def parse_current_landuse_records(records: Iterable[dict]) -> pd.DataFrame:
     """Current land use, physical-lot rows only, one row per mapblklot."""
     rows = []
@@ -213,6 +239,7 @@ def build_physical_parcels(
     landuse_vintage: str = LANDUSE_VINTAGE,
     current_landuse: pd.DataFrame | None = None,
     water: gpd.GeoDataFrame | None = None,
+    heights: gpd.GeoDataFrame | None = None,
 ) -> tuple[gpd.GeoDataFrame, dict]:
     """Consolidate APN rows to one row per physical lot (mapblklot).
 
@@ -292,6 +319,22 @@ def build_physical_parcels(
             g = lots.loc[touch, "geometry"]
             lots.loc[touch, "water_fraction"] = (g.intersection(wat).area / g.area).clip(0, 1).to_numpy()
     lots["submerged"] = lots["water_fraction"] >= SUBMERGED_WATER_FRACTION
+
+    # Planning Code height limit at the lot's representative point (Height and Bulk Districts).
+    lots["height_district"] = None
+    lots["height_limit_ft"] = np.nan
+    lots["height_open_space"] = False
+    lots["height_special_plan"] = False
+    if heights is not None and len(heights):
+        pts = gpd.GeoDataFrame({"_i": lots.index}, geometry=lots.geometry.representative_point(), crs=METRIC_CRS)
+        pts = pts[lots.geometry.notna().to_numpy()]
+        hj = gpd.sjoin(pts, heights.to_crs(METRIC_CRS), how="left", predicate="within")
+        hj = hj[~hj.index.duplicated(keep="first")].set_index("_i")
+        lots.loc[hj.index, "height_district"] = hj["height_district"].to_numpy()
+        lots.loc[hj.index, "height_limit_ft"] = pd.to_numeric(hj["height_limit_ft"], errors="coerce").to_numpy()
+        lots.loc[hj.index, "height_open_space"] = hj["height_open_space"].eq(True).to_numpy()
+        lots.loc[hj.index, "height_special_plan"] = hj["height_special_plan"].eq(True).to_numpy()
+    lots["height_limit_m"] = (lots["height_limit_ft"] * FT_TO_M).round(1)
     wet_vacant = lots["submerged"] & lots["vacancy_status"].eq("source_indicated_vacant")
     lots.loc[wet_vacant, "vacancy_status"] = "unknown"
     lots.loc[wet_vacant, "vacancy_evidence"] = "2023 VACANT code but lot is mostly under water (submerged)"
@@ -335,7 +378,8 @@ def build_physical_parcels(
     cols = [
         "parcel_id", "mapblklot", "source_apns", "apn_count", "geometry", "geometry_quality",
         "representative_point", "rep_lon", "rep_lat", "area_m2", "existing_use", "vacancy_status",
-        "vacancy_evidence", "water_fraction", "submerged", "site_label", "zoning", "zoning_code", "zoning_district", "analysis_neighborhood",
+        "vacancy_evidence", "water_fraction", "submerged", "height_district", "height_limit_ft", "height_limit_m",
+        "height_open_space", "height_special_plan", "site_label", "zoning", "zoning_code", "zoning_district", "analysis_neighborhood",
         "current_uses", "current_residential_units", "current_commercial_area_sqft", "landuse_2023",
         "residential_units_2023", "commercial_area_sqft_2023", "assessed_land_usd", "assessed_improvement_usd",
         "assessor_lot_area_sqft", "assessor_use_codes", "assessor_matched_apns", "assessment_year",
@@ -360,6 +404,10 @@ def build_physical_parcels(
         "submerged_lots": int(lots["submerged"].sum()),
         "submerged_lots_reclassified_from_vacant": int(wet_vacant.sum()),
         "water_layer": "provided" if water is not None else "missing",
+        "lots_with_height_limit": int(lots["height_limit_ft"].notna().sum()),
+        "lots_in_open_space_height_district": int(lots["height_open_space"].sum()),
+        "lots_in_special_plan_height_district": int(lots["height_special_plan"].sum()),
+        "lots_without_height_district": int(lots["height_district"].isna().sum()),
         "current_landuse_rows": int(len(current_landuse)),
         "current_landuse_matched_lots": int(in_current.sum()),
         "assessor_rows": int(len(assessor)),

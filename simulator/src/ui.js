@@ -213,7 +213,7 @@ export function createUI(root) {
          *          choices = [{ id, label, group, color, height, minH, maxH, minArea }]
          * actions: { onClose, onApply(choiceId, heightM), onDelete(), onRestore(), validate(choiceId, heightM) }
          */
-        showBuilding({ title, color, lot, edited = false, choices, choiceId, heightM, footprintM2 }, actions) {
+        showBuilding({ title, color, lot, edited = false, choices, choiceId, heightM, footprintM2, hasRules = true }, actions) {
           onCardClose = actions.onClose;
           const [cls, head, sub] = lot == null
             ? ['unknown', 'Unavailable', 'Rebuild data (npm run data) for vacancy']
@@ -233,6 +233,7 @@ export function createUI(root) {
                 <span class="hval"><input data-hnum type="number" step="1"> m</span>
               </label>
               <div class="bcard-rule" data-rule></div>
+              <div class="bcard-cond" data-note hidden></div>
               <div class="bcard-warn" data-warn role="alert" hidden></div>
               <div class="bcard-actions">
                 <button class="btn primary" data-apply>Apply</button>
@@ -240,24 +241,27 @@ export function createUI(root) {
                 ${edited ? '<button class="btn" data-restore>Restore original</button>' : ''}
               </div>
             </div>
-            <div class="bcard-note">Size rules are illustrative planning defaults. Edits are a local sketch in this browser. Source: Parcel Planner release (SF land use, Google Maps closures). Exact location is not shown.</div>`;
+            <div class="bcard-note">Rules: SF height limit (Height and Bulk Districts) and a simplified SF Planning Code use table${hasRules ? '' : ' (zoning data missing: rebuild with npm run data)'}. Edits are a local sketch in this browser. Source: Parcel Planner release (SF land use, Google Maps closures). Exact location is not shown.</div>`;
           const sel = card.querySelector('[data-type]');
           const range = card.querySelector('[data-hrange]'), num = card.querySelector('[data-hnum]');
           const ruleEl = card.querySelector('[data-rule]'), warn = card.querySelector('[data-warn]');
+          const noteEl = card.querySelector('[data-note]');
           const apply = card.querySelector('[data-apply]');
           const choiceOf = () => choices.find((c) => c.id === sel.value);
           let touched = false;
           const setRange = (c) => {
-            // the slider spans the type's allowed range, widened to show an out-of-range original height
-            range.min = Math.min(c.minH, Number(num.value) || c.minH);
-            range.max = Math.max(c.maxH, Number(num.value) || c.maxH);
+            // the slider spans what SF allows on this lot, widened to show an out-of-range original height
+            const r = actions.range(c.id);
+            range.min = Math.min(r.min, Number(num.value) || r.min);
+            range.max = Math.max(r.max, Number(num.value) || r.max);
             num.min = 1; num.max = 999;
-            ruleEl.textContent = `${c.label}: ${c.minH}–${c.maxH} m tall, footprint ≥ ${c.minArea.toLocaleString()} m² ` +
-              `(this one: ${Math.round(footprintM2).toLocaleString()} m²)`;
           };
           const check = () => {
             const v = actions.validate(sel.value, num.value === '' ? NaN : Number(num.value));
             apply.disabled = !v.ok;
+            ruleEl.textContent = `${v.summary} · footprint ${Math.round(footprintM2).toLocaleString()} m²`;
+            noteEl.hidden = v.notes.length === 0;
+            noteEl.textContent = v.notes.join(' ');
             // the original building's own values are only flagged once the user changes something
             warn.hidden = v.ok || !touched;
             warn.textContent = v.reasons.join(' ');
@@ -271,9 +275,10 @@ export function createUI(root) {
           sel.addEventListener('change', () => {
             const c = choiceOf();
             touched = true;
-            num.value = c.height;          // picking a type fills in its default height
+            const h = actions.defaultHeight(c.id); // picking a type fills in its default height (capped at the SF limit)
+            num.value = h;
             setRange(c);
-            range.value = c.height;
+            range.value = h;
             check();
           });
           range.addEventListener('input', () => { num.value = range.value; touched = true; check(); });

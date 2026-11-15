@@ -67,7 +67,25 @@ export async function loadCityData(onProgress = () => {}) {
     treesBuf,
     lakesBuf,
     vacancy,
+    zoning: await loadZoning(base),
   };
+}
+
+/**
+ * Optional per-building SF rule context (zoning.bin, SFZ1): 4 bytes per building in buildings.bin
+ * order - uint16 height limit in feet (0 = none), uint8 flags (1 special plan, 2 open space),
+ * uint8 index into meta.zoning.codes (255 = none). Returns null for older data builds.
+ */
+async function loadZoning(base) {
+  try {
+    const res = await fetch(base + 'zoning.bin');
+    if (!res.ok) return null;
+    const buf = await res.arrayBuffer();
+    if (buf.byteLength < 8 || new TextDecoder().decode(new Uint8Array(buf, 0, 4)) !== 'SFZ1') return null;
+    return new DataView(buf, 8, new DataView(buf).getUint32(4, true) * 4);
+  } catch {
+    return null;
+  }
 }
 
 /** Bilinear terrain sample (metres) at world x/z - identical to the pipeline's sampler. */

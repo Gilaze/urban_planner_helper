@@ -7,6 +7,10 @@
 totals, fingerprinted publish) and the P4-DATA-005 category fix below. **The SF test set has now been
 evaluated more than once** (0.1.0 and 0.1.1). Treat SF results as exposed, not as an untouched holdout.
 
+## SF height limits (added 2026-11-15)
+
+`parcels.geoparquet` now carries the Planning Code height limit for each lot from DataSF Height and Bulk Districts (`h9wh-cg3m`): `height_district`, `height_limit_ft`, `height_limit_m`, `height_special_plan`, `height_open_space`. 153,143 lots have a numeric limit (median 40 ft, max 1,000 ft). 1,036 are in districts set by a special plan, including 510 in OS open space, and 848 have no height district.
+
 ## Submerged parcels (fixed 2026-11-15)
 
 SF land use codes many bay and ocean tideland parcels `VACANT`, so 772 of the 4,582 "vacant" lots were

@@ -106,6 +106,7 @@ def fetch_sf(s: Settings, max_rows: int | None = None) -> None:
     jobs = [
         ("sf_parcels", sf.PARCELS_ID, dict(order="blklot", select=",".join(sf.PARCEL_FIELDS), where="active=true")),
         ("sf_landuse", sf.LANDUSE_ID, dict(order="mapblklot", select=",".join(sf.LANDUSE_FIELDS))),
+        ("sf_height_districts", sf.HEIGHT_ID, dict(order=":id", select=",".join(sf.HEIGHT_FIELDS))),
         ("sf_landuse_current", sf.CURRENT_LANDUSE_ID, dict(order="mapblklot,ludb_id",
                                                            select=",".join(sf.CURRENT_LANDUSE_FIELDS))),
         ("sf_assessor", sf.ASSESSOR_ID, dict(order="parcel_number,row_id", select=",".join(sf.ASSESSOR_FIELDS),
@@ -190,7 +191,8 @@ def build(s: Settings, skip_census: bool = False) -> None:
     raw_m.save()
     m.data["sources"]["tiger_sf_water"] = raw_m.data["sources"]["tiger_sf_water"]
     lots, lot_rep = sf.build_physical_parcels(parcels_raw, landuse, assessor, parcel_vintage,
-                                              current_landuse=current_lu, water=water)
+                                              current_landuse=current_lu, water=water,
+                                              heights=sf.parse_height_records(read_jsonl(s.raw_dir / "sf" / "sf_height_districts.jsonl")))
     p = rd / "parcels.geoparquet"
     lots.to_parquet(p, index=False)
     m.output(p, len(lots), grain="physical lot (mapblklot)", key="parcel_id")
@@ -482,6 +484,8 @@ def write_checkpoint_md(checks: dict, m: Manifest) -> None:
               f"- Vacancy status: {p['vacancy_status']}",
               f"- Vacancy evidence: {p['vacancy_evidence']}",
               f"- Current land use (c5ge-t6pj) matched lots: {p['current_landuse_matched_lots']:,}",
+              f"- Height districts: {p['lots_with_height_limit']:,} lots with a limit, "
+              f"{p['lots_in_open_space_height_district']:,} in OS (open space), {p['lots_without_height_district']:,} unmatched",
               f"- Submerged lots (>= 50% Census water): {p['submerged_lots']:,}; "
               f"removed from vacant candidates: {p['submerged_lots_reclassified_from_vacant']:,}",
               f"- Assessor roll {p['assessor_roll_years']}: matched APNs {p['assessor_matched_apns']:,}, "

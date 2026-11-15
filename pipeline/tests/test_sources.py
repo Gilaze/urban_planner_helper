@@ -204,3 +204,26 @@ def test_submerged_vacant_lot_is_not_a_candidate():
     out2, _ = sf.build_physical_parcels(parcels, landuse, assessor, "2026-11-01", current_landuse=current, water=half)
     lot2 = out2.set_index("parcel_id").loc["sf:0012003A"]
     assert 0.3 < lot2["water_fraction"] < 0.5 and lot2["vacancy_status"] == "source_indicated_vacant"
+
+
+def test_height_district_limit_joins_to_lot():
+    parcels = sf.parse_parcel_records(_load("sf_parcels_api.json"))
+    landuse = sf.parse_landuse_records(_load("sf_landuse_api.json"))
+    assessor = sf.parse_assessor_records(_load("sf_assessor_api.json"), "2025")
+    sq = lambda x0, y0, x1, y1: {"type": "MultiPolygon", "coordinates": [[[[x0, y0], [x1, y0], [x1, y1], [x0, y1], [x0, y0]]]]}
+    heights = sf.parse_height_records([
+        {"height": "40-X", "gen_hght": "40", "the_geom": sq(-122.4010, 37.7890, -122.3990, 37.7910)},
+        {"height": "OS", "gen_hght": "9999", "the_geom": sq(-122.4210, 37.7990, -122.4190, 37.8010)},
+    ])
+    out, rep = sf.build_physical_parcels(parcels, landuse, assessor, None, heights=heights)
+    out = out.set_index("parcel_id")
+    a = out.loc["sf:0012003A"]
+    assert a["height_district"] == "40-X" and a["height_limit_ft"] == 40 and a["height_limit_m"] == 12.2
+    b = out.loc["sf:0025032"]
+    assert b["height_open_space"] and pd.isna(b["height_limit_ft"])
+    assert pd.isna(out.loc["sf:3702001", "height_district"])
+    assert rep["lots_in_open_space_height_district"] == 1
+    special = sf.parse_height_records([{"height": "CP", "gen_hght": "5555", "the_geom": sq(0, 0, 1, 1)},
+                                       {"height": "700-S-2", "gen_hght": "700", "the_geom": sq(0, 0, 1, 1)}])
+    assert special["height_special_plan"].tolist() == [True, False]
+    assert pd.isna(special.loc[0, "height_limit_ft"]) and special.loc[1, "height_limit_ft"] == 700

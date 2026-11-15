@@ -44,6 +44,7 @@ of the code fixes.
 |---|---|---|---|
 | SF parcels | `/resource/acdm-wktn.json` | `blklot` (APN) | 227,968 active APNs → 155,028 `mapblklot` physical lots. Condos share `mapblklot`. 262 active rows have no shape. |
 | SF assessor | `/resource/wv5m-vpq2.json` | `parcel_number` × `closed_roll_year` | `parcel_number` uses the blklot format. The latest roll (2025) is selected automatically. |
+| SF height districts | `/resource/h9wh-cg3m.json` | district polygon | Zoning Map – Height and Bulk Districts. Joined to each lot's representative point: `height_district`, `height_limit_ft`/`_m`. Repeated-digit codes (2222 … 9999: OS, Candlestick Point, Hunters Point, Special Height Districts) are not heights; those lots get `height_special_plan` and a null limit. |
 | SF land use, current | `/resource/c5ge-t6pj.json` | `mapblklot` (`geography_type = parcel`) | Updated 2026-08-17. Floor area per use and residential units. No explicit vacancy code. The v3 `query.json` endpoint needs an app token; the v2.1 `/resource` endpoint is keyless. |
 | SF land use 2023 | `/resource/fdfd-xptc.json` | `mapblklot` | Archived. Explicit `VACANT` code on 8,512 lots. One duplicate key. |
 | Places | Bright Data CSV | `place_id` | 147,429 rows, no duplicate IDs. No city column (city assigned spatially from TIGER places). No scrape timestamp. |

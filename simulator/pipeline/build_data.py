@@ -461,9 +461,11 @@ def load_team_release():
         if not os.path.exists(f):
             raise SystemExit(f"Missing {f}. Put the Parcel Planner release (Drive: parcel-planner-data/artifacts/person2) "
                              f"there (unzip parcel-planner-data.zip at the repo root, see DATA.md) or set PARCEL_PLANNER_DATA.")
+    have = set(pq.read_schema(pp).names)
+    rule_cols = [c for c in ("zoning_code", "height_limit_ft", "height_special_plan", "height_open_space") if c in have]
     t = pq.read_table(pp, columns=["mapblklot", "vacancy_status", "landuse_2023", "residential_units_2023",
-                                   "current_uses", "current_residential_units", "geometry"]).to_pylist()
-    landuse, status, geoms = {}, {}, {}
+                                   "current_uses", "current_residential_units", "geometry", *rule_cols]).to_pylist()
+    landuse, status, geoms, lot_rules = {}, {}, {}, {}
     for r in t:
         lot = r["mapblklot"]
         code = r["landuse_2023"]
@@ -478,12 +480,19 @@ def load_team_release():
         if code:
             landuse[lot] = {"landuse": code, "resunits": units or 0, "restype": None}
         status[lot] = r["vacancy_status"]
+        # SF Planning Code context for building edits: zoning district + height limit (feet)
+        zc = (r.get("zoning_code") or "").split("|")[0].strip() or None
+        ft = r.get("height_limit_ft")
+        flags = (1 if r.get("height_special_plan") else 0) | (2 if r.get("height_open_space") else 0)
+        lot_rules[lot] = (zc, int(round(ft)) if ft is not None and ft == ft else 0, flags)
         if r["vacancy_status"] == "source_indicated_vacant" and r["geometry"]:
             geoms[lot] = r["geometry"]
     places = pq.read_table(pl, columns=["place_id", "longitude", "latitude", "city", "closure_status",
                                         "primary_category"]).to_pandas()
     places = places[places["city"] == "San Francisco"]
-    return landuse, status, geoms, places
+    if not rule_cols:
+        log("  WARNING: team release has no zoning/height columns; rebuild it with pipeline >= 0.1.1 + height districts")
+    return landuse, status, geoms, places, lot_rules
 
 
 def closed_business_buildings(places, bpolys):
@@ -634,7 +643,11 @@ def main():
     lc = np.stack([np.asarray(layers[k].resize((LC_RES, LC_RES), Image.BOX)) for k in ("grass", "forest", "sand")], -1)
 
     log("[4/7] buildings")
-    landuse, lot_status, vacant_geoms, places = load_team_release()
+    landuse, lot_status, vacant_geoms, places, lot_rules = load_team_release()
+    zoning_codes = sorted({z for z, _, _ in lot_rules.values() if z})[:254]
+    zoning_idx = {z: i for i, z in enumerate(zoning_codes)}
+    zone_out = bytearray()   # per building: uint16 height limit ft (0 = none), uint8 flags, uint8 zoning index
+    cur_zone = [(0, 0, 255)]
     feats = []
     for fn in sorted(glob.glob(os.path.join(CACHE, "footprints_*.geojson")), key=lambda s: int(s.rsplit("_", 1)[1].split(".")[0])):
         with open(fn, encoding="utf-8") as f:
@@ -685,6 +698,7 @@ def main():
         roof_counts[roof_kind] += 1
         heights_by_type[tid].append(height + roof)
         vac_out.append(cur_vac[0])
+        zone_out.extend(struct.pack("<HBB", *cur_zone[0]))
 
     def ground_for(outer):
         gs = hsample(H, outer[:, 0], outer[:, 1])
@@ -706,6 +720,8 @@ def main():
         mean = max(height, float(p.get("hgt_meancm") or 0) / 100.0)
         lu = landuse.get(mblr[2:]) if mblr.startswith("SF") else None
         cur_vac[0] = TEAM_STATUS.get(lot_status.get(mblr[2:], "unknown"), VAC_UNKNOWN) if mblr.startswith("SF") else VAC_UNKNOWN
+        zr = lot_rules.get(mblr[2:]) if mblr.startswith("SF") else None
+        cur_zone[0] = (min(zr[1], 65535), zr[2], zoning_idx.get(zr[0], 255)) if zr else (0, 0, 255)
         if lu is not None:
             n_join += 1
         polys = g["coordinates"] if g["type"] == "MultiPolygon" else [g["coordinates"]]
@@ -760,6 +776,7 @@ def main():
 
     # Tall buildings completed after the 2016 footprint survey exist only in OSM.
     cur_vac[0] = 0
+    cur_zone[0] = (0, 0, 255)
     n_added = 0
     for i, b in enumerate(osm_tall):
         if i in osm_matched or b["h"] < 25 or b["tag"] in ("tower", "construction", "roof"):
@@ -805,6 +822,11 @@ def main():
             n_closed_bldg += 1
     log(f"  Google Maps places in SF: {len(places)}, matched to buildings: {n_matched}, "
         f"buildings with only closed businesses: {n_closed_bldg}")
+    assert len(zone_out) == 4 * n_written
+    with open(os.path.join(OUT, "zoning.bin"), "wb") as f:
+        f.write(b"SFZ1" + struct.pack("<I", n_written))
+        f.write(zone_out)
+    log(f"  zoning/height rules: {sum(1 for i in range(n_written) if zone_out[4*i+3] != 255)} buildings with a zoning district")
     with open(os.path.join(OUT, "vacancy.bin"), "wb") as f:
         f.write(b"SFV1" + struct.pack("<I", n_written))
         f.write(vac_out)
@@ -871,6 +893,11 @@ def main():
         "axes": "+x east, +z south, +y up, metres",
         "extent": EXT, "grid": GRID, "terrainSize": N, "quantum": Q, "towerThresholdM": TOWER_M,
         "types": [{"id": t[0], "label": t[1], "color": t[2], "count": counts[i]} for i, t in enumerate(TYPES)],
+        "zoning": {
+            "codes": zoning_codes,
+            "source": "Parcel Planner release parcels.geoparquet: zoning_code (DataSF parcels) and height_limit_ft "
+                      "(DataSF Zoning Map - Height and Bulk Districts, h9wh-cg3m)",
+        },
         "vacancy": {
             "source": "Parcel Planner data release (team Google Drive): parcels.geoparquet vacancy_status, "
                       "places.parquet closure_status",

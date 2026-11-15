@@ -9,7 +9,7 @@ import { buildTerrain, buildWater, buildBuildingMeshes, buildRoadMeshes, buildLa
 import { createUI, MODES } from './ui.js';
 import { createFocusBlur } from './focusBlur.js';
 import { createBuildingIndex, pickBuilding, buildingParts, createSelectionHighlight, footprintArea } from './picking.js';
-import { BUILDING_RULES, ruleFor, ruleForMapType, validateBuilding } from './buildingRules.js';
+import { BUILDING_RULES, ruleFor, ruleForMapType, validateBuilding, heightRange, defaultHeight } from './buildingRules.js';
 import { createEdits } from './edits.js';
 import GeometryWorker from './geometryWorker.js?worker';
 
@@ -308,6 +308,18 @@ async function boot() {
   const originalHeight = (b) => buildingIndex.h[b] +
     (buildingIndex.kind[b] === 3 ? buildingIndex.roof[b] : buildingIndex.kind[b] === 1 ? buildingIndex.roof[b] * 0.5 : 0);
 
+  /** SF rule context of the lot under building b (zoning district + height limit). */
+  function lotContext(b) {
+    if (!data.zoning || 4 * b + 3 >= data.zoning.byteLength) return {};
+    const ft = data.zoning.getUint16(4 * b, true), flags = data.zoning.getUint8(4 * b + 2), zi = data.zoning.getUint8(4 * b + 3);
+    return {
+      zoning: zi === 255 ? null : (meta.zoning?.codes?.[zi] ?? null),
+      heightLimitFt: ft,
+      specialPlan: (flags & 1) !== 0,
+      openSpace: (flags & 2) !== 0,
+    };
+  }
+
   function select(b) {
     selected = b;
     if (b < 0) {
@@ -320,6 +332,7 @@ async function boot() {
     const mapType = meta.types[buildingIndex.type[b]] || { id: 'other', label: 'Building', color: '#ccc' };
     const rule = e && !e.deleted ? ruleFor(e.kind) : null;
     const area = footprintArea(buildingIndex, b);
+    const ctx = lotContext(b);
     hud.showBuilding({
       title: rule ? rule.label : mapType.label,
       color: rule ? colorOf(rule.render) : mapType.color,
@@ -327,13 +340,16 @@ async function boot() {
       choiceId: rule ? rule.id : ruleForMapType(mapType.id).id,
       heightM: e && !e.deleted ? e.height : originalHeight(b),
       footprintM2: area,
+      hasRules: !!data.zoning,
       lot: data.vacancy ? data.vacancy[b] : null,
       edited: !!e,
     }, {
-      validate: (id, h) => validateBuilding(ruleFor(id), h, area),
+      validate: (id, h) => validateBuilding(ruleFor(id), h, ctx),
+      range: (id) => heightRange(ruleFor(id), ctx),
+      defaultHeight: (id) => defaultHeight(ruleFor(id), ctx),
       onClose: () => select(-1),
       onApply: (id, h) => {
-        if (!validateBuilding(ruleFor(id), h, area).ok) return; // the card already blocks this
+        if (!validateBuilding(ruleFor(id), h, ctx).ok) return; // the card already blocks this
         edits.replace(b, id, h);
         select(b);
       },

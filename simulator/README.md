@@ -93,30 +93,26 @@ The bay's colour comes from depth in the elevation data, with animated surf alon
 - Glints never get smaller than about 1.5 px, so they stay crisp instead of shimmering.
 - Water is mostly exempt from the focus blur.
 
-## Building size rules
+## Building rules (San Francisco)
 
-Each replacement type has a default height, an allowed height range, and a minimum building footprint (`src/buildingRules.js`). These are illustrative planning defaults for sketching, not San Francisco code.
+When you replace a building, the card checks two San Francisco rules for the lot it stands on (`src/buildingRules.js`):
 
-| Type | Default | Height range | Min footprint | Drawn as |
-|---|---|---|---|---|
-| Hospital | 30 m | 12–120 m | 2,000 m² | Medical |
-| Clinic | 8 m | 4–30 m | 150 m² | Medical |
-| Pharmacy | 6 m | 4–20 m | 80 m² | Retail |
-| Grocery store | 7 m | 4–20 m | 300 m² | Retail |
-| Bank / credit union | 8 m | 4–40 m | 100 m² | Office |
-| School (K-12) | 12 m | 6–30 m | 1,500 m² | Civic |
-| Tower / high-rise | 80 m | 50–350 m | 300 m² | Tower |
-| Office | 30 m | 8–250 m | 200 m² | Office |
-| Apartment / condo | 18 m | 9–120 m | 150 m² | Apartment |
-| Flats (2-4 units) | 10 m | 6–20 m | 80 m² | Flats |
-| Single-family house | 8 m | 4–14 m | 40 m² | House |
-| Mixed-use | 15 m | 8–60 m | 100 m² | Mixed-use |
-| Retail / commercial | 6 m | 4–30 m | 60 m² | Retail |
-| Hotel | 30 m | 10–200 m | 300 m² | Hotel |
-| Civic / culture | 12 m | 4–60 m | 150 m² | Civic |
-| Medical office | 15 m | 6–80 m | 150 m² | Medical |
-| Industrial / PDR | 10 m | 5–30 m | 200 m² | Industrial |
-| Other / accessory | 5 m | 3–20 m | none | Other |
+1. **Height limit**: from the Planning Code's [Zoning Map – Height and Bulk Districts](https://data.sfgov.org/d/h9wh-cg3m) (e.g. `40-X` = 40 ft). Taller than the limit blocks Apply. Bulk controls (the letter) are not modelled. Open space (`OS`) and districts whose height is set by a special plan (Candlestick Point, Hunters Point, Special Height Districts) have no numeric limit.
+2. **Use**: whether the use is allowed in the lot's zoning district (`zoning_code` from DataSF parcels). This is a **simplified** version of the Planning Code zoning control tables (Articles 2, 7 and 8), grouped by district family. **P** = permitted, **C** = needs Conditional Use authorization (allowed with a note), **N** = not permitted (blocks Apply). Special plan and redevelopment areas (Mission Bay, Hunters Point, Parkmerced, …) are flagged "check the plan". Individual districts have exceptions; check the code for a real proposal.
+
+| Family (districts) | Hospital | Clinic | Pharmacy | Grocery | Bank | School | Tower | Office | Apartment | Flats | House | Mixed | Retail | Hotel | Civic | Medical | Industrial |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| RH (RH-1, RH-2, RH-3) | C | N | N | N | N | C | N | N | N | P | P | N | N | N | C | N | N |
+| RM / RTO | C | C | N | N | N | C | N | N | P | P | P | N | N | N | C | C | N |
+| RC (RC-3, RC-4, RTO-C) | C | P | P | P | P | C | N | C | P | P | P | P | P | C | C | P | N |
+| NC (NC-1/2/3/S, NCD, NCT, …) | C | P | P | P | C | C | N | P | P | P | P | P | P | C | C | P | N |
+| C-2 | C | P | P | P | P | C | N | P | P | P | P | P | P | P | P | P | C |
+| C-3 (downtown) | C | P | P | P | P | C | P | P | P | P | P | P | P | P | P | P | N |
+| PDR (PDR-*, M-1, M-2, SALI) | N | N | P | P | C | N | N | N | N | N | N | N | P | N | C | N | P |
+| Eastern Neighborhoods mixed use (UMU, MUG, MUR, MUO, …) | C | P | P | P | P | C | N | C | P | P | P | P | P | C | P | P | P |
+| P (public) | P | P | N | N | N | P | N | N | N | N | N | N | N | N | P | P | N |
+
+Sketch conventions, not SF rules: picking a type fills in a typical height, capped at the lot's limit. Heights start at 3 m. A Tower is 50 m or taller, the map's own definition. Lot zoning and height come from the Parcel Planner release (`parcels.geoparquet`: `zoning_code`, `height_limit_ft`) and are written per building to `public/data/zoning.bin`.
 
 ## Data and accuracy
 

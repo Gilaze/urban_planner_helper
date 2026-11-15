@@ -95,8 +95,8 @@
   "source_sha256": {
     "pipeline/src/parcel_pipeline/model.py": "3654e173178de5a1fbbf4feb91755c8a2788415ac134c3c41b5029bb0e4d41f7",
     "pipeline/src/parcel_pipeline/features.py": "1df12a1eccdeec5f26fbf7256f4d9d5e93052fa4f8c5f76c2d1a3008b322560a",
-    "pipeline/src/parcel_pipeline/cli.py": "e59722bbbfac3631d88f5ba8ab8ff3e0fe976e3ebf10d0ce7d1daeb21b4d523c",
-    "pipeline/src/parcel_pipeline/sources/sf.py": "006efca1f940d451f49ce95249b1251b09076be204507da977aaa4d44bfcd5e2",
+    "pipeline/src/parcel_pipeline/cli.py": "1152a1a88cc502d84c7d96c5894cec20cfedb676ef19a14e510cf5a7c8fa6ff3",
+    "pipeline/src/parcel_pipeline/sources/sf.py": "cd425f2dc9cf3bd1e6079b24ee3afac56dc9c3e2ca8f62e14f95533aa02758db",
     "pipeline/src/parcel_pipeline/settings.py": "5c10ff235c37cb5262207b7d09cc5710453dc8718e830fad80b861a43b495c2c",
     "pipeline/src/parcel_pipeline/sources/census.py": "b08946d15ac6d539458a43e6e93033ff8f95efd3e7bb843eefbe8edf487f62e0",
     "pipeline/uv.lock": "67537bc2031380660252fca31959aabbff2cf384bb199c9770c32811bf1d506a",
