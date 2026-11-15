@@ -6,7 +6,7 @@ import {
   createShared, createBuildingMaterials, createTerrainMaterials, createWaterMaterial, createRoadMaterials, elevOfJS,
 } from './materials.js';
 import { buildTerrain, buildWater, buildBuildingMeshes, buildRoadMeshes, buildLakes, buildTrees, buildLandmarks } from './world.js';
-import { createUI } from './ui.js';
+import { createUI, MODES } from './ui.js';
 import { createFocusBlur } from './focusBlur.js';
 import { createBuildingIndex, pickBuilding, buildingParts, createSelectionHighlight } from './picking.js';
 import GeometryWorker from './geometryWorker.js?worker';
@@ -123,9 +123,11 @@ async function boot() {
   // Building index for click picking (built before the buffer is transferred to the worker).
   const buildingIndex = createBuildingIndex(data.buildingsBuf.slice(0), terrain.extent);
   const terrainMsg = { n: terrain.n, grid: terrain.grid, extent: terrain.extent, heights: terrain.heights };
-  const lodPromise = runWorker('lod', { buildingsBuf: data.buildingsBuf.slice(0), terrain: terrainMsg, chunkSize: CHUNK });
+  const lodPromise = runWorker('lod', {
+    buildingsBuf: data.buildingsBuf.slice(0), terrain: terrainMsg, chunkSize: CHUNK, vacancy: data.vacancy,
+  });
   const fullPromise = runWorker('full', {
-    buildingsBuf: data.buildingsBuf, roadsBuf: data.roadsBuf, terrain: terrainMsg, chunkSize: CHUNK,
+    buildingsBuf: data.buildingsBuf, roadsBuf: data.roadsBuf, terrain: terrainMsg, chunkSize: CHUNK, vacancy: data.vacancy,
   }, [data.buildingsBuf, data.roadsBuf]);
   const geomPromise = Promise.all([fullPromise, lodPromise]).then(([f, l]) => ({
     buildings: { full: f.buildings.full, lod: l.buildings.lod },
@@ -134,11 +136,12 @@ async function boot() {
 
   const texLoader = new THREE.TextureLoader();
   const loadTex = (url) => new Promise((res, rej) => texLoader.load(url, res, undefined, rej));
-  const [landcover, urban] = await Promise.all([
+  const [landcover, urban, vacantLots] = await Promise.all([
     loadTex(`${import.meta.env.BASE_URL}data/landcover.png`),
     loadTex(`${import.meta.env.BASE_URL}data/urban.png`),
+    loadTex(`${import.meta.env.BASE_URL}data/vacant.png`),
   ]);
-  for (const t of [landcover, urban]) {
+  for (const t of [landcover, urban, vacantLots]) {
     t.flipY = false;
     t.colorSpace = THREE.NoColorSpace; // masks, not colours
     t.anisotropy = renderer.capabilities.getMaxAnisotropy();
@@ -147,6 +150,7 @@ async function boot() {
   }
   shared.uLandcover.value = landcover;
   shared.uUrban.value = urban;
+  shared.uVacant.value = vacantLots;
 
   scene.add(buildTerrain(terrain, createTerrainMaterials(shared)));
   scene.add(buildWater(createWaterMaterial(shared, false)));
@@ -179,6 +183,7 @@ async function boot() {
     { pos: ground(-122.4664, 37.8052, 2.0), target: new THREE.Vector3(...(() => { const p = proj.toWorld(-122.47785, 37.81402); return [p.x, 150, p.z]; })()) }, // Golden Gate from Crissy Field
   ];
   const start = ground(-122.3990, 37.7905);
+  const START_WORLD_H = 1100;
   const cam = createCameraAngleController(renderer, {
     worldScale: WORLD_SCALE,
     maxWorldHeight: 19000,
@@ -218,7 +223,10 @@ async function boot() {
   // -------------------------------------------------------------------------
   // HUD wiring
   // -------------------------------------------------------------------------
-  let currentMode = 'isometric';
+  // Default view = the strategy-game 3/4 camera ('clash'), snapped into place without a fly-in.
+  cam.applyCameraAngle('clash', true, start, START_WORLD_H);
+  cam.update(10);
+  let currentMode = 'clash';
   let treesOn = true;
   // Clear radius: full detail + shadows + trees inside, blurred low-detail city outside.
   let clearOn = true;
@@ -264,9 +272,12 @@ async function boot() {
     onClear: (on) => { clearOn = on; },
     onRadius: (m) => { clearRadius = m; },
     onOutlines: (on) => { outlinesOn = on; },
+    onColorBy: (mode) => { shared.uVacancyMode.value = mode === 'vacancy' ? 1 : 0; shared.uFocus.value = -1; },
+    onToggleVac: (code, off) => { shared.uHiddenVac.value[code] = off ? 1 : 0; },
+    onFocusVac: (code) => { shared.uFocus.value = code; },
     radius: clearRadius,
   });
-  hud.setMode('isometric');
+  hud.setMode('clash');
   {
     const gl = renderer.getContext();
     const dbg = gl.getExtension('WEBGL_debug_renderer_info');
@@ -282,6 +293,8 @@ async function boot() {
   const raycaster = new THREE.Raycaster();
   const ndc = new THREE.Vector2();
   const groundAt = (x, z) => elevOfJS(shared, sampleGround(x, z));
+  // in the vacancy view, classes hidden from the legend are not clickable either
+  buildingIndex.skip = (b) => shared.uVacancyMode.value === 1 && data.vacancy && shared.uHiddenVac.value[data.vacancy[b]] > 0.5;
   function select(b) {
     selected = b;
     if (b < 0) {
@@ -292,7 +305,7 @@ async function boot() {
     highlight.show(buildingParts(buildingIndex, b, shared));
     hud.showBuilding({
       type: buildingIndex.type[b],
-      lot: data.lotStatus ? data.lotStatus[b] : null,
+      lot: data.vacancy ? data.vacancy[b] : null,
     }, () => select(-1));
   }
   const canvas = renderer.domElement;
@@ -332,7 +345,8 @@ async function boot() {
     else if (k === 'g') hud.toggleTrees();
     else if (k === 'f') hud.toggleFocus();
     else if (k === 'o') hud.toggleOutlines();
-    else if (['1', '2', '3', '4', '5'].includes(k)) setMode(['isometric', 'topdown', 'clash', 'street', 'drone'][Number(k) - 1]);
+    else if (k === 'v') hud.toggleVacancy();
+    else if (['1', '2', '3', '4', '5'].includes(k)) setMode(MODES[Number(k) - 1].id);
     keys.add(k);
   });
   window.addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));

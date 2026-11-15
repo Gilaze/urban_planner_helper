@@ -1,9 +1,17 @@
-const MODES = [
-  { id: 'isometric', label: 'Isometric', key: '1' },
-  { id: 'topdown', label: 'Top-down', key: '2' },
-  { id: 'clash', label: 'Clash 3/4', key: '3' },
+// 'clash' (the strategy-game 3/4 view) is the default camera.
+export const MODES = [
+  { id: 'clash', label: 'Default', key: '1' },
+  { id: 'isometric', label: 'Isometric', key: '2' },
+  { id: 'topdown', label: 'Top-down', key: '3' },
   { id: 'street', label: 'Street', key: '4' },
   { id: 'drone', label: 'Drone', key: '5' },
+];
+
+export const VACANCY_CLASSES = [
+  { code: 2, key: 'vacant', label: 'Vacant lot', color: '#FF5A4F' },
+  { code: 3, key: 'closed', label: 'Closed businesses', color: '#FFA43A' },
+  { code: 1, key: 'not_vacant', label: 'Occupied', color: '#CFE2F3' },
+  { code: 0, key: 'unknown', label: 'Unknown / no parcel', color: '#E9E4DB' },
 ];
 
 const el = (tag, cls, html) => {
@@ -38,7 +46,8 @@ export function createUI(root) {
       stage.textContent = msg;
       loader.classList.add('error');
     },
-    ready({ meta, stats, neighborhoods, onMode, onRotate, onJump, onToggleType, onFocusType, onShowAll, onTerrain, onTrees, onClear, onRadius, onOutlines, radius }) {
+    ready({ meta, stats, neighborhoods, onMode, onRotate, onJump, onToggleType, onFocusType, onShowAll, onTerrain, onTrees, onClear, onRadius, onOutlines, radius,
+      onColorBy, onToggleVac, onFocusVac }) {
       loader.classList.add('done');
       setTimeout(() => loader.remove(), 700);
       hud.classList.remove('hidden');
@@ -50,31 +59,61 @@ export function createUI(root) {
         <div class="t2">${stats.buildings.toLocaleString()} buildings · ${(stats.tris / 1e6).toFixed(1)}M triangles · ${stats.trees.toLocaleString()} trees</div>`;
       hud.appendChild(title);
 
-      // ---- legend
+      // ---- legend: colour by building type or by parcel vacancy
       const legend = el('div', 'panel legend');
-      legend.appendChild(el('div', 'legend-head', 'Building type <button class="link" data-all>show all</button>'));
+      const tabs = el('div', 'legend-tabs');
+      tabs.innerHTML = '<button data-mode="type" class="on">Building type</button><button data-mode="vacancy">Vacancy</button>';
+      legend.appendChild(tabs);
+
+      const typeSec = el('div', 'legend-sec');
+      typeSec.appendChild(el('div', 'legend-head', 'Building type <button class="link" data-all>show all</button>'));
       const rows = [];
+      const addRow = (sec, color, label, count, onClick, onHover) => {
+        const row = el('button', 'legend-row');
+        row.innerHTML = `<span class="sw" style="--c:${color}"></span><span class="lbl">${label}</span><span class="cnt">${count}</span>`;
+        row.title = 'Click to hide / show · hover to highlight';
+        row.addEventListener('click', () => onClick(row.classList.toggle('off')));
+        row.addEventListener('mouseenter', () => onHover(true));
+        row.addEventListener('mouseleave', () => onHover(false));
+        sec.appendChild(row);
+        return row;
+      };
       meta.types.forEach((t, i) => {
         if (!t.count) return;
-        const row = el('button', 'legend-row');
-        row.innerHTML = `<span class="sw" style="--c:${t.color}"></span><span class="lbl">${t.label}</span><span class="cnt">${t.count.toLocaleString()}</span>`;
-        row.title = 'Click to hide / show · hover to highlight';
-        row.addEventListener('click', () => {
-          const off = row.classList.toggle('off');
-          onToggleType(i, off);
-        });
-        row.addEventListener('mouseenter', () => onFocusType(i));
-        row.addEventListener('mouseleave', () => onFocusType(-1));
-        legend.appendChild(row);
-        rows.push(row);
+        rows.push(addRow(typeSec, t.color, t.label, t.count.toLocaleString(),
+          (off) => onToggleType(i, off), (on) => onFocusType(on ? i : -1)));
       });
-      legend.querySelector('[data-all]').addEventListener('click', () => {
+      typeSec.querySelector('[data-all]').addEventListener('click', () => {
         rows.forEach((r) => r.classList.remove('off'));
         onShowAll();
       });
-      const note = el('div', 'legend-note', `Tower = ${meta.towerThresholdM} m or taller, any use.`);
-      legend.appendChild(note);
+      typeSec.appendChild(el('div', 'legend-note', `Tower = ${meta.towerThresholdM} m or taller, any use.`));
+      legend.appendChild(typeSec);
+
+      const vac = meta.vacancy || { buildings: {}, lots: {} };
+      const vacSec = el('div', 'legend-sec hidden');
+      vacSec.appendChild(el('div', 'legend-head', 'Parcel vacancy <span class="sub">buildings · lots</span>'));
+      for (const c of VACANCY_CLASSES) {
+        const b = (vac.buildings[c.key] ?? 0).toLocaleString();
+        const l = c.key in vac.lots ? vac.lots[c.key].toLocaleString() : '–';
+        addRow(vacSec, c.color, c.label, `${b} · ${l}`, (off) => onToggleVac(c.code, off), (on) => onFocusVac(on ? c.code : -1));
+      }
+      vacSec.appendChild(el('div', 'legend-note',
+        '<b>Vacant lot</b>: the team Parcel Planner release marks the parcel vacant (empty ones are hatched red on the ground). <b>Closed businesses</b>: every Google Maps business in the building is closed (Drive Places data).'));
+      legend.appendChild(vacSec);
       hud.appendChild(legend);
+
+      let colorBy = 'type';
+      const setColorBy = (mode) => {
+        colorBy = mode;
+        for (const b of tabs.querySelectorAll('button')) b.classList.toggle('on', b.dataset.mode === mode);
+        typeSec.classList.toggle('hidden', mode !== 'type');
+        vacSec.classList.toggle('hidden', mode !== 'vacancy');
+        vacBtn?.classList.toggle('on', mode === 'vacancy');
+        onColorBy(mode);
+      };
+      tabs.addEventListener('click', (e) => { if (e.target.dataset.mode) setColorBy(e.target.dataset.mode); });
+      let vacBtn = null;
 
       // ---- jump-to
       const jump = el('div', 'panel jump');
@@ -116,6 +155,10 @@ export function createUI(root) {
       const lines = el('button', 'tb toggle on', 'Outlines<kbd>O</kbd>');
       lines.addEventListener('click', () => onOutlines(lines.classList.toggle('on')));
       bar.appendChild(lines);
+      vacBtn = el('button', 'tb toggle', 'Vacancy<kbd>V</kbd>');
+      vacBtn.title = 'Colour buildings and lots by parcel vacancy (V)';
+      vacBtn.addEventListener('click', () => setColorBy(colorBy === 'vacancy' ? 'type' : 'vacancy'));
+      bar.appendChild(vacBtn);
       bar.appendChild(el('span', 'sep'));
       const focus = el('button', 'tb toggle on', 'Focus<kbd>F</kbd>');
       focus.title = 'Full detail inside the clear radius, blurred low-detail city outside (F)';
@@ -139,7 +182,7 @@ export function createUI(root) {
 
       // ---- help + attribution
       hud.appendChild(el('div', 'panel help',
-        '<b>Click</b> building info · <b>Drag</b> pan · <b>Wheel</b> zoom · <b>Q/E</b> rotate · <b>WASD</b> move · <b>1–5</b> camera'));
+        '<b>Click</b> building info · <b>Drag</b> pan · <b>Wheel</b> zoom · <b>Q/E</b> rotate · <b>WASD</b> move · <b>1–5</b> camera · <b>V</b> vacancy'));
       hud.appendChild(el('div', 'attrib',
         meta.sources.map((s) => `<a href="${s.url}" target="_blank" rel="noopener">${s.name}</a>`).join(' · ')));
 
@@ -149,9 +192,11 @@ export function createUI(root) {
       card.setAttribute('aria-label', 'Building details');
       hud.appendChild(card);
       let onCardClose = () => {};
+      // codes from vacancy.bin (see VACANCY_CLASSES)
       const LOT = {
-        1: ['vacant', 'Vacant lot', 'No recorded use on this lot'],
-        2: ['occupied', 'Not vacant', 'Lot has a recorded use'],
+        2: ['vacant', 'Vacant lot', 'No recorded use on this lot'],
+        3: ['closed', 'Closed businesses', 'Every listed business here is closed'],
+        1: ['occupied', 'Not vacant', 'Lot has a recorded use'],
         0: ['unknown', 'Unknown', 'No land-use record for this lot'],
       };
 
@@ -160,14 +205,14 @@ export function createUI(root) {
           onCardClose = onClose;
           const t = meta.types[type] || { label: 'Building', color: '#ccc' };
           const [cls, head, sub] = lot == null
-            ? ['unknown', 'Unavailable', 'Rebuild data (npm run data) for lot status']
+            ? ['unknown', 'Unavailable', 'Rebuild data (npm run data) for vacancy']
             : LOT[lot] || LOT[0];
           card.innerHTML = `
             <button class="bcard-x" aria-label="Close">×</button>
             <div class="bcard-type"><span class="sw" style="--c:${t.color}"></span>${t.label}</div>
-            <div class="bcard-row"><span class="k">Lot</span><span class="pill ${cls}">${head}</span></div>
+            <div class="bcard-row"><span class="k">Status</span><span class="pill ${cls}">${head}</span></div>
             <div class="bcard-sub">${sub}</div>
-            <div class="bcard-note">Source: SF Planning land use. Exact location is not shown.</div>`;
+            <div class="bcard-note">Source: Parcel Planner release (SF land use, Google Maps closures). Exact location is not shown.</div>`;
           card.querySelector('.bcard-x').addEventListener('click', () => onCardClose());
           card.classList.remove('hidden');
         },
@@ -188,6 +233,7 @@ export function createUI(root) {
         toggleTrees() { trees.click(); },
         toggleFocus() { focus.click(); },
         toggleOutlines() { lines.click(); },
+        toggleVacancy() { vacBtn.click(); },
         setGpu(name) { title.querySelector('.t2').insertAdjacentHTML('beforeend', ` · <span class="gpu">${name}</span>`); },
       };
     },

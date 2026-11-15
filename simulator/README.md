@@ -1,6 +1,6 @@
 # San Francisco 3D city model (simulator part 1)
 
-A browser 3D model of all of San Francisco: 173k buildings at measured heights, color-coded by building type. The model also includes real terrain and bay bathymetry, OSM streets and bridges, parks, 40k trees, and the Golden Gate Bridge and Sutro Tower. It runs on Three.js with the six-mode camera rig in `src/camera.js`: isometric, top-down, Clash-style 3/4, street, drone, and ride.
+A browser 3D model of all of San Francisco: 173k buildings at measured heights, color-coded by building type. The model also includes real terrain and bay bathymetry, OSM streets and bridges, parks, 40k trees, and the Golden Gate Bridge and Sutro Tower. It runs on Three.js with the six-mode camera rig in `src/camera.js`: Default (the Clash-style 3/4 view), isometric, top-down, street, drone, and ride.
 
 ## Run it
 
@@ -11,7 +11,7 @@ npm run data   # one-time: downloads sources (~200 MB, cached) and writes public
 npm run dev    # http://localhost:5173
 ```
 
-`npm run data` needs Python 3.11+ with `numpy` and `Pillow`, plus `curl` on PATH. All downloads go through curl, so Python's certificate store is not involved. A rebuild from the cache takes about 2 minutes.
+`npm run data` needs Python 3.11+ with `numpy`, `Pillow` and `pyarrow`, plus `curl` on PATH. It also needs the Parcel Planner data release from the team Google Drive in `../data/artifacts/person2/`. All downloads go through curl, so Python's certificate store is not involved. A rebuild from the cache takes about 2 minutes.
 
 ## Controls
 
@@ -21,15 +21,42 @@ npm run dev    # http://localhost:5173
 | Wheel | Zoom toward the cursor |
 | `Q` / `E` | Rotate the view 90° |
 | `W A S D` / arrows | Move across the ground |
-| `1`–`5` | Isometric · Top-down · Clash 3/4 · Street · Drone |
+| `1`–`5` | Default (3/4 strategy view) · Isometric · Top-down · Street · Drone |
+| `V` / legend tab | Colour by building type ↔ by parcel vacancy |
 | `T` | Real hills ↔ flat game board |
 | `G` | Trees on/off |
 | `F` / slider | Focus mode on/off and its clear radius (300 m – 4 km) |
 | `O` | Building outlines on/off |
 | Legend | Click a type to hide it, hover to highlight it |
-| Click a building | Yellow outline and glow, plus a card with its type and lot status (vacant / not vacant / unknown). `Esc`, `×` or clicking open ground closes it. The card never shows an address, coordinates or parcel number. |
+| Click a building | Yellow outline and glow, plus a card with its type and vacancy status from `vacancy.bin` (vacant lot / closed businesses / not vacant / unknown). `Esc`, `×` or clicking open ground closes it. The card never shows an address, coordinates or parcel number. |
 
 In the browser console, `__sf.jump(lon, lat, viewHeightMeters, mode)` moves the camera.
+
+## Vacancy view
+
+Press `V`, or use the legend's **Vacancy** tab, to colour the city by vacancy instead of building type. Vacant lots without a building are hatched red on the ground.
+
+The data comes from the team's Parcel Planner data release (the shared Google Drive folder `parcel-planner-data`). `npm run data` reads it from `../data/artifacts/person2/`; set `PARCEL_PLANNER_DATA` to read it from somewhere else.
+
+| Colour | Class | Rule |
+|---|---|---|
+| Red | Vacant lot | `parcels.geoparquet` `vacancy_status = source_indicated_vacant`: coded VACANT in 2023 and no recorded use now. |
+| Orange | Closed businesses | Every Google Maps business matched to the building is closed, permanently or temporarily (`places.parquet` `closure_status`). A place is matched to the footprint containing it, or to the nearest wall within 6 m. |
+| Pale blue | Occupied | `vacancy_status = not_vacant`. |
+| Grey | Unknown | `vacancy_status = unknown`, or no parcel match. |
+
+Current counts:
+
+| Class | Buildings | Lots |
+|---|---|---|
+| Vacant lot | 853 | 4,581 |
+| Closed businesses | 510 | – |
+| Occupied | 165,589 | 148,285 |
+| Unknown | 6,486 | 2,161 |
+
+21,773 of the 24,909 SF Google Maps places matched a building.
+
+`npm run data` writes `public/data/vacancy.bin` (one byte per building, in `buildings.bin` order) and `public/data/vacant.png` (a mask of the vacant lots).
 
 ## Focus mode (clear radius)
 
@@ -70,8 +97,7 @@ The bay's colour comes from depth in the elevation data, with animated surf alon
 | Layer | Source | Notes |
 |---|---|---|
 | Footprints and heights | [DataSF Building Footprints](https://data.sfgov.org/d/ynuv-fyni) | LiDAR median roof height per footprint. San Mateo County footprints (`SM*`) are dropped. |
-| Building type | [SF Land Use 2023](https://data.sfgov.org/d/fdfd-xptc) | Joined on map-block-lot (97% of footprints match). Anything 50 m or taller is classed as a **Tower**, whatever its use. |
-| Lot status (click card) | [SF Land Use 2023](https://data.sfgov.org/d/fdfd-xptc) + [current SF Land Use](https://data.sfgov.org/d/c5ge-t6pj) | Same rule as the Parcel Planner pipeline: **vacant** only with the 2023 `VACANT` code and no recorded use in the current snapshot; any current recorded use means not vacant. Written to `buildings_info.bin` (one byte per building). Footprints are from 2016 LiDAR, so a few buildings stand on lots now recorded as vacant (e.g. since demolished or unused). |
+| Building type | Parcel Planner release `parcels.geoparquet` (team Drive): `landuse_2023` and `residential_units_2023`, falling back to `current_uses` | Joined on map-block-lot. Anything 50 m or taller is classed as a **Tower**, whatever its use. |
 | Newer towers | OpenStreetMap `height` / `building:levels` | The LiDAR flight is from 2010. Footprints whose LiDAR *peak* is under 60% of the OSM height take the OSM height (47 buildings, e.g. Salesforce Tower at 326 m and 181 Fremont). Tall OSM buildings with no footprint are added (124). |
 | Roof shapes | LiDAR max/mean vs. median | Hipped roofs (13k small rectangular buildings), stepped podium+tower (96), tapered (Transamerica). |
 | Streets, bridges, parks, beaches, lakes, piers | OpenStreetMap (Overpass) | Bridge decks are interpolated between their ground anchors. The Golden Gate deck is fixed at 67 m. |
@@ -84,9 +110,9 @@ Building type mapping (`classify()` in `pipeline/build_data.py`):
 | Type | Rule |
 |---|---|
 | Tower / high-rise | Height ≥ 50 m |
-| Apartment / condo | Residential APTS / CONDO / SRO, or ≥ 5 units |
-| Flats | Residential FLATS, or 2–4 units |
-| House | Residential, single unit |
+| Apartment / condo | Residential, 5 or more units |
+| Flats | Residential, 2–4 units |
+| House | Residential, 0–1 units |
 | Mixed-use | MIXRES |
 | Retail / commercial | RETAIL/ENT, MIXED |
 | Office | MIPS |

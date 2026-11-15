@@ -220,7 +220,7 @@ export function pickBuilding(index, ray, shared, groundAt) {
       const b = index.cellItems[k];
       if (index.stamp[b] === pass) continue;
       index.stamp[b] = pass;
-      if (hidden[index.type[b]] > 0.5) continue;
+      if (hidden[index.type[b]] > 0.5 || (index.skip && index.skip(b))) continue;
       for (const part of buildingParts(index, b, shared)) {
         const t = hitPrism(part, o, d);
         if (t < best) { best = t; bestB = b; }

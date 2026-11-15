@@ -26,21 +26,25 @@ function checkMagic(buf, magic) {
 
 export async function loadCityData(onProgress = () => {}) {
   const base = `${import.meta.env.BASE_URL}data/`;
-  const parts = { meta: 0, terrain: 0, buildings: 0, roads: 0, trees: 0, lakes: 0 };
+  const parts = { meta: 0, terrain: 0, buildings: 0, roads: 0, trees: 0, lakes: 0, vacancy: 0 };
   const report = (k) => (p) => {
     parts[k] = p;
-    const w = { meta: 0.01, terrain: 0.15, buildings: 0.6, roads: 0.12, trees: 0.08, lakes: 0.04 };
+    const w = { meta: 0.01, terrain: 0.15, buildings: 0.58, roads: 0.12, trees: 0.08, lakes: 0.04, vacancy: 0.02 };
     onProgress(Object.keys(parts).reduce((s, key) => s + parts[key] * w[key], 0));
   };
   const meta = await (await fetch(base + 'meta.json')).json();
   report('meta')(1);
-  const [terrainBuf, buildingsBuf, roadsBuf, treesBuf, lakesBuf] = await Promise.all([
+  const [terrainBuf, buildingsBuf, roadsBuf, treesBuf, lakesBuf, vacancyBuf] = await Promise.all([
     fetchBuffer(base + 'terrain.bin', report('terrain')),
     fetchBuffer(base + 'buildings.bin', report('buildings')),
     fetchBuffer(base + 'roads.bin', report('roads')),
     fetchBuffer(base + 'trees.bin', report('trees')),
     fetchBuffer(base + 'lakes.bin', report('lakes')),
+    fetchBuffer(base + 'vacancy.bin', report('vacancy')),
   ]);
+  checkMagic(vacancyBuf, 'SFV1');
+  // one byte per building, in buildings.bin order: 0 unknown, 1 occupied, 2 vacant
+  const vacancy = new Uint8Array(vacancyBuf, 8, new DataView(vacancyBuf).getUint32(4, true));
   checkMagic(terrainBuf, 'SFH1');
   checkMagic(buildingsBuf, 'SFB2');
   checkMagic(roadsBuf, 'SFR1');
@@ -58,29 +62,12 @@ export async function loadCityData(onProgress = () => {}) {
   return {
     meta,
     terrain: { n, grid, extent, heights },
-    lotStatus: await loadLotStatus(base),
     buildingsBuf,
     roadsBuf,
     treesBuf,
     lakesBuf,
+    vacancy,
   };
-}
-
-/**
- * Optional per-building lot status (buildings_info.bin, SFI1): 0 unknown, 1 vacant, 2 occupied.
- * Returns null for older data builds; the dev server answers missing files with index.html.
- */
-async function loadLotStatus(base) {
-  try {
-    const res = await fetch(base + 'buildings_info.bin');
-    if (!res.ok) return null;
-    const buf = await res.arrayBuffer();
-    if (buf.byteLength < 8 || new TextDecoder().decode(new Uint8Array(buf, 0, 4)) !== 'SFI1') return null;
-    const n = new DataView(buf).getUint32(4, true);
-    return new Uint8Array(buf, 8, n);
-  } catch {
-    return null;
-  }
 }
 
 /** Bilinear terrain sample (metres) at world x/z - identical to the pipeline's sampler. */

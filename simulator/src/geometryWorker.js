@@ -25,6 +25,8 @@ class Grow {
 // ---------------------------------------------------------------------------
 // Buildings
 // ---------------------------------------------------------------------------
+let CUR_VAC = 0; // vacancy code of the building being emitted (0 unknown, 1 occupied, 2 vacant)
+
 class BuildingChunk {
   constructor(cx, cz, ox, oz, Q) {
     Object.assign(this, { cx, cz, ox, oz, Q });
@@ -42,7 +44,7 @@ class BuildingChunk {
   vert(x, y, z, u, elev, wallTop, type, seed) {
     const Q = this.Q;
     this.pos.push3(Math.round((x - this.ox) / Q), Math.round(y / Q), Math.round((z - this.oz) / Q));
-    this.ue.push4(Math.round(u * 20), Math.round(elev * 10), Math.round(wallTop * 10), 0);
+    this.ue.push4(Math.round(u * 20), Math.round(elev * 10), Math.round(wallTop * 10), CUR_VAC);
     this.meta.push2(type, seed);
     this.ctr.push2(this.cur[0], this.cur[1]);
     const top = elev + y;
@@ -156,7 +158,7 @@ function emitHipRoof(ch, p, y, rise, elev, type, seed) {
   face([[D, y], [A, y], [r0, top]]);
 }
 
-function buildBuildings(buf, CH, EXT, post, part = 'both') {
+function buildBuildings(buf, CH, EXT, post, part = 'both', vacancy = null) {
   const doFull = part !== 'lod', doLod = part !== 'full';
   const dv = new DataView(buf);
   const count = dv.getUint32(4, true);
@@ -199,6 +201,7 @@ function buildBuildings(buf, CH, EXT, post, part = 'both') {
       }
       rings.push(p);
     }
+    CUR_VAC = vacancy && b < vacancy.length ? vacancy[b] : 0;
     seedState = (seedState * 1103515245 + 12345) & 0x7fffffff;
     const seed = seedState & 255;
     const outer = rings[0];
@@ -471,7 +474,7 @@ function buildRoads(buf, CH, EXT, sampleGround, post) {
 
 self.onmessage = (e) => {
   // part: 'full' = detailed buildings + roads, 'lod' = low-detail stand-ins (run in a second worker)
-  const { buildingsBuf, roadsBuf, terrain, chunkSize, part = 'both' } = e.data;
+  const { buildingsBuf, roadsBuf, terrain, chunkSize, part = 'both', vacancy = null } = e.data;
   const post = (m) => self.postMessage(m);
   const { n, grid, extent, heights } = terrain;
   const sampleGround = (x, z) => {
@@ -484,7 +487,7 @@ self.onmessage = (e) => {
     return a * (1 - v) + b * v;
   };
   try {
-    const buildings = buildBuildings(buildingsBuf, chunkSize, extent, post, part);
+    const buildings = buildBuildings(buildingsBuf, chunkSize, extent, post, part, vacancy);
     const roads = part === 'lod' ? [] : buildRoads(roadsBuf, chunkSize, extent, sampleGround, post);
     const transfers = [];
     for (const c of [...buildings.full, ...buildings.lod]) transfers.push(c.pos.buffer, c.ue.buffer, c.meta.buffer, c.ctr.buffer, c.idx.buffer);
