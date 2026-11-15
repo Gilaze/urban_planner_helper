@@ -1,0 +1,58 @@
+{
+  "version": "final-geographic-holdout-1",
+  "purpose": "Final evaluation of the previously frozen review-activity predictor, after SF became exposed development evidence",
+  "frozen_before_new_holdout_metrics": true,
+  "model_source": "demo/parcel-planner-data-0.1.1.zip:data/artifacts/release/review_activity_model.joblib",
+  "report_source": "demo/parcel-planner-data-0.1.1.zip:data/artifacts/release/model_report.json",
+  "training_cities": [
+    "Oakland",
+    "Berkeley"
+  ],
+  "previously_exposed_evaluation_city": "San Francisco",
+  "holdout_rule": "All candidate-category, not-permanently-closed Places outside Oakland/Berkeley/San Francisco, inside a TIGER incorporated city (LSAD 25), and inside a supplied ACS tract in Alameda, Contra Costa, Marin or San Mateo county. No sampling or selection by review count, error or model performance.",
+  "holdout_county_fips": [
+    "001",
+    "013",
+    "041",
+    "081"
+  ],
+  "learned_categories": [
+    "clinic",
+    "grocery"
+  ],
+  "fallback_categories": [
+    "pharmacy",
+    "bank_credit_union"
+  ],
+  "excluded_target_category": "school",
+  "target": "log1p(Places.reviews_count)",
+  "primary_metric": "Unweighted macro-average RMSE across clinic and grocery, each compared with the frozen category-median baseline",
+  "secondary_metrics": [
+    "Per-category RMSE",
+    "Per-category MAE",
+    "Per-category Spearman",
+    "Frozen deployment-policy RMSE"
+  ],
+  "subgroups": "Each of the four holdout counties; low/high/missing income at frozen Oakland+Berkeley threshold $106938; low/high/missing population density at frozen threshold 5583.172577533759 per km2",
+  "minimum_subgroup_n": 30,
+  "failure_examples": "Ten largest absolute log-count errors, stable tie-break by place_id",
+  "no_tuning": "Do not refit, change parameters, choose categories, alter labels, update feature rules or switch deployment policy using these results. Report results even if baseline wins.",
+  "context_disclosure": "Bay Area business coordinates and non-target service tags were already used as spatial context. New holdout review-count labels and performance were excluded from the original three-city feature/fit/evaluation pipeline. This is label-held-out evaluation in known geographic context, not wholly unseen source data.",
+  "manual_review": "Team confirms personal review of the existing 160-listing category sample. Checker audit and Data responses remain linked; unresolved cases must remain disclosed.",
+  "eligibility_boundary": "Evidence supports an Advanced Track submission; organizers decide eligibility. This protocol does not erase prior SF exposure.",
+  "frozen_at_utc": "2026-11-15T20:11:33.841762+00:00",
+  "code_commit": "a6f5afb6cdeaa27124420569aa1c5c023ebf33d9",
+  "sha256": {
+    "config/categories.yaml": "a6aab3223ade3ee8414298bb26ec0a7270ef21c8821f4b85d554d51ef00c6614",
+    "pipeline/src/parcel_pipeline/features.py": "1df12a1eccdeec5f26fbf7256f4d9d5e93052fa4f8c5f76c2d1a3008b322560a",
+    "pipeline/src/parcel_pipeline/model.py": "3654e173178de5a1fbbf4feb91755c8a2788415ac134c3c41b5029bb0e4d41f7",
+    "pipeline/src/parcel_pipeline/settings.py": "5c10ff235c37cb5262207b7d09cc5710453dc8718e830fad80b861a43b495c2c",
+    "pipeline/uv.lock": "67537bc2031380660252fca31959aabbff2cf384bb199c9770c32811bf1d506a",
+    "data/raw/census/tl_2024_06_place.zip": "81b827124043164a93d442f6dc4c088fd56c319da14195e4a14ab0fb39656a42",
+    "data/raw/census/tl_2024_06_tract.zip": "8ad60e582b4d61be94ac072a4dd80d763255c0c987c616c7e6f9ffc7ee0bd318",
+    "data/raw/census/acs_2024_tract.csv": "9f8ae724b8159ad9e5208292c18b2b49ec768b376589e6a69d221bfcba800a0e",
+    "data/artifacts/release/review_activity_model.joblib": "0983302109146bc968bb7f7bfc49eedc08f31f4e47e449a51c8ed29f00c06c5f",
+    "data/artifacts/release/model_report.json": "3de37fe5389ce572b0d214e4b74b5fef25d6b9c4b491ffbb41ec4f91052ed8f5",
+    "artifacts/person2/places.parquet": "816c8584f346b24f8b52c065d9a19d3889c302edd58a5c3a703d0fd3a47203c2"
+  }
+}
