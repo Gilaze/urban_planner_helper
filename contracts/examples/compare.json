@@ -48,14 +48,14 @@
       },
       "sustainability": {
         "avoided_vehicle_miles_per_day": {
-          "base": 20.978233984795338,
-          "high": 62.934701954386014,
-          "low": 5.2445584961988345
+          "base": 20.978233984793007,
+          "high": 62.93470195437902,
+          "low": 5.244558496198252
         },
         "baseline_coverage_pct": 100.0,
         "censored_baseline_population": 0.0,
-        "distance_after_m": 469.0068048323657,
-        "distance_before_m": 826.2681275204764,
+        "distance_after_m": 469.00680483244327,
+        "distance_before_m": 826.2681275205143,
         "local_population": 945.0,
         "missing_baseline_population": 0.0,
         "reason": null,
@@ -103,14 +103,14 @@
       },
       "sustainability": {
         "avoided_vehicle_miles_per_day": {
-          "base": 20.126834819375055,
-          "high": 60.380504458125166,
-          "low": 5.031708704843764
+          "base": 20.126834819374412,
+          "high": 60.38050445812324,
+          "low": 5.031708704843603
         },
         "baseline_coverage_pct": 100.0,
         "censored_baseline_population": 0.0,
-        "distance_after_m": 394.5648785143484,
-        "distance_before_m": 737.3267923297169,
+        "distance_after_m": 394.564878514426,
+        "distance_before_m": 737.3267923297836,
         "local_population": 945.0,
         "missing_baseline_population": 0.0,
         "reason": null,
@@ -162,14 +162,14 @@
       },
       "sustainability": {
         "avoided_vehicle_miles_per_day": {
-          "base": 18.231840716538578,
-          "high": 54.695522149615734,
-          "low": 4.5579601791346445
+          "base": 18.2318407165384,
+          "high": 54.6955221496152,
+          "low": 4.5579601791346
         },
         "baseline_coverage_pct": 100.0,
         "censored_baseline_population": 0.0,
-        "distance_after_m": 419.4950877461044,
-        "distance_before_m": 729.985071514539,
+        "distance_after_m": 419.49508774618204,
+        "distance_before_m": 729.9850715146137,
         "local_population": 945.0,
         "missing_baseline_population": 0.0,
         "reason": null,
@@ -221,14 +221,14 @@
       },
       "sustainability": {
         "avoided_vehicle_miles_per_day": {
-          "base": 19.673352330915225,
-          "high": 59.02005699274568,
-          "low": 4.918338082728806
+          "base": 19.67335233091214,
+          "high": 59.02005699273643,
+          "low": 4.918338082728035
         },
         "baseline_coverage_pct": 100.0,
         "censored_baseline_population": 0.0,
-        "distance_after_m": 448.20833103885553,
-        "distance_before_m": 783.2473948869448,
+        "distance_after_m": 448.2083310389331,
+        "distance_before_m": 783.2473948869698,
         "local_population": 945.0,
         "missing_baseline_population": 0.0,
         "reason": null,
@@ -280,14 +280,14 @@
       },
       "sustainability": {
         "avoided_vehicle_miles_per_day": {
-          "base": 8.988492331624576,
-          "high": 26.965476994873725,
-          "low": 2.247123082906144
+          "base": 8.988492331624455,
+          "high": 26.965476994873363,
+          "low": 2.2471230829061137
         },
         "baseline_coverage_pct": 100.0,
         "censored_baseline_population": 0.0,
-        "distance_after_m": 448.4517435433924,
-        "distance_before_m": 601.5266239978477,
+        "distance_after_m": 448.45174354347,
+        "distance_before_m": 601.5266239979231,
         "local_population": 945.0,
         "missing_baseline_population": 0.0,
         "reason": null,
