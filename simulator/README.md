@@ -1,6 +1,6 @@
 # San Francisco 3D city model (simulator part 1)
 
-A browser 3D model of all of San Francisco: 173k buildings at measured heights, color-coded by building type. The model also includes real terrain and bay bathymetry, OSM streets and bridges, parks, 40k trees, and the Golden Gate Bridge and Sutro Tower. It runs on Three.js with the six-mode camera rig in `src/camera.js`: isometric, top-down, Clash-style 3/4, street, drone, and ride.
+A browser 3D model of all of San Francisco: 173k buildings at measured heights, color-coded by building type. The model also includes real terrain and bay bathymetry, OSM streets and bridges, parks, 40k trees, and the Golden Gate Bridge and Sutro Tower. It runs on Three.js with the six-mode camera rig in `src/camera.js`: Default (the Clash-style 3/4 view), isometric, top-down, street, drone, and ride.
 
 ## Run it
 
@@ -21,7 +21,8 @@ npm run dev    # http://localhost:5173
 | Wheel | Zoom toward the cursor |
 | `Q` / `E` | Rotate the view 90° |
 | `W A S D` / arrows | Move across the ground |
-| `1`–`5` | Isometric · Top-down · Clash 3/4 · Street · Drone |
+| `1`–`5` | Default (3/4 strategy view) · Isometric · Top-down · Street · Drone |
+| `V` / legend tab | Colour by building type ↔ by parcel vacancy |
 | `T` | Real hills ↔ flat game board |
 | `G` | Trees on/off |
 | `F` / slider | Focus mode on/off and its clear radius (300 m – 4 km) |
@@ -29,6 +30,28 @@ npm run dev    # http://localhost:5173
 | Legend | Click a type to hide it, hover to highlight it |
 
 In the browser console, `__sf.jump(lon, lat, viewHeightMeters, mode)` moves the camera.
+
+## Vacancy view
+
+Press `V`, or use the legend's **Vacancy** tab, to colour the city by parcel vacancy instead of building type. Buildings on vacant lots turn red, occupied ones pale blue, and unknown ones grey. Vacant lots without a building are hatched red on the ground.
+
+The rule is the same one the Parcel Planner pipeline uses (`pipeline/src/parcel_pipeline/sources/sf.py`):
+
+| Status | Rule |
+|---|---|
+| Vacant | The lot is coded `VACANT` in the 2023 land-use survey (`fdfd-xptc`) and has no recorded use in the current land-use parcel data (`c5ge-t6pj`). |
+| Occupied | The current data records any use: residential units, any commercial floor area, parking, or open space. Lots with a 2023 use that are absent from the current data also count. |
+| Unknown | Everything else, including buildings with no parcel match. |
+
+Current counts:
+
+| Status | Lots | Buildings |
+|---|---|---|
+| Vacant | 4,591 | 856 |
+| Occupied | 148,478 | 166,425 |
+| Unknown | 1,770 | 6,157 |
+
+`npm run data` writes `public/data/vacancy.bin` (one byte per building, in `buildings.bin` order) and `public/data/vacant.png` (a mask of the vacant lots).
 
 ## Focus mode (clear radius)
 

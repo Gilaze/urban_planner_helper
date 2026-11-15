@@ -20,6 +20,7 @@ import os
 import struct
 import subprocess
 import sys
+import urllib.parse
 from collections import Counter, defaultdict
 
 import numpy as np
@@ -404,12 +405,86 @@ def classify(lu, height, area):
 # ---------------------------------------------------------------------------
 # 3. Downloads
 # ---------------------------------------------------------------------------
+VACANCY_CODES = {"unknown": 0, "not_vacant": 1, "vacant": 2}
+
+
+def vacancy_by_lot(landuse_2023, current_rows):
+    """Per-lot vacancy, same rule as pipeline/src/parcel_pipeline/sources/sf.py (the Parcel Planner):
+    vacant      = 2023 land use coded VACANT and the current snapshot (c5ge-t6pj) records no use
+    not_vacant  = current snapshot records any use, or 2023 records a use and the lot is absent now
+    unknown     = everything else
+    """
+    def num(v):
+        try:
+            return float(v)
+        except (TypeError, ValueError):
+            return 0.0
+
+    def flag(v):
+        return str(v).strip().lower() in {"true", "1", "yes"}
+
+    current = {}
+    for r in current_rows:
+        lot = (r.get("mapblklot") or "").strip().upper()
+        if not lot or r.get("geography_type") != "parcel":
+            continue
+        used = (num(r.get("resunits")) > 0 or any(num(r.get(k)) > 0 for k in ("cie", "med", "mips", "retail", "pdr", "visitor"))
+                or flag(r.get("parking_lo")) or flag(r.get("garage")) or flag(r.get("open_space")) or num(r.get("total_comm")) > 0)
+        current[lot] = current.get(lot, False) or used  # any recorded use wins
+    status = {}
+    for lot in set(landuse_2023) | set(current):
+        lu = landuse_2023.get(lot)
+        code = (lu or {}).get("landuse")
+        in_current = lot in current
+        if in_current and current[lot]:
+            status[lot] = "not_vacant"
+        elif code == "VACANT" and in_current:
+            status[lot] = "vacant"
+        elif code and code != "VACANT" and not in_current:
+            status[lot] = "not_vacant"
+        else:
+            status[lot] = "unknown"
+    return status
+
+
+def fetch_vacant_lot_shapes(lots):
+    """Outlines of the vacant lots (current land use parcel geometry), cached."""
+    path = os.path.join(CACHE, "vacant_lots.json")
+    if os.path.exists(path):
+        with open(path, encoding="utf-8") as f:
+            cached = json.load(f)
+        if set(cached) >= set(lots):
+            return cached
+    shapes = {}
+    lots = sorted(lots)
+    for i in range(0, len(lots), 150):
+        chunk = lots[i:i + 150]
+        where = "geography_type='parcel' AND mapblklot in (" + ",".join(f"'{l}'" for l in chunk) + ")"
+        tmp = os.path.join(CACHE, "vacant_chunk.json")
+        if os.path.exists(tmp):
+            os.remove(tmp)
+        url = ("https://data.sf.gov/resource/c5ge-t6pj.json?$select=mapblklot,the_geom&$limit=5000&$where="
+               + urllib.parse.quote(where))
+        fetch(url, tmp)
+        with open(tmp, encoding="utf-8") as f:
+            for r in json.load(f):
+                if r.get("the_geom"):
+                    shapes[r["mapblklot"]] = r["the_geom"]
+    os.remove(os.path.join(CACHE, "vacant_chunk.json"))
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(shapes, f)
+    return shapes
+
+
 def download_sources():
     for off in (0, 50000, 100000, 150000):
         fetch("https://data.sfgov.org/resource/ynuv-fyni.geojson?"
               "$select=sf16_bldgid,mblr,hgt_median_m,hgt_maxcm,hgt_meancm,gnd_min_m,shape"
               f"&$order=sf16_bldgid&$limit=50000&$offset={off}",
               os.path.join(CACHE, f"footprints_{off}.geojson"))
+    fetch("https://data.sf.gov/resource/c5ge-t6pj.json?$select=mapblklot,geography_type,resunits,cie,med,mips,"
+          "retail,pdr,visitor,total_comm,parking_lo,garage,open_space,data_as_of&$where=geography_type='parcel'"
+          "&$limit=300000", os.path.join(CACHE, "current_landuse.json"))
     fetch("https://data.sfgov.org/resource/fdfd-xptc.json?"
           "$select=mapblklot,landuse,restype,resunits,res,totalcomm,retail,cie,med,pdr,visitor,mips&$limit=200000",
           os.path.join(CACHE, "landuse.json"))
@@ -523,6 +598,12 @@ def main():
         with open(fn, encoding="utf-8") as f:
             feats += json.load(f)["features"]
     log(f"  footprints read: {len(feats)}, land-use parcels: {len(landuse)}")
+    with open(os.path.join(CACHE, "current_landuse.json"), encoding="utf-8") as f:
+        lot_status = vacancy_by_lot(landuse, json.load(f))
+    vac_counts_lots = Counter(lot_status.values())
+    log(f"  lot vacancy: {dict(vac_counts_lots)}")
+    vac_out = bytearray()
+    cur_vac = [0]
 
     osm_tall = load_osm_tall()
     log(f"  OSM buildings with heights >= 18 m: {len(osm_tall)}")
@@ -562,6 +643,7 @@ def main():
         counts[tid] += 1
         roof_counts[roof_kind] += 1
         heights_by_type[tid].append(height + roof)
+        vac_out.append(cur_vac[0])
 
     def ground_for(outer):
         gs = hsample(H, outer[:, 0], outer[:, 1])
@@ -582,6 +664,7 @@ def main():
         peak = max(height, float(p.get("hgt_maxcm") or 0) / 100.0)
         mean = max(height, float(p.get("hgt_meancm") or 0) / 100.0)
         lu = landuse.get(mblr[2:]) if mblr.startswith("SF") else None
+        cur_vac[0] = VACANCY_CODES[lot_status.get(mblr[2:], "unknown")] if mblr.startswith("SF") else 0
         if lu is not None:
             n_join += 1
         polys = g["coordinates"] if g["type"] == "MultiPolygon" else [g["coordinates"]]
@@ -634,6 +717,7 @@ def main():
             bdraw.polygon(to_px(outer[:, 0], outer[:, 1], LC_RES), fill=255)
 
     # Tall buildings completed after the 2016 footprint survey exist only in OSM.
+    cur_vac[0] = 0
     n_added = 0
     for i, b in enumerate(osm_tall):
         if i in osm_matched or b["h"] < 25 or b["tag"] in ("tower", "construction", "roof"):
@@ -668,6 +752,26 @@ def main():
         f.write(b"SFB2" + struct.pack("<If", n_written, Q))
         f.write(out)
     log(f"  buildings written {n_written}, land-use join {n_join}, {len(out) / 1e6:.1f} MB")
+    assert len(vac_out) == n_written
+    with open(os.path.join(OUT, "vacancy.bin"), "wb") as f:
+        f.write(b"SFV1" + struct.pack("<I", n_written))
+        f.write(vac_out)
+    vac_counts_bldg = Counter(vac_out)
+    log(f"  building vacancy (0 unknown, 1 occupied, 2 vacant): {dict(vac_counts_bldg)}")
+
+    # Vacant lots painted on the ground (most vacant lots have no building to colour).
+    vacant_lots = [l for l, st in lot_status.items() if st == "vacant"]
+    shapes = fetch_vacant_lot_shapes(vacant_lots)
+    vimg = Image.new("L", (LC_RES * 2, LC_RES * 2), 0)
+    vdraw = ImageDraw.Draw(vimg)
+    for geom in shapes.values():
+        polys = geom["coordinates"] if geom["type"] == "MultiPolygon" else [geom["coordinates"]]
+        for poly in polys:
+            for k, ring in enumerate(poly):
+                xs, zs = proj([c[0] for c in ring], [c[1] for c in ring])
+                vdraw.polygon(to_px(xs, zs, LC_RES * 2), fill=255 if k == 0 else 0)
+    Image.fromarray(np.asarray(vimg.resize((LC_RES, LC_RES), Image.BOX))).save(os.path.join(OUT, "vacant.png"), optimize=True)
+    log(f"  vacant lot outlines: {len(shapes)} of {len(vacant_lots)}")
     for i, t in enumerate(TYPES):
         hs = heights_by_type.get(i, [0])
         log(f"    {t[0]:<11} {counts[i]:>7}  median h {np.median(hs):5.1f} m  max {max(hs):6.1f} m")
@@ -716,10 +820,19 @@ def main():
         "axes": "+x east, +z south, +y up, metres",
         "extent": EXT, "grid": GRID, "terrainSize": N, "quantum": Q, "towerThresholdM": TOWER_M,
         "types": [{"id": t[0], "label": t[1], "color": t[2], "count": counts[i]} for i, t in enumerate(TYPES)],
+        "vacancy": {
+            "rule": "vacant = 2023 land use coded VACANT and no recorded use in the current land-use snapshot "
+                    "(c5ge-t6pj); occupied = any current recorded use, or a 2023 use and absent from the current "
+                    "snapshot; unknown = everything else (same rule as the Parcel Planner pipeline)",
+            "buildings": {"vacant": vac_counts_bldg[2], "not_vacant": vac_counts_bldg[1], "unknown": vac_counts_bldg[0]},
+            "lots": {k: vac_counts_lots[k] for k in ("vacant", "not_vacant", "unknown")},
+            "vacantLotShapes": len(shapes),
+        },
         "buildingCount": n_written, "heightsUpdatedFromOSM": n_override, "buildingsAddedFromOSM": n_added, "roadCount": n_roads, "treeCount": len(trees) // 8, "lakeCount": len(lake_records),
         "sources": [
             {"name": "DataSF Building Footprints (LiDAR heights)", "url": "https://data.sfgov.org/d/ynuv-fyni"},
             {"name": "DataSF San Francisco Land Use 2023", "url": "https://data.sfgov.org/d/fdfd-xptc"},
+            {"name": "DataSF San Francisco Land Use (current)", "url": "https://data.sf.gov/d/c5ge-t6pj"},
             {"name": "OpenStreetMap contributors (ODbL)", "url": "https://www.openstreetmap.org/copyright"},
             {"name": "AWS Terrain Tiles (Mapzen Terrarium; USGS 3DEP, NOAA)", "url": "https://registry.opendata.aws/terrain-tiles/"},
         ],

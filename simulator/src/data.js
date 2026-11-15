@@ -26,21 +26,25 @@ function checkMagic(buf, magic) {
 
 export async function loadCityData(onProgress = () => {}) {
   const base = `${import.meta.env.BASE_URL}data/`;
-  const parts = { meta: 0, terrain: 0, buildings: 0, roads: 0, trees: 0, lakes: 0 };
+  const parts = { meta: 0, terrain: 0, buildings: 0, roads: 0, trees: 0, lakes: 0, vacancy: 0 };
   const report = (k) => (p) => {
     parts[k] = p;
-    const w = { meta: 0.01, terrain: 0.15, buildings: 0.6, roads: 0.12, trees: 0.08, lakes: 0.04 };
+    const w = { meta: 0.01, terrain: 0.15, buildings: 0.58, roads: 0.12, trees: 0.08, lakes: 0.04, vacancy: 0.02 };
     onProgress(Object.keys(parts).reduce((s, key) => s + parts[key] * w[key], 0));
   };
   const meta = await (await fetch(base + 'meta.json')).json();
   report('meta')(1);
-  const [terrainBuf, buildingsBuf, roadsBuf, treesBuf, lakesBuf] = await Promise.all([
+  const [terrainBuf, buildingsBuf, roadsBuf, treesBuf, lakesBuf, vacancyBuf] = await Promise.all([
     fetchBuffer(base + 'terrain.bin', report('terrain')),
     fetchBuffer(base + 'buildings.bin', report('buildings')),
     fetchBuffer(base + 'roads.bin', report('roads')),
     fetchBuffer(base + 'trees.bin', report('trees')),
     fetchBuffer(base + 'lakes.bin', report('lakes')),
+    fetchBuffer(base + 'vacancy.bin', report('vacancy')),
   ]);
+  checkMagic(vacancyBuf, 'SFV1');
+  // one byte per building, in buildings.bin order: 0 unknown, 1 occupied, 2 vacant
+  const vacancy = new Uint8Array(vacancyBuf, 8, new DataView(vacancyBuf).getUint32(4, true));
   checkMagic(terrainBuf, 'SFH1');
   checkMagic(buildingsBuf, 'SFB2');
   checkMagic(roadsBuf, 'SFR1');
@@ -62,6 +66,7 @@ export async function loadCityData(onProgress = () => {}) {
     roadsBuf,
     treesBuf,
     lakesBuf,
+    vacancy,
   };
 }
 

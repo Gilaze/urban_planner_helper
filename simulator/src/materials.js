@@ -29,6 +29,11 @@ export function createShared(meta, terrain) {
     uClearCenter: { value: new THREE.Vector3() },
     uClearRadius: { value: 1e9 },
     uSunDir: { value: new THREE.Vector3(-0.55, 0.78, 0.42).normalize() },
+    // colour-by-vacancy view: palette indexed by vacancy code (0 unknown, 1 occupied, 2 vacant)
+    uVacancyMode: { value: 0 },
+    uVacColors: { value: [new THREE.Color('#E9E4DB'), new THREE.Color('#CFE2F3'), new THREE.Color('#FF5A4F')] },
+    uHiddenVac: { value: new Float32Array(3) },
+    uVacant: { value: null },
   };
 }
 
@@ -103,6 +108,9 @@ flat varying float vHalfLen;
 varying float vWallTop;
 flat varying float vType;
 flat varying float vSeed;
+flat varying float vVac;
+uniform float uVacancyMode;
+uniform float uHiddenVac[3];
 `;
 
 // Collapse a vertex to a degenerate point when its building is on the wrong side of the clear radius.
@@ -115,6 +123,10 @@ const clearSwitch = (lod) => /* glsl */ `
 `;
 const CLEAR_HEAD = /* glsl */ `
 attribute vec2 aCtr;
+#ifndef VAC_DECLARED
+uniform float uVacancyMode;
+uniform float uHiddenVac[3];
+#endif
 uniform vec3 uClearCenter;
 uniform float uClearRadius;
 `;
@@ -123,7 +135,9 @@ const buildingBegin = (Q, lod = false) => /* glsl */ `
 vec3 transformed = vec3(position);
 transformed.y += elevOf(aUE.y * 0.1) / ${Q.toFixed(4)};
 if (uHidden[int(aMeta.x + 0.5)] > 0.5) transformed = vec3(0.0);
+if (uVacancyMode > 0.5 && uHiddenVac[int(aUE.w + 0.5)] > 0.5) transformed = vec3(0.0);
 ${clearSwitch(lod)}
+vVac = aUE.w;
 vRelY = position.y * ${Q.toFixed(4)};
 vU = aUE.x * 0.05;
 vHalfLen = abs(vU);
@@ -137,6 +151,7 @@ const buildingDepthBegin = (Q) => /* glsl */ `
 vec3 transformed = vec3(position);
 transformed.y += elevOf(aUE.y * 0.1) / ${Q.toFixed(4)};
 if (uHidden[int(aMeta.x + 0.5)] > 0.5) transformed = vec3(0.0);
+if (uVacancyMode > 0.5 && uHiddenVac[int(aUE.w + 0.5)] > 0.5) transformed = vec3(0.0);
 ${clearSwitch(false)}
 `;
 
@@ -150,7 +165,13 @@ flat varying float vHalfLen;
 varying float vWallTop;
 flat varying float vType;
 flat varying float vSeed;
+flat varying float vVac;
+uniform float uVacancyMode;
+uniform vec3 uVacColors[3];
 float gWin = 0.0;
+// colour key for this building: its type palette, or its parcel's vacancy class
+vec3 keyColor(int t) { return uVacancyMode > 0.5 ? uVacColors[int(vVac + 0.5)] : uPalette[t]; }
+float keyId() { return uVacancyMode > 0.5 ? vVac : vType; }
 
 // Facade grid per building type: floor height, column width, window width / column, window height / floor
 vec4 facadeParams(int t) {
@@ -173,7 +194,7 @@ const BUILDING_COLOR = /* glsl */ `
 vec3 wN = normalize(cross(dFdx(vWPos), dFdy(vWPos)));
 float upness = abs(wN.y);
 int t = int(vType + 0.5);
-vec3 base = uPalette[t] * (0.9 + 0.2 * vSeed);
+vec3 base = keyColor(t) * (0.9 + 0.2 * vSeed);
 vec3 trim = mix(base, vec3(1.0), 0.5);
 vec3 col;
 if (upness > 0.6) {
@@ -253,19 +274,21 @@ if (upness > 0.6) {
   col *= 0.93 + 0.07 * smoothstep(0.0, 30.0, y);
   col *= mix(0.8, 1.0, smoothstep(0.0, 0.7, vHalfLen - abs(vU)));
 }
-if (uFocus >= 0.0 && abs(vType - uFocus) > 0.5) {
+if (uFocus >= 0.0 && abs(keyId() - uFocus) > 0.5) {
   float l = dot(col, vec3(0.299, 0.587, 0.114));
   col = mix(col, vec3(l) * 0.9 + 0.12, 0.85);
 }
 diffuseColor.rgb = col;
 `;
 
+const VAC_KEYS = ['uVacancyMode', 'uVacColors', 'uHiddenVac'];
+
 export function createBuildingMaterials(shared, Q) {
   const mat = new THREE.MeshStandardMaterial({ roughness: 0.84, metalness: 0.0, flatShading: true });
   mat.onBeforeCompile = (shader) => {
-    withShared(shader, shared, ['uTerrain', 'uTime', 'uHeightTex', 'uTerrainInfo', 'uPalette', 'uHidden', 'uFocus', 'uClearCenter', 'uClearRadius']);
+    withShared(shader, shared, ['uTerrain', 'uTime', 'uHeightTex', 'uTerrainInfo', 'uPalette', 'uHidden', 'uFocus', 'uClearCenter', 'uClearRadius', ...VAC_KEYS]);
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', `#include <common>\n${COMMON}\n${BUILDING_VERT_HEAD}\n${CLEAR_HEAD}`)
+      .replace('#include <common>', `#include <common>\n${COMMON}\n${BUILDING_VERT_HEAD}\n#define VAC_DECLARED\n${CLEAR_HEAD}`)
       .replace('#include <beginnormal_vertex>', DUMMY_NORMAL)
       .replace('#include <begin_vertex>', buildingBegin(Q));
     shader.fragmentShader = shader.fragmentShader
@@ -278,7 +301,7 @@ export function createBuildingMaterials(shared, Q) {
 
   const depth = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking });
   depth.onBeforeCompile = (shader) => {
-    withShared(shader, shared, ['uTerrain', 'uHeightTex', 'uTerrainInfo', 'uHidden', 'uClearCenter', 'uClearRadius']);
+    withShared(shader, shared, ['uTerrain', 'uHeightTex', 'uTerrainInfo', 'uHidden', 'uClearCenter', 'uClearRadius', ...VAC_KEYS]);
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', `#include <common>\n${COMMON}\nattribute vec4 aUE;\nattribute vec2 aMeta;\nuniform float uHidden[16];\n${CLEAR_HEAD}`)
       .replace('#include <begin_vertex>', buildingDepthBegin(Q));
@@ -289,9 +312,9 @@ export function createBuildingMaterials(shared, Q) {
   // shading only - no window grid, no noise, no shadow lookups.
   const lod = new THREE.MeshLambertMaterial({ flatShading: true });
   lod.onBeforeCompile = (shader) => {
-    withShared(shader, shared, ['uTerrain', 'uHeightTex', 'uTerrainInfo', 'uPalette', 'uHidden', 'uFocus', 'uClearCenter', 'uClearRadius']);
+    withShared(shader, shared, ['uTerrain', 'uHeightTex', 'uTerrainInfo', 'uPalette', 'uHidden', 'uFocus', 'uClearCenter', 'uClearRadius', ...VAC_KEYS]);
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', `#include <common>\n${COMMON}\n${BUILDING_VERT_HEAD}\n${CLEAR_HEAD}`)
+      .replace('#include <common>', `#include <common>\n${COMMON}\n${BUILDING_VERT_HEAD}\n#define VAC_DECLARED\n${CLEAR_HEAD}`)
       .replace('#include <beginnormal_vertex>', DUMMY_NORMAL)
       .replace('#include <begin_vertex>', buildingBegin(Q, true));
     shader.fragmentShader = shader.fragmentShader
@@ -304,9 +327,9 @@ export function createBuildingMaterials(shared, Q) {
 
 const LOD_COLOR = /* glsl */ `
 vec3 wN = normalize(cross(dFdx(vWPos), dFdy(vWPos)));
-vec3 col = uPalette[int(vType + 0.5)] * (0.9 + 0.2 * vSeed);
+vec3 col = keyColor(int(vType + 0.5)) * (0.9 + 0.2 * vSeed);
 col = abs(wN.y) > 0.6 ? mix(col * 1.12, vec3(1.0), 0.06) : col * (0.86 + 0.14 * smoothstep(0.0, 30.0, vRelY));
-if (uFocus >= 0.0 && abs(vType - uFocus) > 0.5) col = mix(col, vec3(dot(col, vec3(0.299, 0.587, 0.114))) * 0.9 + 0.12, 0.85);
+if (uFocus >= 0.0 && abs(keyId() - uFocus) > 0.5) col = mix(col, vec3(dot(col, vec3(0.299, 0.587, 0.114))) * 0.9 + 0.12, 0.85);
 diffuseColor.rgb = col;
 `;
 
@@ -341,6 +364,9 @@ vSlope = 1.0 - objectNormal.y;
 const TERRAIN_FRAG_HEAD = /* glsl */ `
 uniform sampler2D uLandcover;
 uniform sampler2D uUrban;
+uniform sampler2D uVacant;
+uniform float uVacancyMode;
+uniform vec3 uVacColors[3];
 varying vec3 vWPos;
 varying float vH;
 varying float vSlope;
@@ -377,13 +403,24 @@ col = mix(col, parkCol, park);
 col = mix(col, forestCol, forest);
 col = mix(col, sandCol, sand);
 col = mix(col, seabed, 1.0 - smoothstep(-0.2, 0.7, vH));
+if (uVacancyMode > 0.5) {
+  // vacant lots: diagonal red hatching with a solid border so empty parcels stand out
+  float vm = texture2D(uVacant, luv).r;
+  float lot = crisp(vm);
+  float border = lot * (1.0 - smoothstep(0.62, 0.9, vm));
+  float hatch = step(0.5, fract((vWPos.x + vWPos.z) / 5.0));
+  vec3 vc = uVacColors[2];
+  vec3 fill = mix(mix(vc, vec3(1.0), 0.55), vc, hatch * 0.6);
+  col = mix(col, fill, lot * 0.9);
+  col = mix(col, vc * 0.8, border);
+}
 diffuseColor.rgb = col;
 `;
 
 export function createTerrainMaterials(shared) {
   const mat = new THREE.MeshStandardMaterial({ roughness: 0.95, metalness: 0.0 });
   mat.onBeforeCompile = (shader) => {
-    withShared(shader, shared, ['uTerrain', 'uTime', 'uHeightTex', 'uTerrainInfo', 'uLandcover', 'uUrban']);
+    withShared(shader, shared, ['uTerrain', 'uTime', 'uHeightTex', 'uTerrainInfo', 'uLandcover', 'uUrban', 'uVacant', 'uVacancyMode', 'uVacColors']);
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', `#include <common>\n${COMMON}\n${TERRAIN_VERT_HEAD}`)
       .replace('#include <beginnormal_vertex>', TERRAIN_NORMAL)
