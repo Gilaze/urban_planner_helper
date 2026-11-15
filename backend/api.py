@@ -12,6 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from .datasf import DataSF, DataSFParcels, ProviderUnavailable, datasf_client
 from .economics import load_assumptions
 from .geometry import massing, validate_bbox
+from .permits import PermitChecklist, PermitRequest, permit_checklist
 from .ranking import rank
 from .release import ROOT, FrozenRelease, Release, ReleaseInputs, freeze
 from .schemas import (
@@ -269,6 +270,11 @@ def create_app(
             limit=VIEWPORT_LIMIT,
             truncated=len(features) > VIEWPORT_LIMIT,
         )
+
+    @router.post("/permits/check", response_model=PermitChecklist, responses=parcel_errors)
+    def check_permits(payload: PermitRequest, request: Request):
+        parcel, _ = resolve_parcel(payload.parcel_id, request.app.state.release, request.app.state.parcel_provider)
+        return permit_checklist(parcel, payload, fixture=mode == "fixture")
 
     @router.post("/scenarios/compare", response_model=Comparison, responses=parcel_errors)
     def compare(payload: CompareRequest, request: Request, release: Release = Depends(require_release)):
