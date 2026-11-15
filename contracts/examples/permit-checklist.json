@@ -1,0 +1,24 @@
+{
+  "category_id": "grocery",
+  "parcel_id": "sf:fixture-001",
+  "special_use_districts": [],
+  "steps": [
+    {
+      "detail": "Demo parcel. Confirm zoning for a real site in the Property Information Map.",
+      "title": "Confirm the proposed use",
+      "url": "https://sfplanning.org/zoning"
+    },
+    {
+      "detail": "Ask the Permit Center which applications, plans, and reviews apply to the new construction.",
+      "title": "Planning approval and building permit",
+      "url": "https://sfplanning.org/permits"
+    },
+    {
+      "detail": "Check the retail food facility plan review process for a new grocery store.",
+      "title": "Public Health plan review",
+      "url": "https://www.sf.gov/check-if-your-project-requires-health-plan-review"
+    }
+  ],
+  "zoning_districts": [],
+  "zoning_note": "Demo parcel. Confirm zoning for a real site in the Property Information Map."
+}
