@@ -3,8 +3,14 @@
   "data_version": "0.1.1+2026-11-15.1+bfa9e1e005fb",
   "source_url": "https://drive.google.com/file/d/1IHeW1k6QcVnFfSQcCTNXHeozQrVIeZJo/view",
   "zip_sha256": "b94efdcc5603f4710e34079eb62212b30defbbcaa5b62bccf84fa93deff1fdbc",
-  "release_sha256": "b5ee5077c7db973dc17fd02d03e75dbcfa7024f480aa00fb124629475de8c9b2",
   "index_sha256": "d9d22606689cbadc7e1dac0756cde9358b7e09ff5a95d5858d3fdeb3b0e52aa6",
   "index_gzip_sha256": "3edb5ab1980e1609d17186a5a046b85eed86203622a4c751662a46dce920d8e7",
-  "tract_sha256": "c613b0b9df678aa095981a988e045c7db070f9e0799113481b3937b0e9591889"
+  "tract_sha256": "c613b0b9df678aa095981a988e045c7db070f9e0799113481b3937b0e9591889",
+  "original_release_sha256": "b5ee5077c7db973dc17fd02d03e75dbcfa7024f480aa00fb124629475de8c9b2",
+  "release_sha256": "336f5c74e9fd99e8c21d2bd40165a887c9354697edee41208fe1335f1e7cdf1b",
+  "release_gzip_sha256": "33bba343667c3b70dc9ee58d8daef7a7d1b7abccfd9d6a741233c94cd581ed05",
+  "serving_parcel_count": 3809,
+  "source_parcel_count": 155027,
+  "assumption_version": "sf-economic-scenarios-2025-v2",
+  "projection": "Vacant planning candidates only; original geometries, five-category scores, services, references and need targets retained from the rebuilt release."
 }

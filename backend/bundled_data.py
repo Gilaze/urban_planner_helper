@@ -5,13 +5,12 @@ import hashlib
 import json
 from pathlib import Path
 from tempfile import NamedTemporaryFile, gettempdir
-from zipfile import ZipFile
 
 BUNDLE = Path(__file__).resolve().parents[1] / "demo"
 
 
 def available():
-    return (BUNDLE / "manifest.json").is_file() and (BUNDLE / "parcel-planner-data-0.1.1.zip").is_file()
+    return (BUNDLE / "manifest.json").is_file() and (BUNDLE / "serving-release.json.gz").is_file()
 
 
 def digest(path):
@@ -46,10 +45,10 @@ def paths():
     cache = Path(gettempdir()) / "tract-planner" / version
     release, index = cache / "release.json", cache / "planning.json"
     if not release.is_file() or digest(release) != manifest["release_sha256"]:
-        archive = BUNDLE / "parcel-planner-data-0.1.1.zip"
-        if digest(archive) != manifest["zip_sha256"]:
-            raise ValueError("Bundled parcel ZIP does not match the verified Drive file")
-        with ZipFile(archive) as zipped, zipped.open("artifacts/release.json") as source:
+        compressed = BUNDLE / "serving-release.json.gz"
+        if digest(compressed) != manifest["release_gzip_sha256"]:
+            raise ValueError("Bundled serving release checksum does not match its manifest")
+        with gzip.open(compressed, "rb") as source:
             copy_verified(source, release, manifest["release_sha256"])
     if not index.is_file() or digest(index) != manifest["index_sha256"]:
         compressed = BUNDLE / "planning-index.json.gz"

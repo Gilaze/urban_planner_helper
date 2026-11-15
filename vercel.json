@@ -3,7 +3,7 @@
   "functions": {
     "index.py": {
       "maxDuration": 300,
-      "excludeFiles": "{simulator/**,pipeline/**,data/**,artifacts/**,tests/**,reports/**,backend/tests/**,.playwright-mcp/**,.env*}"
+      "excludeFiles": "{simulator/**,pipeline/**,data/**,artifacts/**,tests/**,reports/**,backend/tests/**,demo/parcel-planner-data-0.1.1.zip,.playwright-mcp/**,.env*}"
     }
   }
 }
