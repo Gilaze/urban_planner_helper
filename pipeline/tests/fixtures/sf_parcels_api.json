@@ -1,0 +1,19 @@
+[
+  {"blklot": "0012003A", "mapblklot": "0012003A", "zoning_code": "C-3-O", "zoning_district": "DOWNTOWN-OFFICE", "active": true,
+   "analysis_neighborhood": "Financial District/South Beach", "data_as_of": "2026-11-01T00:00:00.000",
+   "shape": {"type": "MultiPolygon", "coordinates": [[[[-122.4000, 37.7900], [-122.3995, 37.7900], [-122.3995, 37.7904], [-122.4000, 37.7904], [-122.4000, 37.7900]]]]}},
+  {"blklot": "0025032", "mapblklot": "0025032", "zoning_code": "RM-3", "zoning_district": "RESIDENTIAL- MIXED", "active": true,
+   "analysis_neighborhood": "Russian Hill", "data_as_of": "2026-11-01T00:00:00.000",
+   "shape": {"type": "MultiPolygon", "coordinates": [[[[-122.4200, 37.8000], [-122.4196, 37.8000], [-122.4196, 37.8003], [-122.4200, 37.8003], [-122.4200, 37.8000]]]]}},
+  {"blklot": "0025033", "mapblklot": "0025032", "zoning_code": "RM-3", "zoning_district": "RESIDENTIAL- MIXED", "active": true,
+   "analysis_neighborhood": "Russian Hill", "data_as_of": "2026-11-01T00:00:00.000",
+   "shape": {"type": "MultiPolygon", "coordinates": [[[[-122.4200, 37.8000], [-122.4196, 37.8000], [-122.4196, 37.8003], [-122.4200, 37.8003], [-122.4200, 37.8000]]]]}},
+  {"blklot": "3702001", "mapblklot": "3702001", "zoning_code": "MUG", "zoning_district": "MIXED USE-GENERAL", "active": true,
+   "analysis_neighborhood": "South of Market", "data_as_of": "2026-11-01T00:00:00.000",
+   "shape": {"type": "MultiPolygon", "coordinates": [[[[-122.4100, 37.7700], [-122.4090, 37.7710], [-122.4090, 37.7700], [-122.4100, 37.7710], [-122.4100, 37.7700]]]]}},
+  {"blklot": "9999001", "mapblklot": "9999001", "zoning_code": null, "zoning_district": null, "active": true,
+   "analysis_neighborhood": null, "data_as_of": "2026-11-01T00:00:00.000", "shape": null},
+  {"blklot": "0001001", "mapblklot": "0001001", "zoning_code": "P", "active": false,
+   "shape": {"type": "MultiPolygon", "coordinates": [[[[-122.41, 37.80], [-122.409, 37.80], [-122.409, 37.801], [-122.41, 37.80]]]]}},
+  {"blklot": null, "mapblklot": "0002001", "active": true}
+]
