@@ -231,7 +231,8 @@ export function createUI(root) {
       // Data credits, collapsed behind a small button (OpenStreetMap's licence needs visible credit).
       const attrib = el('div', 'attrib');
       attrib.innerHTML = `<button class="attrib-btn" aria-expanded="false" title="Data sources">ⓘ Sources</button>
-        <div class="attrib-list" hidden>${meta.sources.map((s) => `<a href="${s.url}" target="_blank" rel="noopener">${s.name}</a>`).join('')}</div>`;
+        <div class="attrib-list" hidden>${meta.sources.map((s) => `<a href="${s.url}" target="_blank" rel="noopener">${s.name}</a>`).join('')}
+          <p class="attrib-warn">Building edits are a local sketch saved only in this browser; they don't change the data or what others see. Building cards never show addresses or exact locations.</p></div>`;
       const attribBtn = attrib.querySelector('.attrib-btn'), attribList = attrib.querySelector('.attrib-list');
       attribBtn.addEventListener('click', () => {
         attribList.hidden = !attribList.hidden;
@@ -305,8 +306,7 @@ export function createUI(root) {
                 <button class="btn danger" data-delete>Delete</button>
                 ${edited ? '<button class="btn" data-restore>Restore original</button>' : ''}
               </div>
-            </div>
-            <div class="bcard-note">Edits are a local sketch in this browser. Exact location is not shown.</div>`;
+            </div>`;
           card.querySelector('.bcard-x').addEventListener('click', () => onCardClose());
           card.querySelectorAll('[data-restore]').forEach((el) => el.addEventListener('click', () => actions.onRestore()));
           card.querySelectorAll('[data-delete]').forEach((el) => el.addEventListener('click', () => actions.onDelete()));

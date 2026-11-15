@@ -97,6 +97,7 @@ html, body {
 .attrib-list { order: -1; background: var(--panel); backdrop-filter: blur(10px); border: 1px solid var(--panel-border); border-radius: 10px; box-shadow: var(--shadow); padding: 8px 10px; display: flex; flex-direction: column; gap: 4px; max-width: 320px; }
 .attrib-list[hidden] { display: none; }
 .attrib-list a { font-size: 11px; color: var(--ink-2); text-decoration: none; }
+.attrib-warn { margin: 4px 0 0; padding-top: 6px; border-top: 1px solid var(--panel-border); font-size: 11px; line-height: 1.4; color: #7a4a00; }
 .attrib-list a:hover { text-decoration: underline; color: var(--ink); }
 
 .loader {
