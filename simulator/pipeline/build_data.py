@@ -3,7 +3,9 @@
 
 Sources (downloaded with curl into pipeline/cache/, then reused):
   * DataSF Building Footprints (ynuv-fyni)  - 177k footprints with LiDAR-measured heights
-  * DataSF San Francisco Land Use 2023 (fdfd-xptc) - per-parcel use, joined by map-block-lot
+  * Parcel Planner data release (team Google Drive, data/artifacts/person2):
+      parcels.geoparquet - per-lot land use (2023 + current), residential units, vacancy_status, lot geometry
+      places.parquet     - Google Maps Places (Bright Data) with closure_status
   * OpenStreetMap via Overpass - streets, bridges, parks, forests, beaches, lakes, piers
   * AWS Terrain Tiles (Terrarium encoding, zoom 14) - ground elevation + bay bathymetry
 
@@ -20,7 +22,6 @@ import os
 import struct
 import subprocess
 import sys
-import urllib.parse
 from collections import Counter, defaultdict
 
 import numpy as np
@@ -405,75 +406,120 @@ def classify(lu, height, area):
 # ---------------------------------------------------------------------------
 # 3. Downloads
 # ---------------------------------------------------------------------------
-VACANCY_CODES = {"unknown": 0, "not_vacant": 1, "vacant": 2}
+# Building vacancy codes written to vacancy.bin
+VAC_UNKNOWN, VAC_OCCUPIED, VAC_VACANT_LOT, VAC_CLOSED = 0, 1, 2, 3
+TEAM_STATUS = {"source_indicated_vacant": VAC_VACANT_LOT, "not_vacant": VAC_OCCUPIED, "unknown": VAC_UNKNOWN}
+# Parcel Planner data release (the team's shared Google Drive folder, "parcel-planner-data").
+TEAM_DATA = os.environ.get("PARCEL_PLANNER_DATA",
+                           os.path.normpath(os.path.join(HERE, "..", "..", "data", "artifacts", "person2")))
+CURRENT_USE_TYPE = {"retail": "RETAIL/ENT", "mips": "MIPS", "cie": "CIE", "med": "MED", "pdr": "PDR", "visitor": "VISITOR"}
 
 
-def vacancy_by_lot(landuse_2023, current_rows):
-    """Per-lot vacancy, same rule as pipeline/src/parcel_pipeline/sources/sf.py (the Parcel Planner):
-    vacant      = 2023 land use coded VACANT and the current snapshot (c5ge-t6pj) records no use
-    not_vacant  = current snapshot records any use, or 2023 records a use and the lot is absent now
-    unknown     = everything else
+def wkb_polygons(b):
+    """Minimal WKB reader for (Multi)Polygon -> list of polygons, each a list of (N,2) lon/lat rings."""
+    def read(off):
+        e = "<" if b[off] == 1 else ">"
+        (t,) = struct.unpack_from(e + "I", b, off + 1)
+        off += 5
+        t %= 1000
+        if t == 3:
+            (nr,) = struct.unpack_from(e + "I", b, off)
+            off += 4
+            rings = []
+            for _ in range(nr):
+                (n,) = struct.unpack_from(e + "I", b, off)
+                off += 4
+                rings.append(np.frombuffer(b, dtype=e + "f8", count=2 * n, offset=off).reshape(n, 2))
+                off += 16 * n
+            return [rings], off
+        if t == 6:
+            (k,) = struct.unpack_from(e + "I", b, off)
+            off += 4
+            polys = []
+            for _ in range(k):
+                ps, off = read(off)
+                polys += ps
+            return polys, off
+        raise ValueError(f"unsupported WKB geometry type {t}")
+    return read(0)[0]
+
+
+def load_team_release():
+    """Parcels and Places from the Parcel Planner data release (team Google Drive).
+
+    parcels.geoparquet : per physical lot - vacancy_status (team rule), landuse_2023,
+                         residential_units_2023, current_uses, WGS84 geometry
+    places.parquet     : Google Maps Places (Bright Data export) with closure_status
     """
-    def num(v):
-        try:
-            return float(v)
-        except (TypeError, ValueError):
-            return 0.0
+    import pyarrow.parquet as pq
+    pp = os.path.join(TEAM_DATA, "parcels.geoparquet")
+    pl = os.path.join(TEAM_DATA, "places.parquet")
+    for f in (pp, pl):
+        if not os.path.exists(f):
+            raise SystemExit(f"Missing {f}. Put the Parcel Planner release (Drive: parcel-planner-data/artifacts/person2) "
+                             f"there or set PARCEL_PLANNER_DATA.")
+    t = pq.read_table(pp, columns=["mapblklot", "vacancy_status", "landuse_2023", "residential_units_2023",
+                                   "current_uses", "current_residential_units", "geometry"]).to_pylist()
+    landuse, status, geoms = {}, {}, {}
+    for r in t:
+        lot = r["mapblklot"]
+        code = r["landuse_2023"]
+        units = r["residential_units_2023"]
+        if not code and r["current_uses"]:
+            uses = r["current_uses"].split(",")
+            if "residential" in uses:
+                code = "MIXRES" if any(u in CURRENT_USE_TYPE for u in uses) else "RESIDENT"
+                units = r["current_residential_units"]
+            else:
+                code = next((CURRENT_USE_TYPE[u] for u in uses if u in CURRENT_USE_TYPE), None)
+        if code:
+            landuse[lot] = {"landuse": code, "resunits": units or 0, "restype": None}
+        status[lot] = r["vacancy_status"]
+        if r["vacancy_status"] == "source_indicated_vacant" and r["geometry"]:
+            geoms[lot] = r["geometry"]
+    places = pq.read_table(pl, columns=["place_id", "longitude", "latitude", "city", "closure_status",
+                                        "primary_category"]).to_pandas()
+    places = places[places["city"] == "San Francisco"]
+    return landuse, status, geoms, places
 
-    def flag(v):
-        return str(v).strip().lower() in {"true", "1", "yes"}
 
-    current = {}
-    for r in current_rows:
-        lot = (r.get("mapblklot") or "").strip().upper()
-        if not lot or r.get("geography_type") != "parcel":
+def closed_business_buildings(places, bpolys):
+    """Assign each SF Google Maps place to the footprint containing it (or within 6 m), and return
+    {building index: (active, closed)}. Places with unknown closure status are ignored."""
+    grid = defaultdict(list)
+    C = 60.0
+    for idx, ring in bpolys:
+        x0, z0 = ring.min(0)
+        x1, z1 = ring.max(0)
+        for gx in range(int(x0 // C), int(x1 // C) + 1):
+            for gz in range(int(z0 // C), int(z1 // C) + 1):
+                grid[(gx, gz)].append((idx, ring, x0, z0, x1, z1))
+    xs, zs = proj(places["longitude"].to_numpy(), places["latitude"].to_numpy())
+    stats = defaultdict(lambda: [0, 0])
+    matched = 0
+    for x, z, st in zip(xs, zs, places["closure_status"].to_numpy()):
+        if st not in ("active", "closed_permanently", "closed_temporarily"):
             continue
-        used = (num(r.get("resunits")) > 0 or any(num(r.get(k)) > 0 for k in ("cie", "med", "mips", "retail", "pdr", "visitor"))
-                or flag(r.get("parking_lo")) or flag(r.get("garage")) or flag(r.get("open_space")) or num(r.get("total_comm")) > 0)
-        current[lot] = current.get(lot, False) or used  # any recorded use wins
-    status = {}
-    for lot in set(landuse_2023) | set(current):
-        lu = landuse_2023.get(lot)
-        code = (lu or {}).get("landuse")
-        in_current = lot in current
-        if in_current and current[lot]:
-            status[lot] = "not_vacant"
-        elif code == "VACANT" and in_current:
-            status[lot] = "vacant"
-        elif code and code != "VACANT" and not in_current:
-            status[lot] = "not_vacant"
-        else:
-            status[lot] = "unknown"
-    return status
-
-
-def fetch_vacant_lot_shapes(lots):
-    """Outlines of the vacant lots (current land use parcel geometry), cached."""
-    path = os.path.join(CACHE, "vacant_lots.json")
-    if os.path.exists(path):
-        with open(path, encoding="utf-8") as f:
-            cached = json.load(f)
-        if set(cached) >= set(lots):
-            return cached
-    shapes = {}
-    lots = sorted(lots)
-    for i in range(0, len(lots), 150):
-        chunk = lots[i:i + 150]
-        where = "geography_type='parcel' AND mapblklot in (" + ",".join(f"'{l}'" for l in chunk) + ")"
-        tmp = os.path.join(CACHE, "vacant_chunk.json")
-        if os.path.exists(tmp):
-            os.remove(tmp)
-        url = ("https://data.sf.gov/resource/c5ge-t6pj.json?$select=mapblklot,the_geom&$limit=5000&$where="
-               + urllib.parse.quote(where))
-        fetch(url, tmp)
-        with open(tmp, encoding="utf-8") as f:
-            for r in json.load(f):
-                if r.get("the_geom"):
-                    shapes[r["mapblklot"]] = r["the_geom"]
-    os.remove(os.path.join(CACHE, "vacant_chunk.json"))
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(shapes, f)
-    return shapes
+        cands = grid.get((int(x // C), int(z // C)), ())
+        hit = next((i for i, r, a, b, c, d in cands if a <= x <= c and b <= z <= d and point_in_poly(x, z, r[:, 0], r[:, 1])), None)
+        if hit is None:  # geocodes often sit on the sidewalk: nearest wall within 6 m
+            best = 6.0
+            for gx in (-1, 0, 1):
+                for gz in (-1, 0, 1):
+                    for i, r, a, b, c, d in grid.get((int(x // C) + gx, int(z // C) + gz), ()):
+                        if x < a - 6 or x > c + 6 or z < b - 6 or z > d + 6:
+                            continue
+                        p0, p1 = r, np.roll(r, -1, 0)
+                        dv = p1 - p0
+                        t = np.clip(((x - p0[:, 0]) * dv[:, 0] + (z - p0[:, 1]) * dv[:, 1]) / np.maximum((dv ** 2).sum(1), 1e-9), 0, 1)
+                        dist = np.hypot(p0[:, 0] + t * dv[:, 0] - x, p0[:, 1] + t * dv[:, 1] - z).min()
+                        if dist < best:
+                            best, hit = dist, i
+        if hit is None:
+            continue
+        matched += 1
+        stats[hit][0 if st == "active" else 1] += 1
+    return stats, matched
 
 
 def download_sources():
@@ -482,12 +528,6 @@ def download_sources():
               "$select=sf16_bldgid,mblr,hgt_median_m,hgt_maxcm,hgt_meancm,gnd_min_m,shape"
               f"&$order=sf16_bldgid&$limit=50000&$offset={off}",
               os.path.join(CACHE, f"footprints_{off}.geojson"))
-    fetch("https://data.sf.gov/resource/c5ge-t6pj.json?$select=mapblklot,geography_type,resunits,cie,med,mips,"
-          "retail,pdr,visitor,total_comm,parking_lo,garage,open_space,data_as_of&$where=geography_type='parcel'"
-          "&$limit=300000", os.path.join(CACHE, "current_landuse.json"))
-    fetch("https://data.sfgov.org/resource/fdfd-xptc.json?"
-          "$select=mapblklot,landuse,restype,resunits,res,totalcomm,retail,cie,med,pdr,visitor,mips&$limit=200000",
-          os.path.join(CACHE, "landuse.json"))
     fetch_overpass(os.path.join(HERE, "overpass.ql"), os.path.join(CACHE, "osm.json"))
 
 
@@ -591,16 +631,14 @@ def main():
     lc = np.stack([np.asarray(layers[k].resize((LC_RES, LC_RES), Image.BOX)) for k in ("grass", "forest", "sand")], -1)
 
     log("[4/7] buildings")
-    with open(os.path.join(CACHE, "landuse.json"), encoding="utf-8") as f:
-        landuse = {r["mapblklot"]: r for r in json.load(f) if r.get("mapblklot")}
+    landuse, lot_status, vacant_geoms, places = load_team_release()
     feats = []
     for fn in sorted(glob.glob(os.path.join(CACHE, "footprints_*.geojson")), key=lambda s: int(s.rsplit("_", 1)[1].split(".")[0])):
         with open(fn, encoding="utf-8") as f:
             feats += json.load(f)["features"]
     log(f"  footprints read: {len(feats)}, land-use parcels: {len(landuse)}")
-    with open(os.path.join(CACHE, "current_landuse.json"), encoding="utf-8") as f:
-        lot_status = vacancy_by_lot(landuse, json.load(f))
     vac_counts_lots = Counter(lot_status.values())
+    bpolys = []  # (building index, outer ring in metres) for the Places join
     log(f"  lot vacancy: {dict(vac_counts_lots)}")
     vac_out = bytearray()
     cur_vac = [0]
@@ -664,7 +702,7 @@ def main():
         peak = max(height, float(p.get("hgt_maxcm") or 0) / 100.0)
         mean = max(height, float(p.get("hgt_meancm") or 0) / 100.0)
         lu = landuse.get(mblr[2:]) if mblr.startswith("SF") else None
-        cur_vac[0] = VACANCY_CODES[lot_status.get(mblr[2:], "unknown")] if mblr.startswith("SF") else 0
+        cur_vac[0] = TEAM_STATUS.get(lot_status.get(mblr[2:], "unknown"), VAC_UNKNOWN) if mblr.startswith("SF") else VAC_UNKNOWN
         if lu is not None:
             n_join += 1
         polys = g["coordinates"] if g["type"] == "MultiPolygon" else [g["coordinates"]]
@@ -713,6 +751,7 @@ def main():
                     h = max(2.6, h - roof / 2)
                     kind = 1                                   # hipped roof
             elev, bottom = ground_for(outer)
+            bpolys.append((n_written, outer))
             write_building(tid, h, elev, bottom, rings, roof, kind, extra)
             bdraw.polygon(to_px(outer[:, 0], outer[:, 1], LC_RES), fill=255)
 
@@ -728,6 +767,7 @@ def main():
             continue
         outer = rings[0].astype(np.float64) * Q
         elev, bottom = ground_for(outer)
+        bpolys.append((n_written, outer))
         write_building(osm_type(b["tag"], b["h"]), b["h"], elev, bottom, rings)
         bdraw.polygon(to_px(outer[:, 0], outer[:, 1], LC_RES), fill=255)
         n_added += 1
@@ -753,22 +793,30 @@ def main():
         f.write(out)
     log(f"  buildings written {n_written}, land-use join {n_join}, {len(out) / 1e6:.1f} MB")
     assert len(vac_out) == n_written
+    # Google Maps Places (Drive): buildings whose listed businesses are all closed
+    pstats, n_matched = closed_business_buildings(places, bpolys)
+    n_closed_bldg = 0
+    for i, (active, closed) in pstats.items():
+        if closed > 0 and active == 0 and vac_out[i] != VAC_VACANT_LOT:
+            vac_out[i] = VAC_CLOSED
+            n_closed_bldg += 1
+    log(f"  Google Maps places in SF: {len(places)}, matched to buildings: {n_matched}, "
+        f"buildings with only closed businesses: {n_closed_bldg}")
     with open(os.path.join(OUT, "vacancy.bin"), "wb") as f:
         f.write(b"SFV1" + struct.pack("<I", n_written))
         f.write(vac_out)
     vac_counts_bldg = Counter(vac_out)
-    log(f"  building vacancy (0 unknown, 1 occupied, 2 vacant): {dict(vac_counts_bldg)}")
+    log(f"  building vacancy (0 unknown, 1 occupied, 2 vacant lot, 3 closed businesses): {dict(vac_counts_bldg)}")
 
     # Vacant lots painted on the ground (most vacant lots have no building to colour).
-    vacant_lots = [l for l, st in lot_status.items() if st == "vacant"]
-    shapes = fetch_vacant_lot_shapes(vacant_lots)
+    vacant_lots = [l for l, st in lot_status.items() if st == "source_indicated_vacant"]
+    shapes = vacant_geoms
     vimg = Image.new("L", (LC_RES * 2, LC_RES * 2), 0)
     vdraw = ImageDraw.Draw(vimg)
-    for geom in shapes.values():
-        polys = geom["coordinates"] if geom["type"] == "MultiPolygon" else [geom["coordinates"]]
-        for poly in polys:
+    for wkb in shapes.values():
+        for poly in wkb_polygons(wkb):
             for k, ring in enumerate(poly):
-                xs, zs = proj([c[0] for c in ring], [c[1] for c in ring])
+                xs, zs = proj(ring[:, 0], ring[:, 1])
                 vdraw.polygon(to_px(xs, zs, LC_RES * 2), fill=255 if k == 0 else 0)
     Image.fromarray(np.asarray(vimg.resize((LC_RES, LC_RES), Image.BOX))).save(os.path.join(OUT, "vacant.png"), optimize=True)
     log(f"  vacant lot outlines: {len(shapes)} of {len(vacant_lots)}")
@@ -821,18 +869,22 @@ def main():
         "extent": EXT, "grid": GRID, "terrainSize": N, "quantum": Q, "towerThresholdM": TOWER_M,
         "types": [{"id": t[0], "label": t[1], "color": t[2], "count": counts[i]} for i, t in enumerate(TYPES)],
         "vacancy": {
-            "rule": "vacant = 2023 land use coded VACANT and no recorded use in the current land-use snapshot "
-                    "(c5ge-t6pj); occupied = any current recorded use, or a 2023 use and absent from the current "
-                    "snapshot; unknown = everything else (same rule as the Parcel Planner pipeline)",
-            "buildings": {"vacant": vac_counts_bldg[2], "not_vacant": vac_counts_bldg[1], "unknown": vac_counts_bldg[0]},
-            "lots": {k: vac_counts_lots[k] for k in ("vacant", "not_vacant", "unknown")},
+            "source": "Parcel Planner data release (team Google Drive): parcels.geoparquet vacancy_status, "
+                      "places.parquet closure_status",
+            "rule": "vacant lot = team vacancy_status source_indicated_vacant; closed businesses = every Google Maps "
+                    "place matched to the building is closed (permanently or temporarily); occupied = team "
+                    "not_vacant; unknown = team unknown or no parcel match",
+            "buildings": {"vacant": vac_counts_bldg[2], "closed": vac_counts_bldg[3],
+                          "not_vacant": vac_counts_bldg[1], "unknown": vac_counts_bldg[0]},
+            "lots": {"vacant": vac_counts_lots["source_indicated_vacant"], "not_vacant": vac_counts_lots["not_vacant"],
+                     "unknown": vac_counts_lots["unknown"]},
+            "placesMatched": n_matched,
             "vacantLotShapes": len(shapes),
         },
         "buildingCount": n_written, "heightsUpdatedFromOSM": n_override, "buildingsAddedFromOSM": n_added, "roadCount": n_roads, "treeCount": len(trees) // 8, "lakeCount": len(lake_records),
         "sources": [
             {"name": "DataSF Building Footprints (LiDAR heights)", "url": "https://data.sfgov.org/d/ynuv-fyni"},
-            {"name": "DataSF San Francisco Land Use 2023", "url": "https://data.sfgov.org/d/fdfd-xptc"},
-            {"name": "DataSF San Francisco Land Use (current)", "url": "https://data.sf.gov/d/c5ge-t6pj"},
+            {"name": "Parcel Planner data release: parcels + Google Maps Places (team Drive)", "url": "https://github.com/Gilaze/urban_planner_helper"},
             {"name": "OpenStreetMap contributors (ODbL)", "url": "https://www.openstreetmap.org/copyright"},
             {"name": "AWS Terrain Tiles (Mapzen Terrarium; USGS 3DEP, NOAA)", "url": "https://registry.opendata.aws/terrain-tiles/"},
         ],

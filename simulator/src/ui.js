@@ -9,6 +9,7 @@ export const MODES = [
 
 export const VACANCY_CLASSES = [
   { code: 2, key: 'vacant', label: 'Vacant lot', color: '#FF5A4F' },
+  { code: 3, key: 'closed', label: 'Closed businesses', color: '#FFA43A' },
   { code: 1, key: 'not_vacant', label: 'Occupied', color: '#CFE2F3' },
   { code: 0, key: 'unknown', label: 'Unknown / no parcel', color: '#E9E4DB' },
 ];
@@ -94,11 +95,11 @@ export function createUI(root) {
       vacSec.appendChild(el('div', 'legend-head', 'Parcel vacancy <span class="sub">buildings · lots</span>'));
       for (const c of VACANCY_CLASSES) {
         const b = (vac.buildings[c.key] ?? 0).toLocaleString();
-        const l = (vac.lots[c.key] ?? 0).toLocaleString();
+        const l = c.key in vac.lots ? vac.lots[c.key].toLocaleString() : '–';
         addRow(vacSec, c.color, c.label, `${b} · ${l}`, (off) => onToggleVac(c.code, off), (on) => onFocusVac(on ? c.code : -1));
       }
       vacSec.appendChild(el('div', 'legend-note',
-        'Vacant = coded <b>VACANT</b> in the 2023 land-use survey and no recorded use in the current parcel land-use data (DataSF c5ge-t6pj). Empty vacant lots are hatched red on the ground.'));
+        '<b>Vacant lot</b>: the team Parcel Planner release marks the parcel vacant (empty ones are hatched red on the ground). <b>Closed businesses</b>: every Google Maps business in the building is closed (Drive Places data).'));
       legend.appendChild(vacSec);
       hud.appendChild(legend);
 

@@ -31,8 +31,8 @@ export function createShared(meta, terrain) {
     uSunDir: { value: new THREE.Vector3(-0.55, 0.78, 0.42).normalize() },
     // colour-by-vacancy view: palette indexed by vacancy code (0 unknown, 1 occupied, 2 vacant)
     uVacancyMode: { value: 0 },
-    uVacColors: { value: [new THREE.Color('#E9E4DB'), new THREE.Color('#CFE2F3'), new THREE.Color('#FF5A4F')] },
-    uHiddenVac: { value: new Float32Array(3) },
+    uVacColors: { value: [new THREE.Color('#E9E4DB'), new THREE.Color('#CFE2F3'), new THREE.Color('#FF5A4F'), new THREE.Color('#FFA43A')] },
+    uHiddenVac: { value: new Float32Array(4) },
     uVacant: { value: null },
   };
 }
@@ -110,7 +110,7 @@ flat varying float vType;
 flat varying float vSeed;
 flat varying float vVac;
 uniform float uVacancyMode;
-uniform float uHiddenVac[3];
+uniform float uHiddenVac[4];
 `;
 
 // Collapse a vertex to a degenerate point when its building is on the wrong side of the clear radius.
@@ -125,7 +125,7 @@ const CLEAR_HEAD = /* glsl */ `
 attribute vec2 aCtr;
 #ifndef VAC_DECLARED
 uniform float uVacancyMode;
-uniform float uHiddenVac[3];
+uniform float uHiddenVac[4];
 #endif
 uniform vec3 uClearCenter;
 uniform float uClearRadius;
@@ -167,7 +167,7 @@ flat varying float vType;
 flat varying float vSeed;
 flat varying float vVac;
 uniform float uVacancyMode;
-uniform vec3 uVacColors[3];
+uniform vec3 uVacColors[4];
 float gWin = 0.0;
 // colour key for this building: its type palette, or its parcel's vacancy class
 vec3 keyColor(int t) { return uVacancyMode > 0.5 ? uVacColors[int(vVac + 0.5)] : uPalette[t]; }
@@ -366,7 +366,7 @@ uniform sampler2D uLandcover;
 uniform sampler2D uUrban;
 uniform sampler2D uVacant;
 uniform float uVacancyMode;
-uniform vec3 uVacColors[3];
+uniform vec3 uVacColors[4];
 varying vec3 vWPos;
 varying float vH;
 varying float vSlope;
