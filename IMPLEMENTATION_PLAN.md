@@ -19,6 +19,21 @@ flowchart LR
 
 Agree on candidate IDs before parallel development: `clinic`, `pharmacy`, `grocery`, `bank_credit_union`, and `school`. Use string IDs for APNs, Census GEOIDs, and place IDs. Namespace parcel IDs as `sf:<physical-lot-key>`. Use EPSG:26910 for metric geometry and WGS84 longitude/latitude for exported GeoJSON. Record area in m², distances in meters or explicitly labeled miles, annual retained sales tax in USD, and jobs in operating FTE.
 
+## Start four coding agents in parallel
+
+Branch from the same `main` commit. Use a separate worktree or clone for each agent and name the branches `feat/frontend`, `feat/data-model`, `feat/backend`, and `test/verification`. Send each agent its work area, first coding task, and the shared contract below. Within the first hour, spend 15 minutes agreeing on identifiers and payloads. Work against local fixtures before the shared version is ready.
+
+| Agent | Owns | First coding task, starting immediately | Integration handoff |
+|---|---|---|---|
+| Frontend | `frontend/` | Build the parcel picker, 3D preview and comparison view against a mocked API. | Replace the mock with the matching FastAPI routes and verify the same user actions. |
+| Data | `pipeline/` and `config/categories.*` | Write API response parsing, Places ingestion and category mapping against small fixture records. | Provide canonical parcel, Places and population artifacts with a manifest. |
+| Backend | `backend/`, `contracts/` and `config/economics.*` | Publish fixture-backed routes and implement scoring against synthetic arrays. | Replace the fixture adapter with the data artifacts and connect the real parcel provider. |
+| Checker | `tests/integration/` and `reports/verification/` | Code an independent scoring oracle and small hand-calculated cases, then scaffold contract and browser tests. | Run the same checks against fixture mode and the integrated API, recording regressions and release blockers. |
+
+Treat the agreed category IDs, parcel IDs, units, canonical table grains and API routes in this plan as the starting contract. By hour 3, Backend publishes the OpenAPI schema and example payloads in `contracts/` for the other agents to consume. Use one synthetic parcel, five categories, and at least one unavailable metric as the first shared fixture. If a field needs to change, Backend updates the shared example and tells the other owners before merging. Keep package locks scoped to their owning directories and coordinate shared root edits with Backend.
+
+Every agent opens a separate PR. Merge the contract and fixture API first, then merge work as it passes its own checks. Frontend and Checker can merge fixture-driven work before the real data arrives. Backend and Data meet at the artifact interface for the live-data switch. Checker runs the integrated suite on the merged result.
+
 ## Person 1 — Frontend and simulator
 
 1. Create a fixture-driven desktop UI. Use a pitched SF map, a parcel selector with keyboard support, a candidate list, and a comparison panel. Show the source vintage and distinguish source-indicated vacancies from hypothetical sites. Keep the parcel list and results usable if the basemap or WebGL fails.
@@ -115,7 +130,10 @@ Precompute spatial metrics and Monte Carlo summaries, load artifacts once at sta
 
 ## Person 4 — Checker and release verification
 
-- At kickoff, own the acceptance matrix, schema review and hand-calculated scoring fixtures. Track each issue with an owner, example, expected result and release impact.
+- Implement independent pytest checks in `tests/integration/` from small hand-calculated fixtures. For example, build a two-population-point catchment that exercises both distance weights and assert the exact before/after accessibility. Keep expected values independent of backend scoring functions.
+- Implement an artifact validator that checks expected columns, unique keys, join cardinality, accepted category IDs and coordinate bounds. Build a command that accepts an API base URL and artifact directory and produces a readable pass/fail report.
+- Write API contract smoke tests and a Playwright flow for parcel selection, preview, reweighting and a stale or unavailable response. Use fixture mode first and run the same core flow against the integrated app.
+- Track failures with an owner, reproduction, expected result and release impact. Product fixes go to the owner of the affected module.
 - Test parcel API pagination, malformed upstream records, timeout fallback and stale-data labels. Verify changed parcels cannot inherit cached scores.
 - Audit APN string handling, source vintage, physical parcel join cardinality, Places-to-Reviews row counts, category overlap, CRS, units, boundary coverage and missing values. Confirm that the scored parcel has explicit vacancy evidence or carries a hypothetical label.
 - Check geographic splits and focal exclusion, review-derived leakage, train-only normalization and common evaluation rows. Recalculate metrics from exported predictions and examine worst errors, low-income slices, density slices and city coverage.
@@ -127,8 +145,8 @@ Precompute spatial metrics and Monte Carlo summaries, load artifacts once at sta
 
 | Hours | Frontend | Data | Backend | Checker |
 |---|---|---|---|---|
-| 0–3 | App and fixture UI | Verify source inventory | OpenAPI and example responses | Acceptance matrix and fixture math |
-| 3–8 | Map selection and 3D massing | Clean joins and map categories | Fixture endpoints and artifact loader | Audit joins, units and geometry |
+| 0–3 | App and fixture UI | Verify source inventory | OpenAPI and example responses | Scoring oracle and contract test scaffold |
+| 3–8 | Map selection and 3D massing | Clean joins and map categories | Fixture endpoints and artifact loader | Build artifact validator |
 | 8–16 | Results and weight controls | Features and baselines | Need and sustainability | Independently calculate sample scenarios |
 | 16–24 | Connect live API and handle errors | Train and export model | Economics, ranking, caching | End-to-end and leakage checks |
 | 24–36 | Polish charts and controls | Final SF evaluation | Package and measure API | Review coverage and failure cases |
