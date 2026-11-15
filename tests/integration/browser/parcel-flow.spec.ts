@@ -181,6 +181,10 @@ test('unavailable API preserves usable controls', async ({ page }) => {
   await expect(page.getByRole('alert')).toContainText(/unavailable|failed|try again/i);
   await expect(selector).toBeEnabled();
   await expect(page.getByTestId('comparison-results')).not.toHaveAttribute('data-status', 'ready');
+  await page.getByLabel('Proposed use').selectOption('grocery');
+  const foodReview = page.getByRole('link', { name: 'Public Health plan review' });
+  await expect(foodReview).toHaveAttribute('href', 'https://www.sf.gov/check-if-your-project-requires-health-plan-review');
+  await expect(page.getByLabel('Gross floor area (sq ft)')).toBeVisible();
 });
 
 test('late comparison cannot replace current selection', async ({ page }) => {
