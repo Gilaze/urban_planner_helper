@@ -4,9 +4,18 @@ from collections import Counter
 from functools import lru_cache
 from pathlib import Path
 
+from shapely.geometry import Point
+from shapely.strtree import STRtree
+
+from .geometry import TO_METERS
 from .planning_schemas import AreaCollection, AreaRecommendations, PlanningIndex, RankedSite, SiteFitAssumptions, SitePlan, SiteRanking
 from .schemas import CATEGORIES
 from .site_fit import open_ground, rectangles, suggest_size
+
+SERVICE_NAMES = {
+    "bank_credit_union": "bank or credit union", "clinic": "clinic", "grocery": "grocery store",
+    "pharmacy": "pharmacy", "school": "school",
+}
 
 
 def need_level(score):
@@ -58,6 +67,40 @@ class Planning:
         need = self.release.frozen.comparisons[parcel_id][category].need
         return None if need.deficit_reduction is None else need.deficit_reduction * need.covered_population
 
+    @lru_cache(maxsize=5)
+    def service_locations(self, category):
+        coordinates = [service.geometry.coordinates for service in self.release.frozen.services
+                       if category in service.properties.categories]
+        if not coordinates:
+            return STRtree([])
+        # Project to meters before measuring; these are map distances, not travel routes.
+        x, y = TO_METERS.transform(*zip(*coordinates))
+        return STRtree([Point(east, north) for east, north in zip(x, y)])
+
+    def explain_site(self, row, category, priority):
+        service = SERVICE_NAMES[category]
+        if row.score is None:
+            need = "There is not enough information about local need to score this lot."
+        elif priority == 0:
+            need = f"Local access data shows no clear shortage of this service, so adding another {service} scores low."
+        elif priority < .25:
+            need = f"Local access data shows only a small shortage of this service, so another {service} is a lower priority."
+        elif priority < .75:
+            need = f"Local access data shows an unmet need for this service; another {service} could help."
+        else:
+            need = f"Local access data shows a large shortage of this service, making another {service} a strong priority."
+        locations = self.service_locations(category)
+        distance = ""
+        if len(locations):
+            point = Point(*TO_METERS.transform(*self.release.parcels[row.parcel_id].properties.representative_point.coordinates))
+            miles = point.distance(locations.geometries[locations.nearest(point)]) / 1609.344
+            amount = "less than 0.1 miles" if miles < .05 else f"about {miles:.1f} miles"
+            distance = f" The nearest mapped {service} is {amount} away."
+        fit = ("This lot has room for the full suggested building size."
+               if row.design.floor_area_m2 >= row.design.target_floor_area_m2 * .99
+               else "This lot fits a smaller building than the target size, which lowers its match score.")
+        return f"{need}{distance} {fit}"
+
     @lru_cache(maxsize=512)
     def site(self, parcel_id):
         context = self.contexts[parcel_id]
@@ -107,16 +150,7 @@ class Planning:
         for i, row in enumerate(rows, 1):
             if row.score is not None:
                 row.rank = i
-                if priority and priority >= .75:
-                    row.explanation = "Helps one of this area's biggest service needs and has space for the suggested building."
-                elif priority:
-                    row.explanation = "Adds a useful local service and has room for the suggested building."
-                else:
-                    row.explanation = "The building fits here, though this tract shows little unmet need for this service."
-                if i > 1:
-                    row.explanation = "An alternative with a lower combined match for local need and available space."
-            else:
-                row.explanation = "There is not enough information about local need to rank this site."
+            row.explanation = self.explain_site(row, category, priority)
         return SiteRanking(
             area_id=area_id, category_id=category, data_version=self.index.data_version,
             assumption_version=self.assumptions.version, need_weight=need_weight,

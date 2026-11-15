@@ -12,6 +12,11 @@ export function createParcelScene(scene, projection, groundAt, terrain) {
   const areaGroup = new THREE.Group();
   areaGroup.name = 'tract-site-planning';
   scene.add(areaGroup);
+  const availableGroup = new THREE.Group();
+  availableGroup.name = 'available-vacant-sites';
+  scene.add(availableGroup);
+  const availableFill = new THREE.MeshBasicMaterial({ color: 0xffdf00, transparent: true, opacity: .35, depthTest: false, depthWrite: false, side: THREE.DoubleSide });
+  const availableLine = new LineMaterial({ color: 0xffdf00, linewidth: 4, transparent: true, depthTest: false, depthWrite: false });
   const areaMaterial = new THREE.LineBasicMaterial({ color: 0x5b9eab, transparent: true, opacity: 0.5 });
   const selectedAreaMaterial = new LineMaterial({ color: 0x1249dc, linewidth: 9, depthTest: false });
   const selectedAreaHalo = new LineMaterial({ color: 0xffffff, linewidth: 15, depthTest: false });
@@ -46,6 +51,30 @@ export function createParcelScene(scene, projection, groundAt, terrain) {
   }
 
   return {
+    drawAvailableSites(features, category) {
+      for (const child of [...availableGroup.children]) {
+        availableGroup.remove(child);
+        child.geometry?.dispose();
+      }
+      availableGroup.userData = { count: features.length, categoryId: category };
+      for (const feature of features) {
+        for (const rings of polygons(feature.geometry)) {
+          const projected = rings.map((ring) => ring.slice(0, -1).map(([lon, lat]) => projection.toWorld(lon, lat)));
+          const shape = new THREE.Shape(projected[0].map(({ x, z }) => new THREE.Vector2(x, -z)));
+          shape.holes = projected.slice(1).map((ring) => new THREE.Path(ring.map(({ x, z }) => new THREE.Vector2(x, -z))));
+          const geometry = new THREE.ShapeGeometry(shape);
+          geometry.rotateX(-Math.PI / 2);
+          const positions = geometry.getAttribute('position');
+          for (let i = 0; i < positions.count; i++) positions.setY(i, groundAt(positions.getX(i), positions.getZ(i)) + 1.2);
+          geometry.computeBoundingSphere();
+          const fill = new THREE.Mesh(geometry, availableFill);
+          fill.userData.parcelId = feature.id;
+          fill.renderOrder = 890;
+          availableGroup.add(fill);
+          drawOutline(rings, availableLine, (x, z) => groundAt(x, z) + 1.3, availableGroup);
+        }
+      }
+    },
     drawAreas(areas, selectedId, designs, selectedUse) {
       rankMarkers.length = 0;
       arrowMarkers.length = 0;
@@ -117,6 +146,10 @@ export function createParcelScene(scene, projection, groundAt, terrain) {
       }
     },
     updateLabels(camera, viewportHeight) {
+      availableLine.resolution.set(window.innerWidth, viewportHeight);
+      const pulse = Math.floor(performance.now() / 650) % 2;
+      availableFill.opacity = .08 + .57 * pulse;
+      availableLine.opacity = .2 + .8 * pulse;
       selectedAreaMaterial.resolution.set(window.innerWidth, viewportHeight);
       selectedAreaHalo.resolution.set(window.innerWidth, viewportHeight);
       for (const marker of rankMarkers) {

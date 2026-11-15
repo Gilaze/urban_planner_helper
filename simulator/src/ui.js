@@ -1,3 +1,5 @@
+import { createGettingStarted } from './gettingStarted.js';
+
 // 'clash' (the strategy-game 3/4 view) is the default camera.
 export const MODES = [
   { id: 'clash', label: 'Default', key: '1' },
@@ -91,6 +93,11 @@ export function createUI(root) {
       title.innerHTML = `
         <div class="t1">Tract Planner</div>`;
       hud.appendChild(title);
+      const guideButton = el('button', 'getting-started-trigger', 'ⓘ Getting Started');
+      guideButton.type = 'button';
+      guideButton.dataset.testid = 'getting-started';
+      title.append(guideButton);
+      createGettingStarted(hud, guideButton);
 
       // ---- legend: colour by building type or by parcel vacancy
       // ---- left drawer: map key (building type / vacancy legend) + controls
@@ -277,7 +284,7 @@ export function createUI(root) {
          * actions: { onClose, onApply(choiceId, heightM), onDelete(), onRestore(), validate(choiceId, heightM) }
          */
         showBuilding({ title, color, lot, edited = false, choices, choiceId, heightM, footprintM2, hasRules = true,
-          editable = true, lockedReason = '' }, actions) {
+          editable = true, lockedReason = '', tractName = '' }, actions) {
           onCardClose = actions.onClose;
           const [cls, head, sub] = lot == null
             ? ['unknown', 'Unavailable', 'Rebuild data (npm run data) for vacancy']
@@ -290,6 +297,7 @@ export function createUI(root) {
             <div class="bcard-type"><span class="sw" style="--c:${color}"></span>${title}${edited ? '<span class="pill edited">Edited</span>' : ''}</div>
             <div class="bcard-row"><span class="k">Status</span><span class="pill ${cls}">${head}</span></div>
             <div class="bcard-sub">${sub}</div>
+            ${actions.onJumpToTract ? '<button class="btn tract-jump" data-testid="jump-to-tract">Jump to this tract</button>' : ''}
             ${!editable ? `<div class="bcard-locked">${lockedReason}</div>
             ${edited ? '<div class="bcard-actions"><button class="btn" data-restore>Restore original</button></div>' : ''}` : ''}
             ${editable && !choices.length ? `<div class="bcard-locked">No building type fits this lot under SF zoning and height rules.</div>
@@ -308,6 +316,11 @@ export function createUI(root) {
               </div>
             </div>`;
           card.querySelector('.bcard-x').addEventListener('click', () => onCardClose());
+          const jump = card.querySelector('[data-testid="jump-to-tract"]');
+          if (jump) {
+            jump.title = tractName;
+            jump.addEventListener('click', () => actions.onJumpToTract());
+          }
           card.querySelectorAll('[data-restore]').forEach((el) => el.addEventListener('click', () => actions.onRestore()));
           card.querySelectorAll('[data-delete]').forEach((el) => el.addEventListener('click', () => actions.onDelete()));
           card.classList.remove('hidden');
@@ -361,6 +374,7 @@ export function createUI(root) {
           editsPanel.querySelector('.edits-count').textContent = `${n} building${n === 1 ? '' : 's'} edited`;
         },
         hideBuilding() { card.classList.add('hidden'); },
+        openPlanner() { right.setOpen(true); },
         /** Anchor the card above the building's screen position (or hide it when off-screen). */
         placeBuilding(x, y, visible) {
           card.style.visibility = visible ? 'visible' : 'hidden';

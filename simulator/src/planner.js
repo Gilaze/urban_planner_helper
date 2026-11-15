@@ -522,7 +522,11 @@ export function createPlanner(root) {
       if (!parcel && options.size) listStatus.textContent = 'Click a vacant lot on the map or choose a parcel.';
     },
     redraw() { renderPreview(); areaPlanning.redraw(); },
+    isChoosingSite: () => areaPlanning.isPicking(),
+    tractAt: (point) => areaPlanning.tractAt(point),
+    jumpToTract: (point) => areaPlanning.jumpToTract(point),
     async pick(point) {
+      if (await areaPlanning.pickSite(point)) return;
       parcelRequest?.abort();
       const controller = new AbortController();
       parcelRequest = controller;

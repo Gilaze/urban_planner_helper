@@ -15,7 +15,7 @@ from .economics import load_assumptions
 from .geometry import massing, validate_bbox
 from .permits import PermitChecklist, PermitRequest, permit_checklist
 from .planning import Planning
-from .planning_schemas import AreaCollection, AreaRecommendations, SitePlan, SiteRanking
+from .planning_schemas import AreaCollection, AreaRecommendations, AvailableSites, SitePlan, SiteRanking
 from .ranking import rank
 from .release import ROOT, FrozenRelease, Release, ReleaseInputs, freeze
 from .schemas import (
@@ -232,10 +232,21 @@ def create_app(
         return planning.collection()
 
     @router.get("/planning/areas/{area_id}/sites", response_model=SiteRanking, responses=errors)
-    def planning_sites(area_id: str, category: Category, limit: int = 20, planning: Planning = Depends(require_planning)):
+    def planning_sites(area_id: str, category: Category, limit: int = 20,
+                       parcel_id: ParcelID | None = None, planning: Planning = Depends(require_planning)):
         if not 1 <= limit <= 100:
             raise APIError(422, "invalid_request", "Site limit must be between 1 and 100")
         try:
+            if parcel_id is not None:
+                context = planning.contexts.get(parcel_id)
+                if context is None or context.area_id != area_id:
+                    raise APIError(422, "site_outside_tract", "Choose a vacant lot inside the selected tract.")
+                design = planning.site(parcel_id).designs[category]
+                if not design.feasible:
+                    raise APIError(422, "site_does_not_fit", "This lot cannot fit this building concept. " + " ".join(design.reasons))
+                result = planning.ranking(area_id, category, len(planning.contexts))
+                result.sites = [site for site in result.sites if site.parcel_id == parcel_id]
+                return result
             return planning.ranking(area_id, category, limit)
         except KeyError:
             raise APIError(404, "area_not_found", "No tract matched this identifier") from None
@@ -244,6 +255,15 @@ def create_app(
     def area_recommendations(area_id: str, planning: Planning = Depends(require_planning)):
         try:
             return planning.recommendations(area_id)
+        except KeyError:
+            raise APIError(404, "area_not_found", "No tract matched this identifier") from None
+
+    @router.get("/planning/areas/{area_id}/available-sites", response_model=AvailableSites, responses=errors)
+    def available_sites(area_id: str, category: Category, planning: Planning = Depends(require_planning)):
+        try:
+            result = planning.ranking(area_id, category, len(planning.contexts))
+            return AvailableSites(area_id=area_id, category_id=category, data_version=planning.index.data_version,
+                                  features=[planning.release.parcels[site.parcel_id] for site in result.sites])
         except KeyError:
             raise APIError(404, "area_not_found", "No tract matched this identifier") from None
 

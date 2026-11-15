@@ -2,7 +2,7 @@ from typing import Literal
 
 from pydantic import Field, model_validator
 
-from .schemas import CATEGORIES, Category, NonNegative, ParcelGeometry, ParcelID, StrictModel
+from .schemas import CATEGORIES, Category, NonNegative, ParcelFeature, ParcelGeometry, ParcelID, StrictModel
 
 
 class ServiceConcept(StrictModel):
@@ -170,3 +170,11 @@ class SitePlan(StrictModel):
     data_version: str
     assumption_version: str
     designs: dict[Category, SiteDesign]
+
+
+class AvailableSites(StrictModel):
+    type: Literal["FeatureCollection"] = "FeatureCollection"
+    area_id: str
+    category_id: Category
+    data_version: str
+    features: list[ParcelFeature]

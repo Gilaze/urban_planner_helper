@@ -349,6 +349,51 @@
         "title": "AreaRecommendations",
         "type": "object"
       },
+      "AvailableSites": {
+        "additionalProperties": false,
+        "properties": {
+          "area_id": {
+            "title": "Area Id",
+            "type": "string"
+          },
+          "category_id": {
+            "enum": [
+              "bank_credit_union",
+              "clinic",
+              "grocery",
+              "pharmacy",
+              "school"
+            ],
+            "title": "Category Id",
+            "type": "string"
+          },
+          "data_version": {
+            "title": "Data Version",
+            "type": "string"
+          },
+          "features": {
+            "items": {
+              "$ref": "#/components/schemas/ParcelFeature-Output"
+            },
+            "title": "Features",
+            "type": "array"
+          },
+          "type": {
+            "const": "FeatureCollection",
+            "default": "FeatureCollection",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "area_id",
+          "category_id",
+          "data_version",
+          "features"
+        ],
+        "title": "AvailableSites",
+        "type": "object"
+      },
       "CategoryInfo": {
         "additionalProperties": false,
         "properties": {
@@ -2844,6 +2889,71 @@
         "summary": "Planning Areas"
       }
     },
+    "/api/v1/planning/areas/{area_id}/available-sites": {
+      "get": {
+        "operationId": "available_sites_api_v1_planning_areas__area_id__available_sites_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "area_id",
+            "required": true,
+            "schema": {
+              "title": "Area Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category",
+            "required": true,
+            "schema": {
+              "enum": [
+                "bank_credit_union",
+                "clinic",
+                "grocery",
+                "pharmacy",
+                "school"
+              ],
+              "title": "Category",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvailableSites"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Available Sites"
+      }
+    },
     "/api/v1/planning/areas/{area_id}/recommendations": {
       "get": {
         "operationId": "area_recommendations_api_v1_planning_areas__area_id__recommendations_get",
@@ -2930,6 +3040,23 @@
               "default": 20,
               "title": "Limit",
               "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parcel_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^sf:[A-Za-z0-9_-]{1,64}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Parcel Id"
             }
           }
         ],

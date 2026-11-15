@@ -6,6 +6,10 @@ The existing permit checklist is used for the selected site. This feature does n
 
 The suggested-height tick remains fixed while the slider moves. **Show only vacant lots** hides non-vacant buildings in both detailed and distant rendering and from building picking, while keeping the site's concept and numbered, colored arrows visible. Roads and terrain remain as context.
 
+The location dropdown labels its suggestions **Best Match**, **Second Best Match**, and **Third Best Match**. **Choose Your Own Vacant Lot…** highlights all physically compatible, source-indicated vacant lots in the selected tract with a yellow flash. Clicking a highlighted lot keeps the building type and uses the same backend scoring and fit checks as the ranked suggestions. Lots outside the tract, occupied lots, and lots too small for that use cannot be selected. Cancel, Escape, and changing the tract or service clear the highlights. These are physical-fit checks, not permit approvals.
+
+Selecting a red vacant building exposes **Jump to this tract**, which opens Tract Planner and selects the containing tract. **Getting Started**, beside the planner heading, opens a three-step dialog: what the product is, map navigation, and tract/site selection. Each step features an edge-to-edge, muted, autoplaying looping clip and poster image from the actual app, without playback controls, with Back/Next step navigation. The dialog supports Escape and arrow keys and keeps keyboard focus inside the modal. Guide assets live in `simulator/public/guide/`.
+
 ## Local data setup
 
 The complete parcel ZIP and matching prebuilt tract index are included in [demo/](../demo/README.md). The backend automatically verifies and loads them on startup. Teammates only need to pull and start the app normally; no separate data download or tract-build command is required. Explicit release/index environment variables remain available for custom datasets, and `PARCEL_PLANNER_MODE=fixture` intentionally selects synthetic data.
@@ -34,6 +38,7 @@ Building footprints are optional. When all four simulator cache pages are presen
 - Every tract uses the same scoring rubric. The absolute tract access gap is scaled as `min(100, gap_pct / 30 × 100)`; a 30% gap earns full need points. Final score is **85% tract need + 10% physical fit + 5% population-weighted access improvement**, rounded to the displayed integer before applying thresholds or ordering the options. A zero-gap service can score at most 15, regardless of how well its building fits. Unknown need stays unknown. The 30% reference and weights are explicit prototype assumptions in `config/site-fit.json`, not validated demand forecasts.
 - Both the building-type list and its site options use that same score, sorted descending. Thresholds are identical everywhere: **0–24 No clear need; 25–49 May help; 50–74 Needed; 75–100 High need**. A missing compatible site is shown separately from a low-need result. Scores represent independent alternatives; Caden's checklist handles permit review separately.
 - Height edits change only the preview. The ranking and one-facility financial estimates continue to use the reference concept.
+- Plain-language site explanations include local need, building fit, and the nearest mapped service. Distances are measured from the lot's representative point in projected meters and converted to miles; they are geographic proximity, not walking or driving routes.
 - The index must match the frozen release's data version and need targets. Stale or missing indexes return an explicit unavailable state while the existing comparison API remains usable.
 
 ## API
@@ -42,6 +47,8 @@ Building footprints are optional. When all four simulator cache pages are presen
 |---|---|
 | `GET /api/v1/planning/areas` | Tract polygons, population coverage, five service gaps, candidate counts, source vintages and unassigned counts |
 | `GET /api/v1/planning/areas/{geoid}/sites?category=grocery&limit=3` | Ranked compatible sites, size concepts, physical exclusions and missing-need counts |
+| `GET /api/v1/planning/areas/{geoid}/sites?category=grocery&parcel_id=sf:…` | Score and concept for a manually chosen compatible vacant lot; membership and fit are validated |
+| `GET /api/v1/planning/areas/{geoid}/available-sites?category=grocery` | All physically compatible vacant parcel polygons in the tract for yellow selection highlights |
 | `GET /api/v1/planning/areas/{geoid}/recommendations` | The best three options for all five services, used for numbered map pins |
 | `GET /api/v1/planning/sites/{parcel_id}` | All five physical concepts for one source-indicated vacant lot |
 

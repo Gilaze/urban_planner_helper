@@ -303,6 +303,8 @@ async function boot() {
   planner.connectMap({
     draw: parcels.draw,
     drawAreas: parcels.drawAreas,
+    drawAvailableSites: parcels.drawAvailableSites,
+    setPickingSite(enabled) { renderer.domElement.classList.toggle('choosing-site', enabled); },
     setOnlyVacant(enabled) {
       shared.uOnlyVacant.value = enabled ? 1 : 0;
       if (enabled && selected >= 0 && data.vacancy?.[selected] !== 2) select(-1);
@@ -375,6 +377,9 @@ async function boot() {
     const area = footprintArea(buildingIndex, b);
     const ctx = lotContext(b);
     const vac = data.vacancy ? data.vacancy[b] : null;
+    const bb = buildingIndex.bbox;
+    const lotPoint = proj.toLonLat((bb[4*b] + bb[4*b+1]) / 2, (bb[4*b+2] + bb[4*b+3]) / 2);
+    const tract = vac === 2 ? planner.tractAt(lotPoint) : null;
     // only vacant buildings can be edited; an existing edit can always be restored
     const editable = vac != null && EDITABLE_VACANCY.has(vac);
     // the dropdown only offers types SF rules allow on this lot
@@ -398,11 +403,16 @@ async function boot() {
       hasRules: !!data.zoning,
       lot: data.vacancy ? data.vacancy[b] : null,
       edited: !!e,
+      tractName: tract?.properties.name,
     }, {
       validate: (id, h) => validateBuilding(ruleFor(id), h, ctx),
       range: (id) => heightRange(ruleFor(id), ctx),
       defaultHeight: (id) => defaultHeight(ruleFor(id), ctx),
       onClose: () => select(-1),
+      onJumpToTract: tract ? () => {
+        hud.openPlanner();
+        planner.jumpToTract(lotPoint);
+      } : null,
       onApply: (id, h) => {
         if (!editable || !fitsLot(ruleFor(id), ctx) || !validateBuilding(ruleFor(id), h, ctx).ok) return; // the card already blocks this
         edits.replace(b, id, h);
@@ -427,6 +437,13 @@ async function boot() {
     ndc.set(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
     raycaster.setFromCamera(ndc, cam.getActiveCamera());
     const building = pickBuilding(buildingIndex, raycaster.ray, shared, groundAt);
+    if (planner.isChoosingSite()) {
+      const bb = buildingIndex.bbox;
+      const point = building >= 0 ? proj.toLonLat((bb[4*building] + bb[4*building+1]) / 2,
+        (bb[4*building+2] + bb[4*building+3]) / 2) : parcels.groundPoint(raycaster.ray);
+      if (point) planner.pick(point);
+      return;
+    }
     select(building);
     if (building < 0) {
       const point = parcels.groundPoint(raycaster.ray);
@@ -446,6 +463,7 @@ async function boot() {
   // -------------------------------------------------------------------------
   const keys = new Set();
   window.addEventListener('keydown', (e) => {
+    if (document.querySelector('.getting-started[open]')) return;
     if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
     const k = e.key.toLowerCase();
     if (k === 'q') cam.rotateView90(-1);

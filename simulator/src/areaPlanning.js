@@ -1,4 +1,7 @@
 import { SERVICE_COLORS } from './planningStyle.js';
+import { containsPoint } from './parcelGeometry.js';
+
+const PICK_OWN = '__pick_own__';
 
 // Plain-language tract needs, three site choices, and one numbered pin per use.
 export function createAreaPlanning(root, { request, categories, onPreview, onClear }) {
@@ -15,6 +18,10 @@ export function createAreaPlanning(root, { request, categories, onPreview, onCle
     <button type="button" data-area-retry hidden>Try again</button>
     <label for="planning-site" data-site-label>Suggested location</label>
     <select id="planning-site" data-testid="site-selector" disabled><option>Choose an area first</option></select>
+    <div class="site-pick-notice" data-testid="site-pick-notice" hidden>
+      <p data-pick-message role="status">Click a vacant lot inside the blue tract boundary.</p>
+      <button type="button" data-testid="cancel-site-pick">Cancel selection</button>
+    </div>
     <div class="area-site-reason" data-site-reason hidden>
       <strong class="area-score" data-testid="site-score"></strong>
       <p data-testid="selected-site-fit"></p>
@@ -44,6 +51,17 @@ export function createAreaPlanning(root, { request, categories, onPreview, onCle
   let areaRequest = null, siteRequest = null;
   let selectedSite = null, selectionSerial = 0, userChoseCategory = false;
   let onlyVacant = false;
+  let picking = false, customSite = null, pickRequest = null, availableRequest = null, availableSites = [];
+
+  function stopPicking() {
+    picking = false;
+    pickRequest?.abort();
+    availableRequest?.abort();
+    availableSites = [];
+    map?.drawAvailableSites?.([], category);
+    find('[data-testid="site-pick-notice"]').hidden = true;
+    map?.setPickingSite?.(false);
+  }
 
   const bestSite = (id) => rankings?.[id]?.sites.find((site) => site.rank != null);
   const orderedNeeds = () => [...area.properties.needs].sort((a, b) => {
@@ -61,7 +79,7 @@ export function createAreaPlanning(root, { request, categories, onPreview, onCle
   function draw() {
     const pins = area ? orderedNeeds().flatMap((need, i) => {
       const options = rankings?.[need.category_id]?.sites.filter((site) => site.rank != null) || [];
-      const best = need.category_id === category ? options.find((site) => site.parcel_id === selectedSite) || options[0] : options[0];
+      const best = need.category_id === category ? customSite || options.find((site) => site.parcel_id === selectedSite) || options[0] : options[0];
       return best ? [{ ...best.design, parcel_id: best.parcel_id, rank: i + 1, category_id: need.category_id }] : [];
     }) : [];
     map?.drawAreas?.(collection?.features || [], area?.id, pins, category);
@@ -91,6 +109,8 @@ export function createAreaPlanning(root, { request, categories, onPreview, onCle
         if (category === need.category_id) return;
         category = need.category_id;
         userChoseCategory = true;
+        stopPicking();
+        customSite = null;
         onClear?.();
         renderNeeds();
         if (rankings) { ranking = rankings[category]; renderSites(); }
@@ -102,10 +122,11 @@ export function createAreaPlanning(root, { request, categories, onPreview, onCle
   function renderSites() {
     const options = rankedSites();
     sites.replaceChildren();
-    ['Best match', 'Second option', 'Third option'].slice(0, options.length).forEach((label, i) =>
+    ['Best Match', 'Second Best Match', 'Third Best Match'].slice(0, options.length).forEach((label, i) =>
       sites.add(new Option(label, options[i].parcel_id)));
-    sites.disabled = !options.length;
+    sites.disabled = false;
     if (!options.length) sites.add(new Option('No suitable vacant site found', ''));
+    sites.add(new Option('Choose Your Own Vacant Lot…', PICK_OWN));
     selectedSite = options[0]?.parcel_id || null;
     if (selectedSite) sites.value = selectedSite;
     find('[data-site-label]').textContent = `Suggested location for ${categories[category].toLowerCase()}`;
@@ -123,8 +144,8 @@ export function createAreaPlanning(root, { request, categories, onPreview, onCle
   async function previewSite(parcelId, focus = false) {
     const serial = ++selectionSerial;
     selectedSite = parcelId;
-    const site = ranking.sites.find((row) => row.parcel_id === parcelId);
-    find('[data-testid="site-score"]').textContent = `${Math.round(site.score)}/100`;
+    const site = customSite?.parcel_id === parcelId ? customSite : ranking.sites.find((row) => row.parcel_id === parcelId);
+    find('[data-testid="site-score"]').textContent = site.score == null ? 'Not scored' : `${Math.round(site.score)}/100`;
     find('[data-testid="selected-site-fit"]').textContent = site.explanation;
     find('[data-score-details]').textContent = `Lot ${parcelId}. Tract access gap: ${number.format(ranking.tract_access_deficit_pct)}%. Scoring is the same everywhere: 85% tract need, 10% space, 5% access improvement. A 30% gap reaches full need points. Concept: ${number.format(site.design.footprint_m2)} m² on the ground, ${site.design.floors} floors.`;
     draw();
@@ -163,6 +184,8 @@ export function createAreaPlanning(root, { request, categories, onPreview, onCle
   }
 
   function chooseArea(id) {
+    stopPicking();
+    customSite = null;
     onClear?.();
     area = collection.features.find((feature) => feature.id === id);
     if (!area) return;
@@ -208,7 +231,86 @@ export function createAreaPlanning(root, { request, categories, onPreview, onCle
   }
 
   select.addEventListener('change', () => chooseArea(select.value));
-  sites.addEventListener('change', () => previewSite(sites.value));
+  sites.addEventListener('change', async () => {
+    if (sites.value === PICK_OWN) {
+      picking = true;
+      const message = find('[data-pick-message]');
+      message.textContent = 'Finding vacant lots that fit this building type…';
+      find('[data-testid="site-pick-notice"]').hidden = false;
+      map?.setPickingSite?.(true);
+      availableRequest?.abort();
+      const controller = new AbortController();
+      availableRequest = controller;
+      try {
+        const result = await request(`/planning/areas/${encodeURIComponent(area.id)}/available-sites?category=${category}`, { signal: controller.signal });
+        if (controller.signal.aborted || !picking) return;
+        if (result.data_version !== collection.data_version) throw new Error('The data changed. Reload before choosing a lot.');
+        availableSites = result.features;
+        map?.drawAvailableSites?.(availableSites, category);
+        message.textContent = availableSites.length
+          ? `${availableSites.length} compatible vacant ${availableSites.length === 1 ? 'lot is' : 'lots are'} blinking yellow. Click one inside the blue boundary.`
+          : 'No vacant lots in this tract fit this building type. Try another type or tract.';
+      } catch (error) {
+        if (!controller.signal.aborted) message.textContent = error.message;
+      }
+      return;
+    }
+    stopPicking();
+    if (sites.value !== customSite?.parcel_id) {
+      customSite = null;
+      sites.querySelector('[data-custom-site]')?.remove();
+    }
+    if (sites.value) previewSite(sites.value);
+  });
+  find('[data-testid="cancel-site-pick"]').addEventListener('click', () => {
+    stopPicking();
+    sites.value = selectedSite || '';
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && picking) {
+      stopPicking();
+      sites.value = selectedSite || '';
+    }
+  });
+
+  async function pickSite(point) {
+    if (!picking || !area) return false;
+    const message = find('[data-pick-message]');
+    if (!containsPoint(area.geometry, point)) {
+      message.textContent = 'That location is outside this tract. Choose a vacant lot inside the blue boundary.';
+      return true;
+    }
+    pickRequest?.abort();
+    const controller = new AbortController();
+    pickRequest = controller;
+    const { signal } = controller;
+    message.textContent = 'Checking this vacant lot…';
+    try {
+      const hit = availableSites.find((feature) => containsPoint(feature.geometry, point));
+      if (!hit) throw new Error('Choose one of the highlighted vacant lots. Other locations do not fit this building type.');
+      const result = await request(`/planning/areas/${encodeURIComponent(area.id)}/sites?category=${category}&parcel_id=${encodeURIComponent(hit.id)}&limit=1`, { signal });
+      if (signal.aborted) return true;
+      if (result.data_version !== collection.data_version) throw new Error('The data changed. Reload the planner before selecting this lot.');
+      const site = result.sites.find((row) => row.parcel_id === hit.id);
+      if (!site) throw new Error('This vacant lot is unavailable for this building type.');
+      customSite = site;
+      const previous = sites.querySelector('[data-custom-site]');
+      previous?.remove();
+      if (![...sites.options].some((option) => option.value === hit.id)) {
+        const option = new Option('Your Selected Lot', hit.id);
+        option.dataset.customSite = '';
+        sites.insertBefore(option, sites.lastElementChild);
+      }
+      sites.value = hit.id;
+      stopPicking();
+      find('[data-site-reason]').hidden = false;
+      status.textContent = 'Your vacant lot is selected. The score uses the same tract needs and physical-fit checks.';
+      await previewSite(hit.id, false);
+    } catch (error) {
+      if (!signal.aborted) message.textContent = error.message;
+    }
+    return true;
+  }
   find('[data-testid="only-vacant-view"]').addEventListener('change', (event) => {
     onlyVacant = event.target.checked;
     map?.setOnlyVacant?.(onlyVacant);
@@ -218,6 +320,16 @@ export function createAreaPlanning(root, { request, categories, onPreview, onCle
   return {
     mountSizeControl(control) { find('[data-size-mount]').append(control); },
     mountDetails(content) { find('[data-detail-mount]').append(content); },
+    isPicking: () => picking,
+    pickSite,
+    tractAt(point) { return collection?.features.find((feature) => containsPoint(feature.geometry, point)); },
+    jumpToTract(point) {
+      const tract = collection?.features.find((feature) => containsPoint(feature.geometry, point));
+      if (!tract) return false;
+      select.value = tract.id;
+      chooseArea(tract.id);
+      return true;
+    },
     connectMap(connectedMap) { map = connectedMap; map.setOnlyVacant?.(onlyVacant); if (area) map.focusArea?.(area); draw(); }, redraw: draw,
   };
 }

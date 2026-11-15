@@ -16,6 +16,8 @@ test.beforeEach(async ({ page }) => {
 });
 
 async function openTract(page: Page, category = 'grocery') {
+  // These flows exercise planning for a returning visitor; first-visit onboarding is checked separately.
+  await page.addInitScript(() => localStorage.setItem('sf-sim-getting-started-seen', '1'));
   await page.goto('/');
   await expect(page).toHaveTitle('Tract Planner');
   const area = page.getByTestId('area-selector');
@@ -53,7 +55,7 @@ test('tract-first screen uses plain language, one score and one details disclosu
   await openTract(page, 'school');
   await expect(page.getByTestId('tract-recommendation')).toHaveText('Schools are the biggest need in this area.');
   await expect(page.getByTestId('site-score')).toHaveText(/^\d+\/100$/);
-  await expect(page.getByTestId('selected-site-fit')).toContainText(/biggest service needs|local service/);
+  await expect(page.getByTestId('selected-site-fit')).toContainText('Local access data');
   await expect(page.getByText('Ranking weights', { exact:true })).toHaveCount(0);
   await expect(page.getByTestId('parcel-selector')).toBeHidden();
   await expect(page.getByTestId('tract-details')).not.toHaveAttribute('open');
@@ -70,8 +72,9 @@ test('best-three dropdown matches the real ranking and changing it moves the sel
   const expected = recommendations.rankings.grocery.sites.filter((site: any) => site.rank != null);
   expect(expected.length).toBe(3);
   const selector = page.getByTestId('site-selector');
-  const values = await selector.locator('option').evaluateAll(elements => elements.map(el => (el as HTMLOptionElement).value));
+  const values = await selector.locator('option:not([value="__pick_own__"])').evaluateAll(elements => elements.map(el => (el as HTMLOptionElement).value));
   expect(values).toEqual(expected.map((site: any) => site.parcel_id));
+  await expect(selector.locator('option')).toHaveText(['Best Match','Second Best Match','Third Best Match','Choose Your Own Vacant Lot…']);
   await selector.selectOption(values[1]);
   await expect(page.getByTestId('comparison-results')).toHaveAttribute('data-parcel-id', values[1]);
   await page.waitForFunction(() => Boolean((window as any).__sf));
@@ -211,11 +214,84 @@ test('missing tract data gives a readable retry state', async ({ page }) => {
 test('tracts with no suitable sites keep the area and type choices usable', async ({ page }) => {
   await openTract(page);
   await page.getByTestId('area-selector').selectOption('06075980200');
-  await expect(page.getByTestId('site-selector')).toBeDisabled();
+  await expect(page.getByTestId('site-selector')).toBeEnabled();
   await expect(page.getByTestId('site-ranking-status')).toContainText(/No vacant lot/);
   await expect(page.getByTestId('area-selector')).toBeEnabled();
   await expect(page.getByTestId('area-use-grocery')).toBeEnabled();
   await expect(page.getByTestId('proposal-height')).toBeHidden();
+});
+
+test('choosing a custom lot pulses only compatible vacancies and clears them on cancel or a type change', async ({ page }) => {
+  await openTract(page);
+  await page.waitForFunction(() => Boolean((window as any).__sf));
+  const response = await page.request.get(`/api/v1/planning/areas/${defaultTract}/available-sites?category=grocery`);
+  const data = await response.json();
+  // Zoom into the tract before choosing a lot; entering selection must retain that framing.
+  await expect(page.locator('.loader')).toHaveCount(0, { timeout: 30000 });
+  await page.mouse.move(600, 400);
+  await page.mouse.wheel(0, -400);
+  await page.waitForTimeout(1200);
+  const framing = () => page.evaluate(() => {
+    const camera = (window as any).__sf.cam.getActiveCamera();
+    return { zoom: camera.zoom, position: camera.position.toArray() };
+  });
+  const beforePick = await framing();
+  await page.getByTestId('site-selector').selectOption('__pick_own__');
+  await expect(page.getByTestId('site-pick-notice')).toContainText('blinking');
+  await expect.poll(() => page.evaluate(() => (window as any).__sf.scene.getObjectByName('available-vacant-sites').userData.count)).toBe(data.features.length);
+  const highlighted = await page.evaluate(() => (window as any).__sf.scene.getObjectByName('available-vacant-sites').children.filter((x: any) => x.isMesh).map((x: any) => x.userData.parcelId));
+  expect([...new Set(highlighted)].sort()).toEqual(data.features.map((x: any) => x.id).sort());
+  const firstOpacity = await page.evaluate(() => (window as any).__sf.scene.getObjectByName('available-vacant-sites').children.find((x: any) => x.isMesh).material.opacity);
+  await expect.poll(() => page.evaluate(() => (window as any).__sf.scene.getObjectByName('available-vacant-sites').children.find((x: any) => x.isMesh).material.opacity)).not.toBe(firstOpacity);
+  const duringPick = await framing();
+  expect(duringPick.zoom).toBeCloseTo(beforePick.zoom, 5);
+  duringPick.position.forEach((value: number, index: number) => expect(value).toBeCloseTo(beforePick.position[index], 2));
+  await page.getByTestId('cancel-site-pick').click();
+  await expect(page.getByTestId('site-pick-notice')).toBeHidden();
+  expect(await page.evaluate(() => (window as any).__sf.scene.getObjectByName('available-vacant-sites').children.length)).toBe(0);
+  await page.getByTestId('site-selector').selectOption('__pick_own__');
+  await expect(page.getByTestId('site-pick-notice')).toContainText('blinking');
+  await page.getByTestId('area-use-clinic').click();
+  await expect(page.getByTestId('site-pick-notice')).toBeHidden();
+  expect(await page.evaluate(() => (window as any).__sf.scene.getObjectByName('available-vacant-sites').children.length)).toBe(0);
+});
+
+test('Getting Started opens on the first visit, remembers it, and reopens from the top-left title', async ({ page }) => {
+  await page.goto('/');
+  const guide = page.getByTestId('getting-started-dialog');
+  await expect(guide).toBeVisible({ timeout: 30000 });
+  await expect(guide).toHaveAttribute('data-step', '1');
+  await guide.getByRole('button', { name: 'Close Getting Started' }).click();
+  await expect(guide).not.toBeVisible();
+  await page.reload();
+  const trigger = page.locator('.title').getByTestId('getting-started');
+  await expect(trigger).toBeVisible({ timeout: 30000 });
+  await expect(guide).not.toBeVisible();
+  await trigger.click();
+  await expect(guide).toBeVisible();
+  await expect(guide).toHaveAttribute('data-step', '1');
+});
+
+test('Getting Started is a three-step modal with control-free looping clips and keyboard navigation', async ({ page }) => {
+  await openTract(page);
+  await page.waitForFunction(() => Boolean((window as any).__sf));
+  await page.getByTestId('getting-started').click();
+  const guide = page.getByTestId('getting-started-dialog');
+  await expect(guide).toBeVisible();
+  for (let step=1; step<=3; step++) {
+    await expect(guide).toHaveAttribute('data-step',String(step));
+    await expect(guide.locator('h2')).not.toBeEmpty();
+    await expect.poll(() => guide.locator('video').evaluate((video: HTMLVideoElement) => video.readyState)).toBeGreaterThanOrEqual(2);
+    expect(await guide.locator('video').evaluate((v: HTMLVideoElement) => ({loop:v.loop,muted:v.muted,playing:!v.paused,controls:v.controls}))).toEqual({loop:true,muted:true,playing:true,controls:false});
+    if (step<3) await guide.getByRole('button',{name:'Next step',exact:true}).click();
+  }
+  await guide.getByRole('button',{name:'Previous step',exact:true}).click();
+  await expect(guide).toHaveAttribute('data-step','2');
+  await page.keyboard.press('ArrowRight');
+  await expect(guide).toHaveAttribute('data-step','3');
+  await guide.getByRole('button',{name:'Start planning',exact:true}).click();
+  await expect(guide).not.toBeVisible();
+  await expect(page.getByTestId('getting-started')).toBeFocused();
 });
 
 test('WebGL failure preserves tract choices and the 2D footprint', async ({ page }) => {
@@ -233,6 +309,7 @@ test('WebGL failure preserves tract choices and the 2D footprint', async ({ page
 });
 
 test('missing comparison estimates preserve the ranked-site controls and size preview', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('sf-sim-getting-started-seen', '1'));
   await page.route('**/api/v1/scenarios/compare', route => route.fulfill({status:503,json:{error:{message:'Site estimates unavailable.'}}}));
   await page.goto('/');
   await expect(page.getByTestId('site-selector')).toBeEnabled({timeout:15000});

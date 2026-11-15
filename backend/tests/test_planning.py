@@ -12,12 +12,12 @@ from shapely.strtree import STRtree
 
 from backend.api import create_app
 from backend.build_planning import assign_area, load_tracts, summarize_area_needs
-from backend.geometry import polygon_model, unproject
+from backend.geometry import TO_METERS, TO_WGS84, polygon_model, unproject
 from backend.planning import Planning, need_level
 from backend.planning_schemas import AreaNeed, AreaProperties, PlanningArea, PlanningIndex, PlanningSources, SiteContext, SiteFitAssumptions
 from backend.release import ROOT, Release, ReleaseInputs, freeze
 from backend.economics import load_assumptions
-from backend.schemas import CATEGORIES, ParcelFeature, ParcelProperties, Point as ModelPoint
+from backend.schemas import CATEGORIES, ParcelFeature, ParcelProperties, Point as ModelPoint, ServiceFeature, ServiceProperties
 from backend.site_fit import open_ground, rectangles, suggest_size
 
 
@@ -186,6 +186,30 @@ class PlanningTests(unittest.TestCase):
                              (50,'Needed'),(74,'Needed'),(75,'High need'),(100,'High need'),(None,'Need unknown')]:
             self.assertEqual(need_level(score), label)
 
+    def test_score_explanation_uses_category_specific_measured_distance_and_local_need(self):
+        self.index.sites[0].available_geometry = context(width=100, length=100).available_geometry
+        self.release.parcels[self.parcel_id].properties.area_m2 = 10000
+        center = self.release.parcels[self.parcel_id].properties.representative_point.coordinates
+        x, y = TO_METERS.transform(*center)
+        self.release.frozen.services = [
+            ServiceFeature(id='test-pharmacy', geometry=ModelPoint(coordinates=TO_WGS84.transform(x + 1609.344, y)),
+                           properties=ServiceProperties(place_id='test-pharmacy', categories=['pharmacy'], status='active')),
+            ServiceFeature(id='test-clinic', geometry=ModelPoint(coordinates=center),
+                           properties=ServiceProperties(place_id='test-clinic', categories=['clinic'], status='active')),
+        ]
+        next(row for row in self.index.areas[0].properties.needs if row.category_id == 'pharmacy').access_deficit_pct = 0
+        planning = Planning(self.index, self.release, assumptions())
+        pharmacy = planning.ranking('06075010100', 'pharmacy').sites[0]
+        self.assertIn('no clear shortage', pharmacy.explanation)
+        self.assertIn('nearest mapped pharmacy is about 1.0 miles away', pharmacy.explanation)
+        self.assertIn('full suggested building size', pharmacy.explanation)
+        clinic = planning.ranking('06075010100', 'clinic').sites[0]
+        self.assertIn('large shortage', clinic.explanation)
+        self.assertIn('nearest mapped clinic is less than 0.1 miles', clinic.explanation)
+        school = planning.ranking('06075010100', 'school').sites[0]
+        self.assertNotIn('nearest mapped', school.explanation)
+        self.assertNotIn('miles', school.explanation)
+
     def test_no_tract_population_evidence_does_not_turn_into_a_ranked_need(self):
         self.index.sites[0].available_geometry = context(width=100, length=100).available_geometry
         self.release.parcels[self.parcel_id].properties.area_m2 = 10000
@@ -222,6 +246,28 @@ class PlanningTests(unittest.TestCase):
             with TestClient(create_app(mode='fixture', planning_path=path.parent / 'missing.json')) as client:
                 self.assertEqual(client.get('/api/v1/planning/areas').status_code, 503)
                 self.assertEqual(client.post('/api/v1/scenarios/compare', json={'parcel_id':self.parcel_id}).status_code, 200)
+
+    def test_custom_site_must_belong_to_selected_tract_and_fit_the_use(self):
+        self.index.sites[0].available_geometry = context().available_geometry
+        self.release.parcels[self.parcel_id].properties.area_m2 = 1000
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / 'planning.json'
+            path.write_text(self.index.model_dump_json())
+            with patch('backend.api.load_release', return_value=self.release), TestClient(create_app(mode='fixture', planning_path=path)) as client:
+                base = '/api/v1/planning/areas/06075010100/sites'
+                response = client.get(base, params={'category':'clinic','parcel_id':self.parcel_id,'limit':1})
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual([site['parcel_id'] for site in response.json()['sites']], [self.parcel_id])
+                available = client.get('/api/v1/planning/areas/06075010100/available-sites', params={'category':'clinic'})
+                self.assertEqual(available.status_code, 200)
+                self.assertEqual([site['id'] for site in available.json()['features']], [self.parcel_id])
+                no_fit = client.get('/api/v1/planning/areas/06075010100/available-sites', params={'category':'school'})
+                self.assertEqual(no_fit.json()['features'], [])
+                wrong_area = client.get('/api/v1/planning/areas/06075099900/sites', params={'category':'clinic','parcel_id':self.parcel_id})
+                self.assertEqual(wrong_area.status_code, 422)
+                too_small = client.get(base, params={'category':'school','parcel_id':self.parcel_id})
+                self.assertEqual(too_small.status_code, 422)
+                self.assertEqual(too_small.json()['error']['code'], 'site_does_not_fit')
 
 
 if __name__ == '__main__':
