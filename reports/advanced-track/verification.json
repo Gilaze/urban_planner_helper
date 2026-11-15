@@ -1,0 +1,11 @@
+{
+  "status": "pass",
+  "rows": 10480,
+  "distinct_places": 10480,
+  "original_cities_present": false,
+  "county_subgroups_verified": 4,
+  "category_and_primary_rmse_independently_recomputed": true,
+  "predictions_sha256": "71a0b008d6c95eb469df78944e1cca2d1b281fa860c3aa333f1b2f09df58629e",
+  "raw_places_rebuild_matches_frozen_canonical": true,
+  "raw_reproduction_predictions_match_first_run_byte_for_byte": true
+}

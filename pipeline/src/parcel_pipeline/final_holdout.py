@@ -21,6 +21,7 @@ from .categories import load_categories
 from .features import FEATURE_COLUMNS, SupplyIndex, build_place_features, tract_covariates
 from .model import TARGET
 from .settings import REPO_ROOT
+from .sources import places as places_source
 
 
 def sha(data):
@@ -38,7 +39,7 @@ def metrics(frame, prediction):
             "spearman": float(spearmanr(y,p).statistic) if len(y)>1 and np.unique(y).size>1 and np.unique(p).size>1 else None}
 
 
-def evaluate(root: Path, output: Path):
+def evaluate(root: Path, output: Path, from_raw: bool = False):
     protocol_path = root / 'reports/advanced-track/protocol.json'
     protocol = json.loads(protocol_path.read_text())
     # All checks and model choices are fixed before computing or inspecting holdout metrics.
@@ -70,6 +71,20 @@ def evaluate(root: Path, output: Path):
     # Identify new city membership spatially, without using held-out target values.
     boundaries = gpd.read_file(f"zip://{root/'data/raw/census/tl_2024_06_place.zip'}")
     boundaries = boundaries[boundaries.LSAD == '25'][['NAME','geometry']].to_crs('EPSG:4326')
+    if from_raw:
+        rebuilt, _ = places_source.read_places(raw_places, load_categories())
+        rebuilt = places_source.finalize_places(places_source.assign_city(
+            rebuilt, boundaries[boundaries.NAME.isin(['Oakland','Berkeley','San Francisco'])]))
+        # Reproduction must reproduce the original canonical inputs, not silently change labels/features.
+        columns = ['place_id','longitude','latitude','city','primary_category','closure_status',
+                   'is_current_supply','reviews_count','service_tags']
+        def comparable(frame):
+            frame = frame[columns].sort_values('place_id').reset_index(drop=True).copy()
+            frame['service_tags'] = frame.service_tags.map(lambda tags: '|'.join(tags))
+            return frame
+        pd.testing.assert_frame_equal(comparable(places), comparable(rebuilt), check_dtype=False,
+                                      check_exact=False, rtol=1e-12, atol=1e-12)
+        places = rebuilt
     outside = places[places.city.isna()].copy()
     pts = gpd.GeoDataFrame(outside, geometry=gpd.points_from_xy(outside.longitude,outside.latitude),crs='EPSG:4326')
     joined = gpd.sjoin(pts, boundaries, how='inner', predicate='within')
@@ -137,10 +152,11 @@ def evaluate(root: Path, output: Path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output',type=Path,required=True)
+    parser.add_argument('--from-raw',action='store_true',help='Rebuild Places using frozen cleaning rules and verify equality before reproducing the evaluation')
     args=parser.parse_args()
     if args.output.exists() and any(args.output.iterdir()):
         raise SystemExit('Output exists; use a separate directory for an explicitly labeled reproducibility rerun, never overwrite first-run evidence.')
-    report=evaluate(REPO_ROOT,args.output)
+    report=evaluate(REPO_ROOT,args.output,args.from_raw)
     print(json.dumps({'n':report['n'],'n_cities':report['n_cities'],'primary':report['primary'],'overlap':report['prior_split_overlap']},indent=2))
 
 if __name__=='__main__':

@@ -1,5 +1,7 @@
 # Parcel Planner
 
+[Advanced Track evidence and final held-out evaluation](reports/advanced-track/README.md) · [Reproduction instructions](reports/advanced-track/REPRODUCE.md)
+
 The FastAPI backend runs a synthetic San Francisco scenario with five service alternatives. The fixture uses hypothetical geometry, population, service locations, review activity and economic assumptions.
 
 ## Run the fixture

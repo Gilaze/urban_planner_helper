@@ -74,3 +74,8 @@ See `category_audit_sample.csv`; the `reviewer_verdict` column is empty for manu
 - **Pharmacy includes individual pharmacist listings** (e.g. personal names under category "Pharmacy"). These are probably duplicates of the store they work in.
 - **Convenience stores are excluded from grocery** (1,669 + 59 rows). Lookalikes such as "Popeye's Tobacco & Grocery" stay `other`.
 - Specialists (surgeons, cardiologists, oncologists), acupuncture, PT and med spas are `other`, not clinic.
+
+
+## Final evaluation supplement (2026-11-15)
+
+The SF exposure warning above remains valid. A separately frozen, no-refit evaluation now uses10,480 previously excluded labeled Places in50 other incorporated cities. See [Advanced Track evidence](../advanced-track/README.md), its preregistered protocol, first-run predictions and independent verification. The new label-held-out result supplements rather than replaces historical SF results. No live app model, taxonomy, need score or serving release was changed.
