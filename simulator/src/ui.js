@@ -89,8 +89,7 @@ export function createUI(root) {
       // ---- title
       const title = el('div', 'panel title');
       title.innerHTML = `
-        <div class="t1">SF 3D Model</div>
-        <div class="t2">${stats.buildings.toLocaleString()} buildings · ${(stats.tris / 1e6).toFixed(1)}M triangles · ${stats.trees.toLocaleString()} trees</div>`;
+        <div class="t1">SF 3D Model</div>`;
       hud.appendChild(title);
 
       // ---- legend: colour by building type or by parcel vacancy
@@ -384,7 +383,7 @@ export function createUI(root) {
         toggleFocus() { focus.click(); },
         toggleOutlines() { lines.click(); },
         toggleVacancy() { vacBtn.click(); },
-        setGpu(name) { title.querySelector('.t2').insertAdjacentHTML('beforeend', ` · <span class="gpu">${name}</span>`); },
+        setGpu(name) { title.title = `Rendering on ${name}`; },
       };
     },
   };
