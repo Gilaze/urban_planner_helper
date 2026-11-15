@@ -169,6 +169,7 @@ html, body {
   padding: 12px; background: #f7faff; font-size: 13px;
 }
 .planner summary { cursor: pointer; font-weight: 700; }
+.planner-fallback-title { margin: 0; font-size: 14px; }
 .planner-body { margin-top: 10px; }
 .planner-parcels { display: flex; gap: 6px; margin-top: 4px; }
 .planner button, .planner select {
@@ -209,12 +210,32 @@ html, body {
 .planner-alternative dl { display: grid; grid-template-columns: 1fr 1.2fr; gap: 4px 8px; font-size: 12px; margin: 8px 0 0; }
 .planner-alternative dt { color: var(--ink-2); }
 .planner-alternative dd { margin: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.area-planning { margin-bottom: 12px; }
+.area-planning > select { width: 100%; margin: 4px 0; }
+.area-method { margin-top: 8px; font-size: 12px; }
+.area-needs { display: grid; gap: 4px; margin: 8px 0; }
+.area-needs button { display: flex; justify-content: space-between; gap: 8px; text-align: left; font-size: 12px; }
+.area-recommendation { font-size: 14px; font-weight: 650; line-height: 1.45; }
+.area-site-reason { display: flex; gap: 10px; align-items: center; padding: 10px 0 4px; }
+.area-score { flex: none; font-size: 20px; letter-spacing: -0.04em; color: #194a9e; }
+.area-site-reason p { font-size: 12px; line-height: 1.45; }
+.area-needs button span:last-child { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.area-sites { display: grid; gap: 8px; list-style: none; margin: 8px 0; padding: 0; }
+.area-sites > li { padding: 8px; border: 1px solid #cadad8; border-radius: 8px; background: #f3faf7; }
+.area-sites strong { font-size: 12px; }
+.area-sites button { width: 100%; margin-top: 5px; }
+.area-size { font-size: 12px; font-weight: 600; }
+.area-assumptions { border-top: 1px solid #d9e2ef; padding-top: 8px; }
+.planner [data-size-control] label { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; }
+.planner [data-size-control] input { width: 100%; accent-color: var(--accent); }
+.planner [data-size-control] { margin: 10px 0; padding: 8px; border-radius: 8px; background: #edf4ff; }
+.area-method [data-testid="comparison-results"] { max-height: none; overflow: visible; scrollbar-gutter: auto; }
 
 @media (max-width: 900px) {
   .toolbar { left: 16px; right: 16px; transform: none; overflow-x: auto; }
 }
 
-/* ---- side drawers (map key on the left, Parcel Planner on the right) ---- */
+/* ---- side drawers (map key on the left, Tract Planner on the right) ---- */
 .drawer {
   --w: 300px;
   position: absolute; top: 88px; max-height: calc(100% - 204px); display: flex; width: min(var(--w), calc(100vw - 72px));
@@ -240,6 +261,12 @@ html, body {
 .drawer.left .drawer-tab { left: 100%; border-left: 0; border-radius: 0 10px 10px 0; }
 .drawer.right .drawer-tab { right: 100%; border-right: 0; border-radius: 10px 0 0 10px; transform: rotate(180deg); }
 .drawer-tab:hover { color: var(--accent); }
+.height-track { position: relative; display: flex; align-items: center; height: 30px; }
+.planner .height-track input { margin: 0; }
+.height-suggestion { position: absolute; width: 3px; height: 25px; top: 2px; transform: translateX(-50%); background: #e48300; border: 1px solid #6d3700; border-radius: 2px; box-shadow: 0 0 0 2px #fff; pointer-events: none; z-index: 2; }
+.vacant-view-toggle { display: flex; align-items: center; gap: 8px; margin: 6px 0 10px; font-size: 13px; cursor: pointer; }
+.vacant-view-toggle input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+@media (prefers-reduced-motion: reduce) { .drawer { transition: none; } }
 .drawer-chev::before { content: '‹'; display: inline-block; font-size: 15px; writing-mode: horizontal-tb; }
 .drawer.left .drawer-chev::before { transform: rotate(-90deg); }
 .drawer.left.collapsed .drawer-chev::before { transform: rotate(90deg); }
@@ -249,9 +276,9 @@ html, body {
 .drawer-help summary { cursor: pointer; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; padding: 0 6px; }
 .drawer-help ul { margin: 6px 0 0; padding-left: 22px; line-height: 1.6; }
 .drawer-help b { color: var(--ink); font-weight: 650; }
-/* the Parcel Planner panel docked inside the right drawer */
+/* The drawer tab is the planner's only open/close control. */
 .drawer .planner { position: static; width: auto; padding: 0; background: transparent; border: 0; box-shadow: none; backdrop-filter: none; }
-.drawer .planner > details > summary { display: none; }
+.drawer .planner-fallback-title { display: none; }
 .drawer .planner .planner-body { margin-top: 0; }
 @media (max-width: 900px) {
   .drawer { max-height: calc(100% - 216px); }

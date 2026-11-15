@@ -163,6 +163,192 @@
         "title": "Alternative",
         "type": "object"
       },
+      "AreaCollection": {
+        "additionalProperties": false,
+        "properties": {
+          "data_version": {
+            "title": "Data Version",
+            "type": "string"
+          },
+          "features": {
+            "items": {
+              "$ref": "#/components/schemas/PlanningArea-Output"
+            },
+            "title": "Features",
+            "type": "array"
+          },
+          "sources": {
+            "$ref": "#/components/schemas/PlanningSources"
+          },
+          "type": {
+            "const": "FeatureCollection",
+            "default": "FeatureCollection",
+            "title": "Type",
+            "type": "string"
+          },
+          "unassigned_candidate_count": {
+            "minimum": 0.0,
+            "title": "Unassigned Candidate Count",
+            "type": "integer"
+          },
+          "unassigned_population_points": {
+            "minimum": 0.0,
+            "title": "Unassigned Population Points",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "features",
+          "data_version",
+          "sources",
+          "unassigned_candidate_count",
+          "unassigned_population_points"
+        ],
+        "title": "AreaCollection",
+        "type": "object"
+      },
+      "AreaNeed": {
+        "additionalProperties": false,
+        "properties": {
+          "access_deficit_pct": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Access Deficit Pct"
+          },
+          "category_id": {
+            "enum": [
+              "bank_credit_union",
+              "clinic",
+              "grocery",
+              "pharmacy",
+              "school"
+            ],
+            "title": "Category Id",
+            "type": "string"
+          },
+          "covered_population": {
+            "minimum": 0.0,
+            "title": "Covered Population",
+            "type": "number"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "required": [
+          "category_id",
+          "covered_population"
+        ],
+        "title": "AreaNeed",
+        "type": "object"
+      },
+      "AreaProperties": {
+        "additionalProperties": false,
+        "properties": {
+          "candidate_count": {
+            "minimum": 0.0,
+            "title": "Candidate Count",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "needs": {
+            "items": {
+              "$ref": "#/components/schemas/AreaNeed"
+            },
+            "title": "Needs",
+            "type": "array"
+          },
+          "population": {
+            "minimum": 0.0,
+            "title": "Population",
+            "type": "number"
+          },
+          "representative_point": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Representative Point",
+            "type": "array"
+          },
+          "supported_population": {
+            "minimum": 0.0,
+            "title": "Supported Population",
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "population",
+          "supported_population",
+          "candidate_count",
+          "representative_point",
+          "needs"
+        ],
+        "title": "AreaProperties",
+        "type": "object"
+      },
+      "AreaRecommendations": {
+        "additionalProperties": false,
+        "properties": {
+          "area_id": {
+            "title": "Area Id",
+            "type": "string"
+          },
+          "data_version": {
+            "title": "Data Version",
+            "type": "string"
+          },
+          "rankings": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/SiteRanking"
+            },
+            "propertyNames": {
+              "enum": [
+                "bank_credit_union",
+                "clinic",
+                "grocery",
+                "pharmacy",
+                "school"
+              ]
+            },
+            "title": "Rankings",
+            "type": "object"
+          }
+        },
+        "required": [
+          "area_id",
+          "data_version",
+          "rankings"
+        ],
+        "title": "AreaRecommendations",
+        "type": "object"
+      },
       "CategoryInfo": {
         "additionalProperties": false,
         "properties": {
@@ -1351,6 +1537,138 @@
         "title": "PermitStep",
         "type": "object"
       },
+      "PlanningArea-Input": {
+        "additionalProperties": false,
+        "properties": {
+          "geometry": {
+            "discriminator": {
+              "mapping": {
+                "MultiPolygon": "#/components/schemas/MultiPolygon",
+                "Polygon": "#/components/schemas/Polygon"
+              },
+              "propertyName": "type"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Polygon"
+              },
+              {
+                "$ref": "#/components/schemas/MultiPolygon"
+              }
+            ],
+            "title": "Geometry"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "properties": {
+            "$ref": "#/components/schemas/AreaProperties"
+          },
+          "type": {
+            "const": "Feature",
+            "default": "Feature",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "geometry",
+          "properties"
+        ],
+        "title": "PlanningArea",
+        "type": "object"
+      },
+      "PlanningArea-Output": {
+        "additionalProperties": false,
+        "properties": {
+          "geometry": {
+            "discriminator": {
+              "mapping": {
+                "MultiPolygon": "#/components/schemas/MultiPolygon",
+                "Polygon": "#/components/schemas/Polygon"
+              },
+              "propertyName": "type"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Polygon"
+              },
+              {
+                "$ref": "#/components/schemas/MultiPolygon"
+              }
+            ],
+            "title": "Geometry"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "properties": {
+            "$ref": "#/components/schemas/AreaProperties"
+          },
+          "type": {
+            "const": "Feature",
+            "default": "Feature",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "geometry",
+          "properties"
+        ],
+        "title": "PlanningArea",
+        "type": "object"
+      },
+      "PlanningSources": {
+        "additionalProperties": false,
+        "properties": {
+          "building_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Building Source"
+          },
+          "demographic_sha256": {
+            "title": "Demographic Sha256",
+            "type": "string"
+          },
+          "population_vintage": {
+            "title": "Population Vintage",
+            "type": "string"
+          },
+          "tract_sha256": {
+            "title": "Tract Sha256",
+            "type": "string"
+          },
+          "tract_url": {
+            "title": "Tract Url",
+            "type": "string"
+          },
+          "tract_vintage": {
+            "title": "Tract Vintage",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tract_url",
+          "tract_sha256",
+          "tract_vintage",
+          "population_vintage",
+          "building_source",
+          "demographic_sha256"
+        ],
+        "title": "PlanningSources",
+        "type": "object"
+      },
       "Point": {
         "additionalProperties": false,
         "properties": {
@@ -1415,6 +1733,270 @@
           "coordinates"
         ],
         "title": "Polygon",
+        "type": "object"
+      },
+      "RankedSite-Input": {
+        "additionalProperties": false,
+        "properties": {
+          "area_id": {
+            "title": "Area Id",
+            "type": "string"
+          },
+          "benefit_score": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benefit Score"
+          },
+          "deficit_reduction_pct": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deficit Reduction Pct"
+          },
+          "design": {
+            "$ref": "#/components/schemas/SiteDesign"
+          },
+          "explanation": {
+            "title": "Explanation",
+            "type": "string"
+          },
+          "fit_score": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Fit Score",
+            "type": "number"
+          },
+          "need_level": {
+            "title": "Need Level",
+            "type": "string"
+          },
+          "need_score": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Need Score"
+          },
+          "parcel_id": {
+            "pattern": "^sf:[A-Za-z0-9_-]{1,64}$",
+            "title": "Parcel Id",
+            "type": "string"
+          },
+          "population_weighted_benefit": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Population Weighted Benefit"
+          },
+          "rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          }
+        },
+        "required": [
+          "parcel_id",
+          "area_id",
+          "rank",
+          "score",
+          "need_score",
+          "fit_score",
+          "benefit_score",
+          "need_level",
+          "deficit_reduction_pct",
+          "population_weighted_benefit",
+          "design",
+          "explanation"
+        ],
+        "title": "RankedSite",
+        "type": "object"
+      },
+      "RankedSite-Output": {
+        "additionalProperties": false,
+        "properties": {
+          "area_id": {
+            "title": "Area Id",
+            "type": "string"
+          },
+          "benefit_score": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benefit Score"
+          },
+          "deficit_reduction_pct": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deficit Reduction Pct"
+          },
+          "design": {
+            "$ref": "#/components/schemas/SiteDesign"
+          },
+          "explanation": {
+            "title": "Explanation",
+            "type": "string"
+          },
+          "fit_score": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Fit Score",
+            "type": "number"
+          },
+          "need_level": {
+            "title": "Need Level",
+            "type": "string"
+          },
+          "need_score": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Need Score"
+          },
+          "parcel_id": {
+            "pattern": "^sf:[A-Za-z0-9_-]{1,64}$",
+            "title": "Parcel Id",
+            "type": "string"
+          },
+          "population_weighted_benefit": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Population Weighted Benefit"
+          },
+          "rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          }
+        },
+        "required": [
+          "parcel_id",
+          "area_id",
+          "rank",
+          "score",
+          "need_score",
+          "fit_score",
+          "benefit_score",
+          "need_level",
+          "deficit_reduction_pct",
+          "population_weighted_benefit",
+          "design",
+          "explanation"
+        ],
+        "title": "RankedSite",
         "type": "object"
       },
       "ReviewActivity": {
@@ -1590,6 +2172,271 @@
         "title": "ServiceProperties",
         "type": "object"
       },
+      "SiteDesign": {
+        "additionalProperties": false,
+        "properties": {
+          "available_land_m2": {
+            "minimum": 0.0,
+            "title": "Available Land M2",
+            "type": "number"
+          },
+          "feasible": {
+            "title": "Feasible",
+            "type": "boolean"
+          },
+          "fit_score": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Fit Score",
+            "type": "number"
+          },
+          "floor_area_m2": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Floor Area M2",
+            "type": "number"
+          },
+          "floors": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Floors",
+            "type": "integer"
+          },
+          "footprint_m2": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Footprint M2",
+            "type": "number"
+          },
+          "geometry": {
+            "anyOf": [
+              {
+                "discriminator": {
+                  "mapping": {
+                    "MultiPolygon": "#/components/schemas/MultiPolygon",
+                    "Polygon": "#/components/schemas/Polygon"
+                  },
+                  "propertyName": "type"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Polygon"
+                  },
+                  {
+                    "$ref": "#/components/schemas/MultiPolygon"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geometry"
+          },
+          "height_m": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Height M",
+            "type": "number"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "target_floor_area_m2": {
+            "minimum": 0.0,
+            "title": "Target Floor Area M2",
+            "type": "number"
+          }
+        },
+        "required": [
+          "feasible",
+          "fit_score",
+          "available_land_m2",
+          "target_floor_area_m2"
+        ],
+        "title": "SiteDesign",
+        "type": "object"
+      },
+      "SitePlan": {
+        "additionalProperties": false,
+        "properties": {
+          "area_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Area Id"
+          },
+          "assumption_version": {
+            "title": "Assumption Version",
+            "type": "string"
+          },
+          "data_version": {
+            "title": "Data Version",
+            "type": "string"
+          },
+          "designs": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/SiteDesign"
+            },
+            "propertyNames": {
+              "enum": [
+                "bank_credit_union",
+                "clinic",
+                "grocery",
+                "pharmacy",
+                "school"
+              ]
+            },
+            "title": "Designs",
+            "type": "object"
+          },
+          "parcel_id": {
+            "pattern": "^sf:[A-Za-z0-9_-]{1,64}$",
+            "title": "Parcel Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "parcel_id",
+          "area_id",
+          "data_version",
+          "assumption_version",
+          "designs"
+        ],
+        "title": "SitePlan",
+        "type": "object"
+      },
+      "SiteRanking": {
+        "additionalProperties": false,
+        "properties": {
+          "area_id": {
+            "title": "Area Id",
+            "type": "string"
+          },
+          "assumption_version": {
+            "title": "Assumption Version",
+            "type": "string"
+          },
+          "benefit_weight": {
+            "minimum": 0.0,
+            "title": "Benefit Weight",
+            "type": "number"
+          },
+          "candidate_count": {
+            "minimum": 0.0,
+            "title": "Candidate Count",
+            "type": "integer"
+          },
+          "category_id": {
+            "enum": [
+              "bank_credit_union",
+              "clinic",
+              "grocery",
+              "pharmacy",
+              "school"
+            ],
+            "title": "Category Id",
+            "type": "string"
+          },
+          "data_version": {
+            "title": "Data Version",
+            "type": "string"
+          },
+          "excluded_count": {
+            "minimum": 0.0,
+            "title": "Excluded Count",
+            "type": "integer"
+          },
+          "exclusion_reasons": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Exclusion Reasons",
+            "type": "object"
+          },
+          "fit_weight": {
+            "minimum": 0.0,
+            "title": "Fit Weight",
+            "type": "number"
+          },
+          "need_weight": {
+            "minimum": 0.0,
+            "title": "Need Weight",
+            "type": "number"
+          },
+          "ranked_count": {
+            "minimum": 0.0,
+            "title": "Ranked Count",
+            "type": "integer"
+          },
+          "sites": {
+            "items": {
+              "$ref": "#/components/schemas/RankedSite-Output"
+            },
+            "title": "Sites",
+            "type": "array"
+          },
+          "tract_access_deficit_pct": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tract Access Deficit Pct"
+          },
+          "tract_need_priority": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Tract Need Priority",
+            "type": "number"
+          },
+          "unranked_count": {
+            "minimum": 0.0,
+            "title": "Unranked Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "area_id",
+          "category_id",
+          "data_version",
+          "assumption_version",
+          "need_weight",
+          "fit_weight",
+          "benefit_weight",
+          "tract_access_deficit_pct",
+          "tract_need_priority",
+          "candidate_count",
+          "excluded_count",
+          "unranked_count",
+          "ranked_count",
+          "exclusion_reasons",
+          "sites"
+        ],
+        "title": "SiteRanking",
+        "type": "object"
+      },
       "Sustainability": {
         "additionalProperties": false,
         "properties": {
@@ -1719,7 +2566,7 @@
     }
   },
   "info": {
-    "title": "Parcel Planner",
+    "title": "Tract Planner",
     "version": "1.0"
   },
   "openapi": "3.1.0",
@@ -1774,7 +2621,7 @@
                 }
               }
             },
-            "description": "Unprocessable Content"
+            "description": "Unprocessable Entity"
           },
           "503": {
             "content": {
@@ -1825,7 +2672,7 @@
                 }
               }
             },
-            "description": "Unprocessable Content"
+            "description": "Unprocessable Entity"
           },
           "503": {
             "content": {
@@ -1885,7 +2732,7 @@
                 }
               }
             },
-            "description": "Unprocessable Content"
+            "description": "Unprocessable Entity"
           },
           "503": {
             "content": {
@@ -1943,7 +2790,7 @@
                 }
               }
             },
-            "description": "Unprocessable Content"
+            "description": "Unprocessable Entity"
           },
           "503": {
             "content": {
@@ -1957,6 +2804,218 @@
           }
         },
         "summary": "Check Permits"
+      }
+    },
+    "/api/v1/planning/areas": {
+      "get": {
+        "operationId": "planning_areas_api_v1_planning_areas_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AreaCollection"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Planning Areas"
+      }
+    },
+    "/api/v1/planning/areas/{area_id}/recommendations": {
+      "get": {
+        "operationId": "area_recommendations_api_v1_planning_areas__area_id__recommendations_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "area_id",
+            "required": true,
+            "schema": {
+              "title": "Area Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AreaRecommendations"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Area Recommendations"
+      }
+    },
+    "/api/v1/planning/areas/{area_id}/sites": {
+      "get": {
+        "operationId": "planning_sites_api_v1_planning_areas__area_id__sites_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "area_id",
+            "required": true,
+            "schema": {
+              "title": "Area Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category",
+            "required": true,
+            "schema": {
+              "enum": [
+                "bank_credit_union",
+                "clinic",
+                "grocery",
+                "pharmacy",
+                "school"
+              ],
+              "title": "Category",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteRanking"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Planning Sites"
+      }
+    },
+    "/api/v1/planning/sites/{parcel_id}": {
+      "get": {
+        "operationId": "planning_site_api_v1_planning_sites__parcel_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "parcel_id",
+            "required": true,
+            "schema": {
+              "pattern": "^sf:[A-Za-z0-9_-]{1,64}$",
+              "title": "Parcel Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SitePlan"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Planning Site"
       }
     },
     "/api/v1/scenarios/compare": {
@@ -2001,7 +3060,7 @@
                 }
               }
             },
-            "description": "Unprocessable Content"
+            "description": "Unprocessable Entity"
           },
           "503": {
             "content": {
@@ -2075,7 +3134,7 @@
                 }
               }
             },
-            "description": "Unprocessable Content"
+            "description": "Unprocessable Entity"
           },
           "503": {
             "content": {

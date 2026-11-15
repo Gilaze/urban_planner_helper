@@ -13,6 +13,8 @@ from .datasf import DataSF, DataSFParcels, ProviderUnavailable, datasf_client
 from .economics import load_assumptions
 from .geometry import massing, validate_bbox
 from .permits import PermitChecklist, PermitRequest, permit_checklist
+from .planning import Planning
+from .planning_schemas import AreaCollection, AreaRecommendations, SitePlan, SiteRanking
 from .ranking import rank
 from .release import ROOT, FrozenRelease, Release, ReleaseInputs, freeze
 from .schemas import (
@@ -150,11 +152,13 @@ def create_app(
     release_path: Path | None = None,
     frontend_dir: Path | None = None,
     parcel_provider: DataSFParcels | None = None,
+    planning_path: Path | None = None,
 ) -> FastAPI:
     mode = mode or os.getenv("PARCEL_PLANNER_MODE", "fixture")
     if mode not in {"fixture", "live"}:
         raise ValueError("PARCEL_PLANNER_MODE must be fixture or live")
     release_path = release_path or Path(os.getenv("PARCEL_PLANNER_RELEASE", str(ROOT / "artifacts/release.json")))
+    planning_file = planning_path or Path(os.getenv("PARCEL_PLANNER_PLANNING", str(ROOT / "artifacts/planning/index.json")))
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -163,6 +167,14 @@ def create_app(
         except (OSError, ValueError):
             logging.getLogger(__name__).exception("Unable to load the %s scoring release", mode)
             app.state.release = None
+        app.state.planning = None
+        app.state.planning_message = "Tract planning data is not loaded. Parcel comparisons remain available."
+        if app.state.release is not None and (mode == "live" or planning_path is not None) and planning_file.is_file():
+            try:
+                app.state.planning = Planning.load(planning_file, app.state.release, ROOT / "config/site-fit.json")
+            except (OSError, ValueError) as exc:
+                logging.getLogger(__name__).warning("Tract planning unavailable: %s", exc)
+                app.state.planning_message = "Tract planning data does not match this release and needs refreshing."
         token = os.getenv("DATASF_APP_TOKEN")
         if mode == "live" and parcel_provider is None and token:
             with datasf_client(token) as client:
@@ -172,7 +184,7 @@ def create_app(
             app.state.parcel_provider = parcel_provider if mode == "live" else None
             yield
 
-    app = FastAPI(title="Parcel Planner", version="1.0", lifespan=lifespan)
+    app = FastAPI(title="Tract Planner", version="1.0", lifespan=lifespan)
     origins = os.getenv("PARCEL_PLANNER_CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
     app.add_middleware(
         CORSMiddleware,
@@ -197,6 +209,40 @@ def create_app(
 
     errors = {422: {"model": ErrorResponse}, 503: {"model": ErrorResponse}}
     router = APIRouter(prefix="/api/v1")
+
+    def require_planning(request: Request):
+        planning = request.app.state.planning
+        if planning is None:
+            raise APIError(503, "planning_unavailable", request.app.state.planning_message)
+        return planning
+
+    @router.get("/planning/areas", response_model=AreaCollection, responses=errors)
+    def planning_areas(planning: Planning = Depends(require_planning)):
+        return planning.collection()
+
+    @router.get("/planning/areas/{area_id}/sites", response_model=SiteRanking, responses=errors)
+    def planning_sites(area_id: str, category: Category, limit: int = 20, planning: Planning = Depends(require_planning)):
+        if not 1 <= limit <= 100:
+            raise APIError(422, "invalid_request", "Site limit must be between 1 and 100")
+        try:
+            return planning.ranking(area_id, category, limit)
+        except KeyError:
+            raise APIError(404, "area_not_found", "No tract matched this identifier") from None
+
+    @router.get("/planning/areas/{area_id}/recommendations", response_model=AreaRecommendations, responses=errors)
+    def area_recommendations(area_id: str, planning: Planning = Depends(require_planning)):
+        try:
+            return planning.recommendations(area_id)
+        except KeyError:
+            raise APIError(404, "area_not_found", "No tract matched this identifier") from None
+
+    @router.get("/planning/sites/{parcel_id}", response_model=SitePlan, responses=errors)
+    def planning_site(parcel_id: ParcelID, planning: Planning = Depends(require_planning)):
+        try:
+            return planning.site(parcel_id)
+        except KeyError:
+            raise APIError(404, "planning_site_not_found", "This parcel is not a source-indicated vacant planning site") from None
+
     @router.get("/health", response_model=Health, responses={503: {"model": Health}})
     def health(request: Request):
         release = request.app.state.release

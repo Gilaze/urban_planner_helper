@@ -44,6 +44,10 @@ The default [live economics assumptions](config/economics.live.json) use 2025 in
 
 With a provider outage, the API uses a validated cached response or the release's parcel snapshot and marks the result stale. Parcel details show whether cached scoring applies. A new, ineligible or changed parcel remains visible with scores unavailable. A missing scoring release returns 503 for comparisons, metadata and service overlays. A missing provider and snapshot returns 503 for parcels.
 
+## Tract recommendations
+
+The **Tract Planner** drawer shows each tract's needs, numbered pins for five suggested uses, and up to three vacant-site options for the selected use. Suggested height initializes an editable slider. Technical information is under **Details**. See [tract data setup and scoring](docs/tract-planning.md).
+
 ## Check the backend
 
 ```powershell

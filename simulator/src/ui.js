@@ -59,7 +59,7 @@ export function createUI(root) {
   const loader = el('div', 'loader');
   loader.innerHTML = `
     <div class="loader-card">
-      <div class="loader-title">San Francisco</div>
+      <div class="loader-title">Tract Planner</div>
       <div class="loader-sub">Building the city…</div>
       <div class="bar"><div class="bar-fill"></div></div>
       <div class="loader-stage">Starting</div>
@@ -89,7 +89,7 @@ export function createUI(root) {
       // ---- title
       const title = el('div', 'panel title');
       title.innerHTML = `
-        <div class="t1">SF 3D Model</div>`;
+        <div class="t1">Tract Planner</div>`;
       hud.appendChild(title);
 
       // ---- legend: colour by building type or by parcel vacancy
@@ -135,7 +135,7 @@ export function createUI(root) {
         addRow(vacSec, c.color, c.label, `${b} · ${l}`, (off) => onToggleVac(c.code, off), (on) => onFocusVac(on ? c.code : -1));
       }
       vacSec.appendChild(el('div', 'legend-note',
-        '<b>Vacant lot</b>: the team Parcel Planner release marks the parcel vacant (empty ones are hatched red on the ground). <b>Closed businesses</b>: every Google Maps business in the building is closed (Drive Places data).'));
+        '<b>Vacant lot</b>: the team data release marks the lot vacant (empty ones are hatched red on the ground). <b>Closed businesses</b>: every Google Maps business in the building is closed (Drive Places data).'));
       legend.appendChild(vacSec);
       left.body.appendChild(legend);
 
@@ -224,14 +224,14 @@ export function createUI(root) {
         <li><b>Q / E</b> rotate · <b>WASD</b> move</li><li><b>1–5</b> camera views · <b>V</b> vacancy colours</li></ul>`;
       left.body.appendChild(help);
 
-      // ---- right drawer: the Parcel Planner panel (created by planner.js) is docked into it
-      const right = createDrawer(hud, { side: 'right', label: 'Parcel Planner', key: 'planner', openByDefault: true });
+      // ---- right drawer: tract needs, vacant sites and selected-site details
+      const right = createDrawer(hud, { side: 'right', label: 'Tract Planner', key: 'planner', openByDefault: true });
       const plannerPanel = root.parentElement?.querySelector('aside.planner') || document.querySelector('aside.planner');
       if (plannerPanel) right.body.appendChild(plannerPanel);
       // Data credits, collapsed behind a small button (OpenStreetMap's licence needs visible credit).
       const attrib = el('div', 'attrib');
       attrib.innerHTML = `<button class="attrib-btn" aria-expanded="false" title="Data sources">ⓘ Sources</button>
-        <div class="attrib-list" hidden>${meta.sources.map((s) => `<a href="${s.url}" target="_blank" rel="noopener">${s.name}</a>`).join('')}
+        <div class="attrib-list" hidden>${meta.sources.map((s) => `<a href="${s.url}" target="_blank" rel="noopener">${s.name.replace('Parcel Planner', 'Team')}</a>`).join('')}
           <p class="attrib-warn">Building edits are a local sketch saved only in this browser; they don't change the data or what others see. Building cards never show addresses or exact locations.</p></div>`;
       const attribBtn = attrib.querySelector('.attrib-btn'), attribList = attrib.querySelector('.attrib-list');
       attribBtn.addEventListener('click', () => {

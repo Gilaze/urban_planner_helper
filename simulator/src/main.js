@@ -302,7 +302,30 @@ async function boot() {
   const parcels = createParcelScene(scene, proj, groundAt, terrain);
   planner.connectMap({
     draw: parcels.draw,
+    drawAreas: parcels.drawAreas,
+    setOnlyVacant(enabled) {
+      shared.uOnlyVacant.value = enabled ? 1 : 0;
+      if (enabled && selected >= 0 && data.vacancy?.[selected] !== 2) select(-1);
+    },
     center: () => proj.toLonLat(cam.controls.target.x, cam.controls.target.z),
+    focusArea(area) {
+      const [lon, lat] = area.properties.representative_point;
+      const p = proj.toWorld(lon, lat);
+      if (Math.abs(p.x) > terrain.extent || Math.abs(p.z) > terrain.extent) return;
+      const points = area.geometry.type === 'Polygon' ? area.geometry.coordinates.flat()
+        : area.geometry.coordinates.flat(2);
+      const west = Math.min(...points.map(([lo]) => lo)), east = Math.max(...points.map(([lo]) => lo));
+      const south = Math.min(...points.map(([, la]) => la)), north = Math.max(...points.map(([, la]) => la));
+      const size = Math.max((east-west) * meta.origin.metersPerDegLon, (north-south) * meta.origin.metersPerDegLat);
+      const drawers = [...document.querySelectorAll('.drawer:not(.collapsed)')];
+      const occupiedWidth = drawers.reduce((sum, drawer) => sum + drawer.getBoundingClientRect().width, 0);
+      const usableWidth = Math.max(360, window.innerWidth - occupiedWidth - 80);
+      const panelAllowance = Math.max(1, window.innerWidth / usableWidth);
+      currentMode = 'clash';
+      hud.setMode(currentMode);
+      select(-1);
+      cam.applyCameraAngle(currentMode, true, ground((west+east)/2, (south+north)/2), Math.min(15000, Math.max(600, size * 1.4 * panelAllowance)));
+    },
     focus(parcel, view) {
       const [lon, lat] = parcel.properties.representative_point.coordinates;
       const mode = view === '2d' ? 'topdown' : 'clash';
@@ -313,7 +336,8 @@ async function boot() {
     },
   });
   // in the vacancy view, classes hidden from the legend are not clickable either
-  buildingIndex.skip = (b) => shared.uVacancyMode.value === 1 && data.vacancy && shared.uHiddenVac.value[data.vacancy[b]] > 0.5;
+  buildingIndex.skip = (b) => (shared.uOnlyVacant.value > .5 && data.vacancy?.[b] !== 2) ||
+    (shared.uVacancyMode.value === 1 && data.vacancy && shared.uHiddenVac.value[data.vacancy[b]] > 0.5);
   // User edits: delete a building or replace it with another type and height (local sketch).
   const edits = createEdits({
     scene, shared, index: buildingIndex, mats: buildingMats, chunkSize: CHUNK, vacancy: data.vacancy,
@@ -557,6 +581,7 @@ async function boot() {
       const onScreen = p.z > -1 && p.z < 1 && Math.abs(p.x) < 1.2 && Math.abs(p.y) < 1.2;
       hud.placeBuilding((p.x + 1) / 2 * window.innerWidth, (1 - p.y) / 2 * window.innerHeight, onScreen);
     }
+    parcels.updateLabels(camera, window.innerHeight);
     blur.render(scene, camera, focusPt, R, clearOn ? 3.2 * ratio : 0, outline, mpp);
     highlight.render(camera);
     requestAnimationFrame(frame);

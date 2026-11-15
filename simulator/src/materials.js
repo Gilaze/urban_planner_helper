@@ -31,6 +31,7 @@ export function createShared(meta, terrain) {
     uSunDir: { value: new THREE.Vector3(-0.55, 0.78, 0.42).normalize() },
     // colour-by-vacancy view: palette indexed by vacancy code (0 unknown, 1 occupied, 2 vacant)
     uVacancyMode: { value: 0 },
+    uOnlyVacant: { value: 0 },
     // user edits: one texel per building (red > 0 = original hidden, deleted or replaced)
     uEdited: { value: createEditTexture(meta.buildingCount) },
     uVacColors: { value: [new THREE.Color('#E9E4DB'), new THREE.Color('#E4E6E9'), new THREE.Color('#E02424'), new THREE.Color('#1C1D21')] },
@@ -122,6 +123,7 @@ flat varying float vSeed;
 flat varying float vVac;
 uniform float uVacancyMode;
 uniform float uHiddenVac[4];
+uniform float uOnlyVacant;
 `;
 
 // Collapse a vertex to a degenerate point when its building is on the wrong side of the clear radius.
@@ -143,6 +145,7 @@ uniform sampler2D uEdited;
 #ifndef VAC_DECLARED
 uniform float uVacancyMode;
 uniform float uHiddenVac[4];
+uniform float uOnlyVacant;
 #endif
 uniform vec3 uClearCenter;
 uniform float uClearRadius;
@@ -153,6 +156,7 @@ vec3 transformed = vec3(position);
 transformed.y += elevOf(aUE.y * 0.1) / ${Q.toFixed(4)};
 if (uHidden[int(aMeta.x + 0.5)] > 0.5) transformed = vec3(0.0);
 if (uVacancyMode > 0.5 && uHiddenVac[int(aUE.w + 0.5)] > 0.5) transformed = vec3(0.0);
+if (uOnlyVacant > 0.5 && abs(aUE.w - 2.0) > 0.25) transformed = vec3(0.0);
 ${clearSwitch(lod)}
 vVac = aUE.w;
 vRelY = position.y * ${Q.toFixed(4)};
@@ -169,6 +173,7 @@ vec3 transformed = vec3(position);
 transformed.y += elevOf(aUE.y * 0.1) / ${Q.toFixed(4)};
 if (uHidden[int(aMeta.x + 0.5)] > 0.5) transformed = vec3(0.0);
 if (uVacancyMode > 0.5 && uHiddenVac[int(aUE.w + 0.5)] > 0.5) transformed = vec3(0.0);
+if (uOnlyVacant > 0.5 && abs(aUE.w - 2.0) > 0.25) transformed = vec3(0.0);
 ${clearSwitch(false)}
 `;
 
@@ -298,7 +303,7 @@ if (uFocus >= 0.0 && abs(keyId() - uFocus) > 0.5) {
 diffuseColor.rgb = col;
 `;
 
-const VAC_KEYS = ['uVacancyMode', 'uVacColors', 'uHiddenVac'];
+const VAC_KEYS = ['uVacancyMode', 'uVacColors', 'uHiddenVac', 'uOnlyVacant'];
 
 export function createBuildingMaterials(shared, Q) {
   const mat = new THREE.MeshStandardMaterial({ roughness: 0.84, metalness: 0.0, flatShading: true });
@@ -383,6 +388,7 @@ uniform sampler2D uLandcover;
 uniform sampler2D uUrban;
 uniform sampler2D uVacant;
 uniform float uVacancyMode;
+uniform float uOnlyVacant;
 uniform vec3 uVacColors[4];
 varying vec3 vWPos;
 varying float vH;
@@ -420,7 +426,7 @@ col = mix(col, parkCol, park);
 col = mix(col, forestCol, forest);
 col = mix(col, sandCol, sand);
 col = mix(col, seabed, 1.0 - smoothstep(-0.2, 0.7, vH));
-if (uVacancyMode > 0.5) {
+if (uVacancyMode > 0.5 || uOnlyVacant > 0.5) {
   // vacant lots: solid red border with a faint diagonal hatch inside, so big parcels
   // (e.g. freeway right-of-way) read as outlined ground rather than a wash of red
   float vm = texture2D(uVacant, luv).r;
@@ -437,7 +443,7 @@ diffuseColor.rgb = col;
 export function createTerrainMaterials(shared) {
   const mat = new THREE.MeshStandardMaterial({ roughness: 0.95, metalness: 0.0 });
   mat.onBeforeCompile = (shader) => {
-    withShared(shader, shared, ['uTerrain', 'uTime', 'uHeightTex', 'uTerrainInfo', 'uLandcover', 'uUrban', 'uVacant', 'uVacancyMode', 'uVacColors']);
+    withShared(shader, shared, ['uTerrain', 'uTime', 'uHeightTex', 'uTerrainInfo', 'uLandcover', 'uUrban', 'uVacant', 'uVacancyMode', 'uVacColors', 'uOnlyVacant']);
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', `#include <common>\n${COMMON}\n${TERRAIN_VERT_HEAD}`)
       .replace('#include <beginnormal_vertex>', TERRAIN_NORMAL)

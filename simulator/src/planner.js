@@ -1,4 +1,5 @@
 import { containsPoint, polygons } from './parcelGeometry.js';
+import { createAreaPlanning } from './areaPlanning.js';
 
 const API = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '');
 const DEFAULT_CENTER = { lon: -122.399, lat: 37.7905 };
@@ -22,7 +23,7 @@ function element(tag, text, testId) {
 async function request(path, options = {}) {
   const response = await fetch(`${API}${path}`, options);
   const result = await response.json().catch(() => null);
-  if (!response.ok || !result) throw new Error(result?.error?.message || 'Parcel Planner is unavailable. Try again.');
+  if (!response.ok || !result) throw new Error(result?.error?.message || 'Tract planning is unavailable. Try again.');
   return result;
 }
 
@@ -69,12 +70,12 @@ function footprintSvg(geometry) {
 export function createPlanner(root) {
   const panel = element('aside');
   panel.className = 'panel planner';
-  panel.setAttribute('aria-label', 'Parcel Planner');
+  panel.setAttribute('aria-label', 'Tract Planner');
   panel.innerHTML = `
-    <details open>
-      <summary>Parcel Planner</summary>
+    <h2 class="planner-fallback-title">Tract Planner</h2>
       <div class="planner-body">
-        <label for="planner-parcel">Parcel</label>
+        <div data-area-planner-root></div>
+        <div hidden data-legacy-parcel-picker><label for="planner-parcel">Parcel</label>
         <div class="planner-parcels">
           <select id="planner-parcel" data-testid="parcel-selector" disabled>
             <option value="">Select a parcel</option>
@@ -82,6 +83,7 @@ export function createPlanner(root) {
           <button type="button" data-find>Find nearby</button>
         </div>
         <p class="planner-note" data-find-status aria-live="polite"></p>
+        </div>
         <p class="planner-note" data-testid="data-freshness"></p>
         <div data-testid="comparison-results" data-status="idle">
           <p class="planner-note" data-status-text role="status"></p>
@@ -89,14 +91,22 @@ export function createPlanner(root) {
           <button type="button" data-retry hidden>Retry comparison</button>
           <div data-testid="massing-preview" class="planner-preview" hidden>
             <p data-preview-text></p>
+            <div data-size-control hidden>
+              <label for="proposal-height">Building height <output data-testid="proposal-height-value"></output></label>
+              <div class="height-track">
+                <input id="proposal-height" data-testid="proposal-height" type="range" min="3" max="350" step="0.5" aria-describedby="suggested-height-caption">
+                <span class="height-suggestion" data-testid="suggested-height-mark" aria-hidden="true"></span>
+              </div>
+              <p id="suggested-height-caption" class="planner-note" data-testid="suggested-height"></p>
+            </div>
             <div data-footprint></div>
             <div class="planner-views">
               <button type="button" data-testid="view-3d" aria-pressed="true">3D</button>
               <button type="button" data-testid="view-2d" aria-pressed="false">2D</button>
             </div>
           </div>
-          <details class="planner-preview" data-permits open hidden>
-            <summary>Preliminary permit checklist</summary>
+          <div class="planner-preview" data-permits hidden>
+            <h4>Permit checklist</h4>
             <form data-permit-form>
               <label>Proposed use <select data-permit-use></select></label>
               <label data-permit-area-row hidden>Gross floor area (sq ft)
@@ -106,17 +116,15 @@ export function createPlanner(root) {
             </form>
             <p class="planner-note" data-permit-status role="status"></p>
             <ol data-permit-steps></ol>
-          </details>
-          <details class="planner-weights" hidden>
-            <summary>Ranking weights</summary>
+          </div>
+          <div class="planner-weights" hidden>
             <div data-sliders></div>
             <button type="button" data-reset>Reset</button>
-          </details>
+          </div>
           <p class="planner-note" data-testid="unavailable-reason" hidden></p>
-          <div data-alternatives></div>
+          <div data-service-details><h4>Site estimates</h4><div data-alternatives></div></div>
         </div>
-      </div>
-    </details>`;
+      </div>`;
   root.append(panel);
 
   const find = (selector) => panel.querySelector(selector);
@@ -145,6 +153,10 @@ export function createPlanner(root) {
   let parcel = null;
   let comparison = null;
   let candidate = null;
+  let sitePlan = null;
+  let pendingCategory = null;
+  const customHeights = new Map();
+  const proposalHeight = byTestId('proposal-height');
   let view = '3d';
   let parcelRequest = null;
   let compareRequest = null;
@@ -197,17 +209,33 @@ export function createPlanner(root) {
   }
 
   function renderPreview() {
-    const massing = comparison?.massing;
+    const design = sitePlan?.designs[candidate];
+    const baseMassing = design || comparison?.massing;
+    const height = customHeights.get(candidate) ?? baseMassing?.height_m;
+    const massing = baseMassing ? { ...baseMassing, height_m: height } : null;
     const visible = Boolean(candidate && massing);
     preview.hidden = !visible;
     delete preview.dataset.kind;
+    find('[data-size-control]').hidden = !design?.feasible;
+    if (design?.feasible) {
+      proposalHeight.value = height;
+      const fraction = (design.height_m - Number(proposalHeight.min)) / (Number(proposalHeight.max) - Number(proposalHeight.min));
+      const marker = byTestId('suggested-height-mark');
+      marker.style.left = `calc(${fraction * 100}% + ${8 - fraction * 16}px)`;
+      marker.dataset.suggestedHeight = String(design.height_m);
+      marker.title = `Suggested height: ${count.format(design.height_m)} m`;
+      byTestId('proposal-height-value').textContent = `${count.format(height)} m`;
+      byTestId('suggested-height').textContent = `Suggested: ${count.format(design.height_m)} m. Move the slider to try a different height.`;
+    }
     const geometry = massing?.geometry;
     map?.draw(parcel, visible && view === '3d' ? massing : null);
     if (!visible) return;
     preview.dataset.kind = geometry ? 'volume' : 'outline';
-    find('[data-preview-text]').textContent = geometry
-      ? `${CATEGORIES[candidate]} · Illustrative ${massing.height_m} m building`
-      : `${CATEGORIES[candidate]} · Parcel outline. Building footprint unavailable.`;
+    find('[data-preview-text]').textContent = design ? (design.feasible
+      ? `${CATEGORIES[candidate]} · Illustrative ${count.format(height)} m concept · ${count.format(design.footprint_m2)} m² footprint. Physical fit only; use the permit checklist for review.`
+      : `${CATEGORIES[candidate]} · ${design.reasons.join(' ')} Parcel outline shown.`)
+      : geometry ? `${CATEGORIES[candidate]} · Illustrative ${massing.height_m} m building`
+        : `${CATEGORIES[candidate]} · Parcel outline. Building footprint unavailable.`;
     const footprint = (!map || view === '2d') && footprintSvg(geometry || parcel?.geometry);
     find('[data-footprint]').replaceChildren(...(footprint ? [footprint] : []));
     byTestId('view-3d').disabled = !map;
@@ -217,11 +245,16 @@ export function createPlanner(root) {
 
   function selectCandidate(id) {
     candidate = id;
+    renderComparison();
     for (const button of alternatives.querySelectorAll('[aria-pressed]')) {
       button.setAttribute('aria-pressed', String(button.dataset.category === id));
     }
     renderPreview();
     permitUse.value = id;
+    const design = sitePlan?.designs[id];
+    if (id === 'grocery' && design?.feasible && !permitArea.value) {
+      permitArea.value = (design.floor_area_m2 * 10.7639104167).toFixed(1);
+    }
     updatePermitForm();
     checkPermits();
   }
@@ -281,18 +314,17 @@ export function createPlanner(root) {
         : `Unavailable for ranking · ${labels.join(', ')}`;
       unavailable.hidden = false;
     }
-    for (const row of comparison.alternatives) {
+    for (const row of comparison.alternatives.filter((row) => !sitePlan || row.category_id === candidate)) {
       const id = row.category_id;
       const card = element('article', null, `alternative-${id}`);
       card.className = 'planner-alternative';
       if (row.rank != null) card.dataset.rank = row.rank;
-      const button = element('button', `${row.rank == null ? '' : `#${row.rank} · `}${CATEGORIES[id]}`, `candidate-${id}`);
+      const button = element('button', CATEGORIES[id], `candidate-${id}`);
       button.type = 'button';
       button.dataset.category = id;
       button.setAttribute('aria-pressed', String(id === candidate));
       button.addEventListener('click', () => selectCandidate(id));
       const values = element('dl', null, `raw-metrics-${id}`);
-      if (row.total != null) addMetric(values, 'Weighted score', count.format(row.total));
       addMetric(values, 'Local sales tax / year', formatRange(row.economic.retained_sales_tax_usd_per_year, usd));
       addMetric(values, 'Operating jobs (FTE)', formatRange(row.economic.operating_fte, count));
       const reviews = row.review_activity;
@@ -340,10 +372,19 @@ export function createPlanner(root) {
       });
       if (signal.aborted) return;
       comparison = data;
+      if (sitePlan && sitePlan.data_version !== data.data_version) {
+        sitePlan = null;
+        pendingCategory = null;
+      }
       setSource(data.parcel_source);
       results.dataset.status = 'ready';
       statusText.textContent = 'Choose a service to preview its building.';
       renderComparison();
+      if (pendingCategory) {
+        const use = pendingCategory;
+        pendingCategory = null;
+        selectCandidate(use);
+      }
     } catch (cause) {
       if (signal.aborted) return;
       results.dataset.status = 'error';
@@ -359,11 +400,15 @@ export function createPlanner(root) {
     compareTimer = setTimeout(compare, 150);
   }
 
-  function chooseParcel(feature) {
+  function chooseParcel(feature, recommendation = null) {
     clearTimeout(compareTimer);
     compareRequest?.abort();
     parcel = feature || null;
-    comparison = candidate = null;
+    comparison = null;
+    candidate = recommendation?.category || null;
+    sitePlan = recommendation?.plan || null;
+    pendingCategory = recommendation?.category || null;
+    customHeights.clear();
     renderComparison();
     renderPreview();
     setSource(listSource);
@@ -371,15 +416,14 @@ export function createPlanner(root) {
     results.dataset.status = 'idle';
     statusText.textContent = '';
     error.hidden = retry.hidden = true;
-    weights.hidden = !parcel;
+    weights.hidden = true;
     permits.hidden = !parcel;
     resetPermits();
     permitArea.value = '';
     permitUse.value = '';
     updatePermitForm();
     if (!parcel) return;
-    panel.querySelector('details').open = true;
-    map?.focus(parcel, view);
+    if (recommendation?.focus !== false) map?.focus(parcel, view);
     compare();
   }
 
@@ -439,16 +483,45 @@ export function createPlanner(root) {
     parcelRequest?.abort();
     chooseParcel(options.get(select.value));
   });
+  const areaPlanning = createAreaPlanning(find('[data-area-planner-root]'), {
+    request, categories: CATEGORIES,
+    onClear() { parcelRequest?.abort(); chooseParcel(null); },
+    async onPreview(parcelId, category, dataVersion, { focus = true } = {}) {
+      parcelRequest?.abort();
+      const controller = new AbortController();
+      parcelRequest = controller;
+      const [feature, plan] = await Promise.all([
+        request(`/parcels/${encodeURIComponent(parcelId)}`, { signal: controller.signal }),
+        request(`/planning/sites/${encodeURIComponent(parcelId)}`, { signal: controller.signal }),
+      ]);
+      if (controller.signal.aborted) throw new Error('Site selection changed.');
+      if (!feature.scoring_available || plan.data_version !== dataVersion) {
+        throw new Error('The site or data release changed. Refresh the tract recommendations.');
+      }
+      listSource = feature.source;
+      chooseParcel(feature, { plan, category, focus });
+      updateOptions([...options.values(), feature]);
+    },
+  });
+  areaPlanning.mountSizeControl(find('[data-size-control]'));
+  areaPlanning.mountDetails(results);
+  results.prepend(freshness);
+  proposalHeight.addEventListener('input', () => {
+    if (!candidate || !sitePlan) return;
+    customHeights.set(candidate, Number(proposalHeight.value));
+    renderPreview();
+  });
   refreshParcels();
 
   return {
     connectMap(connectedMap) {
       map = connectedMap;
-      if (parcel) map.focus(parcel, view);
+      areaPlanning.connectMap(connectedMap);
+      if (parcel && !sitePlan) map.focus(parcel, view);
       renderPreview();
       if (!parcel && options.size) listStatus.textContent = 'Click a vacant lot on the map or choose a parcel.';
     },
-    redraw: renderPreview,
+    redraw() { renderPreview(); areaPlanning.redraw(); },
     async pick(point) {
       parcelRequest?.abort();
       const controller = new AbortController();

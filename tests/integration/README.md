@@ -1,5 +1,7 @@
 # Person 4: independent verification
 
+The user's newer product request adds the **Tract Planner** flow. The current browser suite now covers tract selection, five numbered suggestions, three site options per use, editable height with a fixed suggestion marker, the vacant-only view, drawer state, and fallback states at two desktop sizes. Build the matching planning index first using [tract-planning.md](../../docs/tract-planning.md). Run with `PLAYWRIGHT_CHANNEL=chrome` to use installed Chrome. Historical parcel-picker reports below remain historical; their earlier counts are not the current tract UI results.
+
 The Backend schema 1.0 contract and Data pipeline are on `main`. This directory
 owns independent verification and release evidence. Expected calculations never
 import production scoring functions. Regression fixes and independent proofs are

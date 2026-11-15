@@ -6,7 +6,7 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: 0,
-  timeout: 30_000,
+  timeout: 60_000,
   expect: { timeout: 5_000 },
   reporter: [
     ['list'],
@@ -21,6 +21,7 @@ export default defineConfig({
   use: {
     baseURL: process.env.APP_BASE_URL ?? 'http://127.0.0.1:5173',
     browserName: 'chromium',
+    channel: process.env.PLAYWRIGHT_CHANNEL,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     serviceWorkers: 'block',

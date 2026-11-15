@@ -61,7 +61,7 @@ def permit_checklist(parcel: ParcelFeature, proposal: PermitRequest, fixture: bo
     if not fixture:
         note = "Current map lookup unavailable. Confirm the parcel's zoning and overlays with SF Planning."
         try:
-            with httpx.Client(timeout=2.5) as client:
+            with httpx.Client(timeout=httpx.Timeout(8.0, connect=3.0)) as client:
                 zones = mapped_districts(client, "3i4a-hu95", "zoning", geometry)
                 special_uses = mapped_districts(client, "rxfc-8aap", "name", geometry)
             districts = sorted(zones)

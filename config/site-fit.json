@@ -1,0 +1,16 @@
+{
+  "version": "tract-service-concepts-3",
+  "description": "Illustrative service programs for comparing physical site fit. These are scenario assumptions, not zoning, permitting or construction requirements. Capacity and financial estimates still represent one facility.",
+  "max_lot_coverage": 0.5,
+  "full_need_gap_pct": 30,
+  "need_weight": 0.85,
+  "fit_weight": 0.10,
+  "benefit_weight": 0.05,
+  "categories": {
+    "clinic": { "min_footprint_m2": 150, "min_width_m": 8, "target_floor_area_m2": 900, "max_floors": 3, "floor_height_m": 4 },
+    "pharmacy": { "min_footprint_m2": 80, "min_width_m": 6, "target_floor_area_m2": 200, "max_floors": 1, "floor_height_m": 6 },
+    "grocery": { "min_footprint_m2": 300, "min_width_m": 12, "target_floor_area_m2": 1000, "max_floors": 1, "floor_height_m": 7 },
+    "bank_credit_union": { "min_footprint_m2": 100, "min_width_m": 6, "target_floor_area_m2": 500, "max_floors": 2, "floor_height_m": 4 },
+    "school": { "min_footprint_m2": 1500, "min_width_m": 18, "target_floor_area_m2": 6000, "max_floors": 3, "floor_height_m": 4 }
+  }
+}
