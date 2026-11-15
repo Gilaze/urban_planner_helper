@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "data_version": "0.1.1+2026-11-15.1+bfa9e1e005fb",
+  "source_url": "https://drive.google.com/file/d/1IHeW1k6QcVnFfSQcCTNXHeozQrVIeZJo/view",
+  "zip_sha256": "b94efdcc5603f4710e34079eb62212b30defbbcaa5b62bccf84fa93deff1fdbc",
+  "release_sha256": "b5ee5077c7db973dc17fd02d03e75dbcfa7024f480aa00fb124629475de8c9b2",
+  "index_sha256": "d9d22606689cbadc7e1dac0756cde9358b7e09ff5a95d5858d3fdeb3b0e52aa6",
+  "index_gzip_sha256": "3edb5ab1980e1609d17186a5a046b85eed86203622a4c751662a46dce920d8e7",
+  "tract_sha256": "c613b0b9df678aa095981a988e045c7db070f9e0799113481b3937b0e9591889"
+}

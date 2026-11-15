@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from . import bundled_data
 from .datasf import DataSF, DataSFParcels, ProviderUnavailable, datasf_client
 from .economics import load_assumptions
 from .geometry import massing, validate_bbox
@@ -154,7 +155,9 @@ def create_app(
     parcel_provider: DataSFParcels | None = None,
     planning_path: Path | None = None,
 ) -> FastAPI:
-    mode = mode or os.getenv("PARCEL_PLANNER_MODE", "fixture")
+    release_override = release_path is not None or bool(os.getenv("PARCEL_PLANNER_RELEASE"))
+    planning_override = planning_path is not None or bool(os.getenv("PARCEL_PLANNER_PLANNING"))
+    mode = mode or os.getenv("PARCEL_PLANNER_MODE") or ("live" if bundled_data.available() else "fixture")
     if mode not in {"fixture", "live"}:
         raise ValueError("PARCEL_PLANNER_MODE must be fixture or live")
     release_path = release_path or Path(os.getenv("PARCEL_PLANNER_RELEASE", str(ROOT / "artifacts/release.json")))
@@ -162,16 +165,24 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
+        resolved_release, resolved_planning = release_path, planning_file
         try:
-            app.state.release = load_release(mode, release_path)
+            if mode == "live" and bundled_data.available() and not release_override:
+                resolved_release, bundled_index = bundled_data.paths()
+                if not planning_override:
+                    resolved_planning = bundled_index
+            app.state.release = load_release(mode, resolved_release)
+            if mode == "live" and bundled_data.available() and release_override and not planning_override:
+                # Explicit releases still undergo the planning data-version/target checks below.
+                _, resolved_planning = bundled_data.paths()
         except (OSError, ValueError):
             logging.getLogger(__name__).exception("Unable to load the %s scoring release", mode)
             app.state.release = None
         app.state.planning = None
         app.state.planning_message = "Tract planning data is not loaded. Parcel comparisons remain available."
-        if app.state.release is not None and (mode == "live" or planning_path is not None) and planning_file.is_file():
+        if app.state.release is not None and (mode == "live" or planning_path is not None) and resolved_planning.is_file():
             try:
-                app.state.planning = Planning.load(planning_file, app.state.release, ROOT / "config/site-fit.json")
+                app.state.planning = Planning.load(resolved_planning, app.state.release, ROOT / "config/site-fit.json")
             except (OSError, ValueError) as exc:
                 logging.getLogger(__name__).warning("Tract planning unavailable: %s", exc)
                 app.state.planning_message = "Tract planning data does not match this release and needs refreshing."

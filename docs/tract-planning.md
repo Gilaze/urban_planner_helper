@@ -8,19 +8,19 @@ The suggested-height tick remains fixed while the slider moves. **Show only vaca
 
 ## Local data setup
 
-First install the backend release dependencies and unpack the team's parcel data bundle as described in [DATA.md](../DATA.md). The supplied tract GeoJSON is included at [config/geography/sf-tracts.geojson](../config/geography/sf-tracts.geojson), so teammates do not need a separate boundary download. It is an unchanged copy of the team Drive's `tmph-tgz9.geojson`; see [source details](../config/geography/README.md). It contains 244 tracts, in WGS84 longitude/latitude, with a `data_as_of` value of 2021-02-01. SHA-256: `c613b0b9df678aa095981a988e045c7db070f9e0799113481b3937b0e9591889`.
+The complete parcel ZIP and matching prebuilt tract index are included in [demo/](../demo/README.md). The backend automatically verifies and loads them on startup. Teammates only need to pull and start the app normally; no separate data download or tract-build command is required. Explicit release/index environment variables remain available for custom datasets, and `PARCEL_PLANNER_MODE=fixture` intentionally selects synthetic data.
 
-From the repository root, using the Python environment with `backend/requirements-release.lock` installed:
+The supplied tract GeoJSON is included at [config/geography/sf-tracts.geojson](../config/geography/sf-tracts.geojson). It is an unchanged copy of the team Drive's `tmph-tgz9.geojson`; see [source details](../config/geography/README.md). It contains 244 tracts, in WGS84 longitude/latitude, with a `data_as_of` value of 2021-02-01. SHA-256: `c613b0b9df678aa095981a988e045c7db070f9e0799113481b3937b0e9591889`.
+
+From the repository root, using the Python environment with `backend/requirements.lock` installed:
 
 ```bash
-python -m backend.build_planning
-PARCEL_PLANNER_MODE=live PARCEL_PLANNER_RELEASE=artifacts/release.json \
-  python -m uvicorn backend.api:app --host 127.0.0.1 --port 8000
+python -m uvicorn backend.api:app --host 127.0.0.1 --port 8000
 ```
 
 Then run the simulator with `npm run dev` in `simulator/`. Its default `/api` proxy targets port 8000. Set `PARCEL_PLANNER_API_TARGET` for a different local backend port.
 
-The builder reads existing project snapshots and does not download anything. It writes the ignored `artifacts/planning/index.json`. By default it uses the committed tract boundaries, `artifacts/person2/`, `artifacts/release.json`, and the simulator's cached DataSF footprint pages. Use `--tracts`, `--input`, `--release`, `--footprint-cache`, and `--output` to override these paths. `PARCEL_PLANNER_PLANNING` selects a different index at API startup. Rebuild the index after changing the parcel release or tract input. The parcel ZIP and generated index remain local; a Git pull supplies the boundaries and code, and the build command creates the index for each machine's release.
+For data-owner rebuilds, install `backend/requirements-release.lock`, extract the included ZIP into the repository root, then run `python -m backend.build_planning`. The builder reads existing project snapshots and does not download anything. It writes the ignored `artifacts/planning/index.json`. By default it uses the committed tract boundaries, `artifacts/person2/`, `artifacts/release.json`, and the simulator's cached DataSF footprint pages. Use `--tracts`, `--input`, `--release`, `--footprint-cache`, and `--output` to override these paths. `PARCEL_PLANNER_PLANNING` selects a custom index at API startup. Rebuild the index after changing the parcel release or tract input, and update the bundled index and manifest together when publishing a new shared demo release.
 
 Building footprints are optional. When all four simulator cache pages are present, their mapped footprints are subtracted from the lots before fitting concepts. When they are absent, site designs explicitly report that existing structures have not been checked. Source-indicated vacancy is a screening classification, not confirmation of present-day availability.
 

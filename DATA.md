@@ -1,6 +1,12 @@
 # Getting the data
 
-The built data is not in git. It derives partly from the hackathon's Bright Data exports, which should not be in a public repo, and `release.json` is 170 MB. Download the prebuilt bundle instead of rerunning the pipeline.
+The original complete team Drive ZIP is now included in Git at [demo/parcel-planner-data-0.1.1.zip](demo/parcel-planner-data-0.1.1.zip), at the user's explicit request for a shared demo. The matching tract index is included too. After pulling, the backend automatically verifies and unpacks the serving files into a temporary cache and defaults to real data. No separate download, extraction, or tract-build command is required for the demo. See [demo startup and deployment](demo/README.md).
+
+Start the backend with `python -m uvicorn backend.api:app --port 8000` after installing `backend/requirements.lock`. Start the frontend with `npm run dev` in `simulator/`. Restart the backend after pulling new code. Remove any old `PARCEL_PLANNER_MODE=fixture` override to use real data.
+
+## Optional canonical-data workflow
+
+For pipeline work, extract the included ZIP into the repository root, or download the same ZIP from Drive as below. These steps are not needed to start the demo.
 
 1. Download `parcel-planner-data-0.1.1.zip` from the team's [DSS FA26 Datathon Drive folder](https://drive.google.com/drive/folders/1iGJ511t7Enpj9ShRZmMOkOH0FvRjpSut).
 2. Move it to the repo root (the folder containing `backend/` and `pipeline/`) and unzip it there:
@@ -59,4 +65,4 @@ zip -X data/bundles/parcel-planner-data-0.1.1.zip artifacts/person2/* artifacts/
 
 Then upload the zip to the Drive folder and update the table above.
 
-Do not post the bundle publicly: places, reviews and release.json derive from the hackathon's Bright Data exports.
+The original raw Bright Data CSV exports stay in Drive. The processed ZIP included in `demo/` is the exact team release selected by the user for distribution with this demo.
