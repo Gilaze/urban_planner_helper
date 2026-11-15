@@ -190,6 +190,12 @@ html, body {
 .planner-preview p { margin-top: 0; }
 .planner-preview svg { display: block; width: 100%; height: 75px; margin-bottom: 6px; }
 .planner-preview path { fill: #d8e8ff; stroke: #155fd2; stroke-width: 1.5; }
+.planner [data-permit-form] { display: grid; gap: 6px; margin-top: 8px; }
+.planner [data-permit-form] input { width: 100%; }
+.planner [data-permit-form] button { justify-self: start; }
+.planner [data-permits] ol { margin: 8px 0 0; padding-left: 20px; }
+.planner [data-permits] ol:empty { display: none; }
+.planner [data-permits] a { color: #194a9e; }
 .planner-views { display: flex; gap: 5px; }
 .planner-weights label {
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(50px, 38%) 2.3em;
