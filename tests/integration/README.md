@@ -2,14 +2,16 @@
 
 The Backend schema 1.0 contract and Data pipeline are on `main`. This directory
 owns independent verification and release evidence. Expected calculations never
-import production scoring functions. Product regressions belong to the affected
-owner, as specified by the implementation plan. Delivery is a direct push to
-`main`, without PRs, per the user's instruction.
+import production scoring functions. Regression fixes and independent proofs are
+tracked in the verification reports. Delivery is a direct push to `main`, without
+PRs, per the user's instruction.
 
 Start with `reports/verification/ACCEPTANCE.md` and
-`reports/verification/REGRESSIONS.md`. Passing checker/unit tests does not approve
-a release: the independent Data probes currently expose four product regressions.
-Frontend and full canonical release files are absent from this checkout.
+`reports/verification/REGRESSIONS.md`. The four Data regressions are fixed in
+pipeline 0.1.1 and all eight independent Data probes now pass. Passing code checks
+does not approve an unrebuilt data release. The new `simulator/` city viewer is on
+main; its integration with the planner API/browser flow remains unverified. Full
+canonical release files are absent from this checkout.
 
 ## Clean-checkout setup
 
@@ -27,7 +29,7 @@ npm run test:list
 
 `uv` can provision Python 3.11 if it is not already installed. The latest runs
 used 3.11.17: the combined checker/Backend environment, Backend's 10 own tests,
-and Data's 21 own tests all execute on the planned production interpreter. The
+and Data's 36 own tests all execute on the planned production interpreter. The
 lighter `tests/integration/requirements.lock.txt` remains available for checker
 oracles and JSON/Parquet fixtures without Backend libraries.
 
@@ -70,15 +72,17 @@ replaces only the upstream network. Real parsers, cache, pagination, retries,
 release matching and FastAPI routes stay in the path. The live-mode setup release
 is synthetic, not real SF data.
 
-The Data command currently exits **1**: four checks pass and four fail. Inputs are
+The Data command now exits **0**: all eight checks pass in pipeline 0.1.1. Inputs are
 small synthetic records; the actual SF test labels are never revisited. It checks
 dotenv precedence, Census error privacy, independent feature distances and train normalization, then tests SF label
 isolation, consistency between evaluated and served baseline fallbacks, unknown
-condo assessments, and published-file checksums. Failures include owner,
+condo assessments, and published-file checksums. Results include owner,
 reproduction, expected behavior and impact. Code/config/lock fingerprints bind
 the results to the tested sources; changing those sources requires rerunning the
 probes. Failures are imported into the acceptance report rather than hidden by
-a green unit suite.
+a green unit suite. Older 0.1.0 reports remain historical until a full
+build/train/publish with 0.1.1; producer-version checks prevent treating them as
+fixed release evidence.
 
 The older `provider_checks.py --driver module:factory` protocol remains for future
 providers. It is not needed to verify the current DataSF implementation.
@@ -99,11 +103,12 @@ backend/.venv/bin/python -m tests.integration.verify_release \
   --report-dir reports/verification/current
 ```
 
-The current report records 20 passes, four failures, four blockers and one
+The current report records 24 passes, zero failures, five blockers and one
 warning. Exit 1 is intentional. It writes readable `acceptance.md`, JSON checks,
 and a qualified Data aggregate review. `release_accepted` is always false in
-fixture mode. Missing native artifacts/actual boundary coverage, category verdicts,
-Frontend/browser evidence and the presentation review remain blocked.
+fixture mode. Unrebuilt historical reports, missing native artifacts/actual
+boundary coverage, category verdicts, integrated browser evidence and the
+presentation review remain blocked.
 
 For a real release, use `--mode release`, its live API URL, its full canonical
 artifact directory, and matching oracle cases. Also pass actual Playwright JSON
@@ -170,7 +175,8 @@ ranges, zeros versus unknowns, common dimensions, priorities and Pareto cases.
 
 ## Browser and presentation handoff
 
-Once Frontend exists, run the same eight flows at 1440x900 and 1280x720:
+Once the planner flow is integrated with the API, run the same eight flows at
+1440x900 and 1280x720:
 
 ```sh
 cd tests/integration/browser

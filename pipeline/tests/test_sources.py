@@ -60,9 +60,32 @@ def test_condo_apns_consolidate_to_one_physical_lot(lots):
     assert list(lot["source_apns"]) == ["0025032", "0025033"]
     assert lot["apn_count"] == 2
     assert lot["assessed_land_usd"] == 250000  # summed across condo APNs, 2024 row ignored
-    assert lot["assessed_improvement_usd"] == 200000  # null member does not null the sum
+    assert pd.isna(lot["assessed_improvement_usd"])  # unknown member makes the total unknown
     assert report["condo_lots"] == 1
     assert "sf:0001001" not in out.index  # inactive parcel dropped
+
+
+@pytest.mark.parametrize("values,expected", [([0, 0], 0), ([100, 200], 300), ([0, None], None), ([None, None], None)])
+def test_condo_totals_distinguish_zeros_complete_values_and_unknowns(values, expected):
+    parcels = sf.parse_parcel_records(_load("sf_parcels_api.json"))
+    assessor = sf.parse_assessor_records(_load("sf_assessor_api.json"), "2025")
+    for apn, value in zip(("0025032", "0025033"), values):
+        assessor.loc[assessor["apn"] == apn, "assessed_improvement_value_usd"] = value
+    lots, _ = sf.build_physical_parcels(parcels, sf.parse_landuse_records(_load("sf_landuse_api.json")), assessor,
+                                       "synthetic", current_landuse=sf.parse_current_landuse_records(_load("sf_landuse_current_api.json")))
+    actual = lots.set_index("parcel_id").loc["sf:0025032", "assessed_improvement_usd"]
+    assert pd.isna(actual) if expected is None else actual == expected
+
+
+def test_missing_assessor_apn_cannot_produce_a_complete_lot_total():
+    parcels = sf.parse_parcel_records(_load("sf_parcels_api.json"))
+    assessor = sf.parse_assessor_records(_load("sf_assessor_api.json"), "2025")
+    assessor = assessor[assessor["apn"] != "0025033"]
+    lots, _ = sf.build_physical_parcels(parcels, sf.parse_landuse_records(_load("sf_landuse_api.json")), assessor,
+                                       "synthetic", current_landuse=sf.parse_current_landuse_records(_load("sf_landuse_current_api.json")))
+    row = lots.set_index("parcel_id").loc["sf:0025032"]
+    assert row["assessor_matched_apns"] == 1
+    assert pd.isna(row["assessed_land_usd"]) and pd.isna(row["assessed_improvement_usd"])
 
 
 def test_vacancy_requires_2023_code_and_no_current_use(lots):

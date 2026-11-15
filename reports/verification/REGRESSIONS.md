@@ -1,11 +1,22 @@
-# Person 4 regression handoff
+# Four Data regressions — resolved
 
-Audited source baseline: `8898718` on `main`. Owner of the four product fixes:
-**Data / Person 2**. These are independently reproduced runtime failures, using
-small synthetic inputs through production functions. No actual SF labels were
-re-evaluated. Product code is left with its owner, per the implementation plan.
+Fixed in pipeline **0.1.1**, following the user's explicit request to implement
+the fixes directly. The original failures were independently reproduced at
+`f8ba4ba`; the same eight probes now all pass without changing their expected
+values. Actual SF test labels were not re-evaluated.
 
-Reproduce all four with the locked Data environment:
+| Issue | Fix | Verification |
+| --- | --- | --- |
+| P4-DATA-001: SF labels affected training eligibility | Fit all-zero target/category eligibility on Oakland training labels only and freeze it for validation/test. | Changing Berkeley or SF labels cannot change training rows, categories or baselines. |
+| P4-DATA-002: selected evaluation omitted served fallbacks | Evaluation and parcel serving share one model-plus-category-baseline function. Export prediction sources; preserve null only when no baseline exists. | A model-winning synthetic case evaluates all three unsupported pharmacy rows with the same baseline value served to parcels. |
+| P4-DATA-003: partial condo assessments appeared complete | Any unknown member APN component makes that physical-lot total null. Complete zero values remain zero. | Complete, zero, partially missing, wholly missing and unmatched-APN cases pass. |
+| P4-DATA-004: publication copied pre-filter checksums | Stage the serving projection, hash/count the actual published files, preserve canonical manifest lineage and omissions, and install the manifest last. | Published hashes/counts match filtered bytes; repeats are deterministic; canonical files and prior publications survive rejected inputs. |
+
+Sources: [model.py](../../pipeline/src/parcel_pipeline/model.py),
+[sf.py](../../pipeline/src/parcel_pipeline/sources/sf.py),
+[cli.py](../../pipeline/src/parcel_pipeline/cli.py).
+
+Reproduce the independent proofs:
 
 ```sh
 uv sync --project pipeline --locked
@@ -14,100 +25,28 @@ OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 LOKY_MAX_CPU_COUNT=1 \
   --output reports/verification/pipeline-probe-results.json
 ```
 
-The command intentionally exits 1. Its JSON records exact source/config/lock
-fingerprints, expected behavior and affected categories. Current result: four
-passes and four failures. Passing unit tests do not override these failures.
+Current result: **8 PASS, 0 FAIL**, exit 0. The JSON fingerprints the tested
+production code, configuration and lock. The Data suite has **36 passing tests**;
+the combined checker suite has **135 passing tests**, with no skips when the
+fixture API and locked Backend environment are available.
 
-## P4-DATA-001: SF labels change training eligibility (P1)
+## Real artifacts still require rebuilding
 
-Probe: `pipeline.sf_label_isolation`.
-Source: [model.py:162](../../pipeline/src/parcel_pipeline/model.py#L162).
+The code fixes do not repair cached 0.1.0 Parquet files or retroactively recompute
+old evaluation reports. With the source/Census caches present, rebuild canonical
+tables, regenerate evaluation/serving outputs, publish the new projection, and
+freeze the Backend release. Preserve SF evaluation history rather than claim a
+new untouched holdout. The actual cached files are absent from this checkout,
+so only synthetic regressions were executed here.
 
-The degenerate-target filter examines labels across every city before splitting.
-In a synthetic school example, changing only SF labels changes the number of
-eligible Oakland training rows from **0 to 3**, and removes school from the
-degenerate-category set. SF is supposed to be held out from all training and
-selection decisions.
+The fixed publisher records `publication.canonical_manifest_sha256`, original
+canonical output records, publisher version, omitted files and parcel counts.
+Its root `outputs` describe the published bytes, not the canonical inputs.
+Canonical hash/count mismatches are rejected before touching an old publication.
+An explicit missing-Census publication removes stale demographic files and labels
+coverage as skipped; it is not eligible for live release.
 
-Expected: freeze eligibility/target-quality rules using permitted training data,
-then apply them to validation and test. Changing test labels must leave the
-training rows, normalization, categories and selected approach unchanged.
-Current impact is demonstrated for school and applies to any category whose
-degeneracy decision depends on SF targets. Release blocker; confidence high.
-
-## P4-DATA-002: evaluation omits the fallback actually served (P1)
-
-Probe: `pipeline.serving_fallback_evaluation`.
-Sources: [model.py:215](../../pipeline/src/parcel_pipeline/model.py#L215),
-[model.py:226](../../pipeline/src/parcel_pipeline/model.py#L226).
-
-When the learned model wins, evaluation uses its NaN predictions for unsupported
-categories. `predict_parcels` instead substitutes their category baseline. In a
-synthetic supported-clinic/unsupported-pharmacy case, production serves pharmacy
-baseline **2**, while the selected SF evaluation has **0 of 3 predictions**.
-The committed aggregate report likewise leaves pharmacy/bank selected metrics
-empty while serving those categories via baselines.
-
-Expected: evaluate the same model-plus-baseline policy that is served, on common
-rows, and keep genuinely unavailable categories explicitly null. Export complete
-selected predictions for those rows and recompute metrics without changing model
-selection based on SF outcomes. Release blocker; confidence high.
-
-## P4-DATA-003: partial condo assessments appear complete (P2)
-
-Probe: `pipeline.partial_assessment`.
-Source: [sf.py:292](../../pipeline/src/parcel_pipeline/sources/sf.py#L292).
-
-The fixture's physical lot has two APNs, including an unknown improvement value.
-The pipeline reports **USD 200,000** as the parcel improvement total by summing
-only known members. There is no partial-value label; matching an assessor row
-does not imply all its assessment fields are known.
-
-Expected: propagate an unknown member value to a null physical-lot total, or
-export an explicitly named known subtotal with value-level coverage and ensure
-the API/UI labels it partial. Preserve actual zeros and assessment vintage.
-This affects assessor context, not a demonstrated causal economic estimate.
-Confidence high; blocks the affected release field until resolved.
-
-## P4-DATA-004: publication retains pre-filter file checksums (P1)
-
-Probe: `pipeline.publication_fingerprint`.
-Source: [cli.py:366](../../pipeline/src/parcel_pipeline/cli.py#L366).
-
-`publish` filters/rewrites parcel and prediction Parquet files, then copies the
-canonical `source_manifest.json` unchanged. The published parcel bytes do not
-match its declared SHA256. Its original row counts can also describe the
-unfiltered universe. Backend schema loading can pass despite this broken
-provenance chain.
-
-Expected: fingerprint the actual published bytes and counts, preserve a separate
-reference to canonical-source provenance, and identify omissions/release lineage.
-Both the canonical and serving projections should validate against their own
-manifests. Release blocker; confidence high.
-
-## Remaining evidence and next owners
-
-1. **Data:** fix the four issues, regenerate/freeze canonical and serving outputs,
-   and provide the full canonical directory to the checker. The latest committed
-   reports declare a successful Census-backed build, but the ignored Parquet and
-   frozen prediction files are not present in this checkout. Aggregate arithmetic
-   is reconciled; raw metrics, joins and real boundary coverage remain unverified.
-   Include fingerprinted `model_normalization.json` evidence as documented in
-   `tests/integration/README.md`.
-2. **Data + Checker:** review category policy and the 160 sampled candidate,
-   ambiguous and clinic/grocery-lookalike records. All verdicts are currently
-   empty. Individual provider listings versus service facilities need an explicit
-   decision before supply counts are accepted.
-3. **Frontend:** provide the runnable UI. The 16 browser cases are type-checked
-   and collected, but no product UI exists here to execute them against. Then
-   Checker runs both presentation sizes, error states and the actual user flow.
-4. **Team + Checker:** disclose earlier SF evaluations, freeze the evaluation
-   protocol, and complete the presentation-machine review. SF results were already
-   visible in earlier and current report versions; do not describe a later run as
-   an untouched holdout or tune against its labels and still claim final-test
-   independence.
-
-The six actual Backend provider probes pass, including stale fallback and changed
-or new parcels losing cached scores. That former blocker is closed. Python 3.11
-execution is also verified. The current fallback exercised is the synthetic API;
-no live-data or browser release is approved.
+Remaining release evidence: rebuilt canonical files/normalization exports, category
+review, the real Frontend/browser flow, boundary coverage and presentation review.
+Those are separate from these four now-closed code defects. See
+[ACCEPTANCE.md](ACCEPTANCE.md) and [current results](current/results.json).
