@@ -13,7 +13,14 @@ import { readRings } from './picking.js';
 export const MIN_HEIGHT_M = 3;
 export const MAX_HEIGHT_M = 350;
 
-export function createEdits({ scene, shared, index, mats, chunkSize, vacancy, storageKey }) {
+import { ruleFor } from './buildingRules.js';
+
+/**
+ * mapTypes: meta.types (index = render type id). An edit is { deleted: true } or
+ * { kind: rule id from buildingRules.js, type: render type index, height }.
+ */
+export function createEdits({ scene, shared, index, mats, chunkSize, vacancy, storageKey, mapTypes }) {
+  const typeIndex = (id) => Math.max(0, mapTypes.findIndex((t) => t.id === id));
   const edits = new Map(); // building index -> { deleted: true } | { type, height }
   const meshes = new Map(); // building index -> [full mesh, lod mesh]
   const group = new THREE.Group();
@@ -91,8 +98,11 @@ export function createEdits({ scene, shared, index, mats, chunkSize, vacancy, st
     const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
     for (const [b, e] of saved) {
       if (Number.isInteger(b) && b >= 0 && b < index.count && e && (e.deleted ||
-          (Number.isInteger(e.type) && Number.isFinite(e.height)))) {
-        apply(b, e.deleted ? { deleted: true } : { type: e.type, height: clampHeight(e.height) });
+          (Number.isFinite(e.height) && (ruleFor(e.kind) || Number.isInteger(e.type))))) {
+        if (e.deleted) { apply(b, { deleted: true }); continue; }
+        // older saves stored only the map type index
+        const rule = ruleFor(e.kind) || ruleFor(mapTypes[e.type]?.id) || ruleFor('other');
+        apply(b, { kind: rule.id, type: typeIndex(rule.render), height: clampHeight(e.height) });
       }
     }
   } catch { /* ignore unreadable storage */ }
@@ -103,7 +113,13 @@ export function createEdits({ scene, shared, index, mats, chunkSize, vacancy, st
     get: (b) => edits.get(b) || null,
     onChange(fn) { listeners.add(fn); fn(edits.size); },
     remove(b) { apply(b, { deleted: true }); save(); },
-    replace(b, type, height) { apply(b, { type, height: clampHeight(height) }); save(); },
+    /** kind: a rule id from buildingRules.js (the caller validates size rules first). */
+    replace(b, kind, height) {
+      const rule = ruleFor(kind);
+      if (!rule) return;
+      apply(b, { kind: rule.id, type: typeIndex(rule.render), height: clampHeight(height) });
+      save();
+    },
     restore(b) { apply(b, null); save(); },
     resetAll() {
       for (const b of [...edits.keys()]) apply(b, null);

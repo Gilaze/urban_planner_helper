@@ -97,6 +97,17 @@ export function readRings(index, b) {
   return rings;
 }
 
+/** Building footprint area in m² (outer ring minus holes). */
+export function footprintArea(index, b) {
+  const rings = readRings(index, b);
+  const area = (p) => {
+    let a = 0;
+    for (let i = 0, n = p.length / 2, j = n - 1; i < n; j = i++) a += p[2 * j] * p[2 * i + 1] - p[2 * i] * p[2 * j + 1];
+    return Math.abs(a) / 2;
+  };
+  return rings.reduce((s, r, k) => s + (k === 0 ? area(r) : -area(r)), 0);
+}
+
 function ringCentroid(p) {
   const n = p.length / 2;
   let a = 0, cx = 0, cz = 0;

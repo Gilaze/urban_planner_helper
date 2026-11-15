@@ -207,45 +207,83 @@ export function createUI(root) {
       let onResetAll = () => {};
       editsPanel.querySelector('[data-reset]').addEventListener('click', () => onResetAll());
 
-      const typeOptions = (sel) => meta.types.map((t, i) => (t.count || i === sel)
-        ? `<option value="${i}"${i === sel ? ' selected' : ''}>${t.label}</option>` : '').join('');
-
       return {
         /**
-         * info: { type, lot, heightM, edited, minH, maxH }
-         * actions: { onClose, onApply(type, heightM), onDelete(), onRestore() }
+         * info:    { title, color, lot, edited, choices, choiceId, heightM, footprintM2 }
+         *          choices = [{ id, label, group, color, height, minH, maxH, minArea }]
+         * actions: { onClose, onApply(choiceId, heightM), onDelete(), onRestore(), validate(choiceId, heightM) }
          */
-        showBuilding({ type, lot, heightM, edited = false, minH = 3, maxH = 350 }, actions) {
+        showBuilding({ title, color, lot, edited = false, choices, choiceId, heightM, footprintM2 }, actions) {
           onCardClose = actions.onClose;
-          const t = meta.types[type] || { label: 'Building', color: '#ccc' };
           const [cls, head, sub] = lot == null
             ? ['unknown', 'Unavailable', 'Rebuild data (npm run data) for vacancy']
             : LOT[lot] || LOT[0];
-          const h = Math.round(heightM);
+          const groups = [...new Set(choices.map((c) => c.group))];
+          const options = groups.map((g) => `<optgroup label="${g}">${choices.filter((c) => c.group === g)
+            .map((c) => `<option value="${c.id}"${c.id === choiceId ? ' selected' : ''}>${c.label}</option>`).join('')}</optgroup>`).join('');
           card.innerHTML = `
             <button class="bcard-x" aria-label="Close">×</button>
-            <div class="bcard-type"><span class="sw" style="--c:${t.color}"></span>${t.label}${edited ? '<span class="pill edited">Edited</span>' : ''}</div>
+            <div class="bcard-type"><span class="sw" style="--c:${color}"></span>${title}${edited ? '<span class="pill edited">Edited</span>' : ''}</div>
             <div class="bcard-row"><span class="k">Status</span><span class="pill ${cls}">${head}</span></div>
             <div class="bcard-sub">${sub}</div>
             <div class="bcard-edit">
-              <label class="bcard-field"><span class="k">Type</span><select data-type>${typeOptions(type)}</select></label>
+              <label class="bcard-field"><span class="k">Type</span><select data-type>${options}</select></label>
               <label class="bcard-field"><span class="k">Height</span>
-                <input data-hrange type="range" min="${minH}" max="${maxH}" step="1" value="${h}">
-                <span class="hval"><input data-hnum type="number" min="${minH}" max="${maxH}" step="1" value="${h}"> m</span>
+                <input data-hrange type="range" step="1">
+                <span class="hval"><input data-hnum type="number" step="1"> m</span>
               </label>
+              <div class="bcard-rule" data-rule></div>
+              <div class="bcard-warn" data-warn role="alert" hidden></div>
               <div class="bcard-actions">
                 <button class="btn primary" data-apply>Apply</button>
                 <button class="btn danger" data-delete>Delete</button>
                 ${edited ? '<button class="btn" data-restore>Restore original</button>' : ''}
               </div>
             </div>
-            <div class="bcard-note">Edits are a local sketch in this browser. Source: Parcel Planner release (SF land use, Google Maps closures). Exact location is not shown.</div>`;
+            <div class="bcard-note">Size rules are illustrative planning defaults. Edits are a local sketch in this browser. Source: Parcel Planner release (SF land use, Google Maps closures). Exact location is not shown.</div>`;
+          const sel = card.querySelector('[data-type]');
           const range = card.querySelector('[data-hrange]'), num = card.querySelector('[data-hnum]');
-          range.addEventListener('input', () => { num.value = range.value; });
-          num.addEventListener('input', () => { range.value = num.value; });
+          const ruleEl = card.querySelector('[data-rule]'), warn = card.querySelector('[data-warn]');
+          const apply = card.querySelector('[data-apply]');
+          const choiceOf = () => choices.find((c) => c.id === sel.value);
+          let touched = false;
+          const setRange = (c) => {
+            // the slider spans the type's allowed range, widened to show an out-of-range original height
+            range.min = Math.min(c.minH, Number(num.value) || c.minH);
+            range.max = Math.max(c.maxH, Number(num.value) || c.maxH);
+            num.min = 1; num.max = 999;
+            ruleEl.textContent = `${c.label}: ${c.minH}–${c.maxH} m tall, footprint ≥ ${c.minArea.toLocaleString()} m² ` +
+              `(this one: ${Math.round(footprintM2).toLocaleString()} m²)`;
+          };
+          const check = () => {
+            const v = actions.validate(sel.value, num.value === '' ? NaN : Number(num.value));
+            apply.disabled = !v.ok;
+            // the original building's own values are only flagged once the user changes something
+            warn.hidden = v.ok || !touched;
+            warn.textContent = v.reasons.join(' ');
+            apply.title = v.ok ? '' : v.reasons.join(' ');
+          };
+          const h0 = Math.round(heightM);
+          num.value = range.value = h0;
+          setRange(choiceOf());
+          range.value = h0;
+          check();
+          sel.addEventListener('change', () => {
+            const c = choiceOf();
+            touched = true;
+            num.value = c.height;          // picking a type fills in its default height
+            setRange(c);
+            range.value = c.height;
+            check();
+          });
+          range.addEventListener('input', () => { num.value = range.value; touched = true; check(); });
+          num.addEventListener('input', () => { if (num.value !== '') range.value = num.value; touched = true; check(); });
           card.querySelector('.bcard-x').addEventListener('click', () => onCardClose());
-          card.querySelector('[data-apply]').addEventListener('click', () =>
-            actions.onApply(Number(card.querySelector('[data-type]').value), Number(num.value)));
+          apply.addEventListener('click', () => {
+            touched = true;
+            check();
+            if (!apply.disabled) actions.onApply(sel.value, Number(num.value));
+          });
           card.querySelector('[data-delete]').addEventListener('click', () => actions.onDelete());
           card.querySelector('[data-restore]')?.addEventListener('click', () => actions.onRestore());
           card.classList.remove('hidden');

@@ -29,7 +29,7 @@ npm run dev    # http://localhost:5173
 | `O` | Building outlines on/off |
 | Legend | Click a type to hide it, hover to highlight it |
 | Click a building | Yellow outline and glow, plus a card with its type and vacancy status from `vacancy.bin` (vacant lot / closed businesses / not vacant / unknown). `Esc`, `×` or clicking open ground closes it. The card never shows an address, coordinates or parcel number. |
-| Edit a building (in the card) | **Type** + **Height** (3–350 m) then **Apply** replaces the building on the same footprint (flat roof, same window style as its type). **Delete** removes it. **Restore original** undoes one building; **Reset all** (bottom left) undoes every edit. Edits are a local sketch: they are saved in this browser only and do not change the data release or the backend. |
+| Edit a building (in the card) | Pick a **Type** (services: hospital, clinic, pharmacy, grocery, bank, school; or a map building type). Picking a type fills in its default height. **Apply** replaces the building on the same footprint, but only if the type's size rule is met (see below); otherwise Apply is disabled and the card says why. **Delete** removes it. **Restore original** undoes one building; **Reset all** (bottom left) undoes every edit. Edits are a local sketch saved in this browser only; they do not change the data release or the backend. |
 
 In the browser console, `__sf.jump(lon, lat, viewHeightMeters, mode)` moves the camera.
 
@@ -92,6 +92,31 @@ The bay's colour comes from depth in the elevation data, with animated surf alon
 
 - Glints never get smaller than about 1.5 px, so they stay crisp instead of shimmering.
 - Water is mostly exempt from the focus blur.
+
+## Building size rules
+
+Each replacement type has a default height, an allowed height range, and a minimum building footprint (`src/buildingRules.js`). These are illustrative planning defaults for sketching, not San Francisco code.
+
+| Type | Default | Height range | Min footprint | Drawn as |
+|---|---|---|---|---|
+| Hospital | 30 m | 12–120 m | 2,000 m² | Medical |
+| Clinic | 8 m | 4–30 m | 150 m² | Medical |
+| Pharmacy | 6 m | 4–20 m | 80 m² | Retail |
+| Grocery store | 7 m | 4–20 m | 300 m² | Retail |
+| Bank / credit union | 8 m | 4–40 m | 100 m² | Office |
+| School (K-12) | 12 m | 6–30 m | 1,500 m² | Civic |
+| Tower / high-rise | 80 m | 50–350 m | 300 m² | Tower |
+| Office | 30 m | 8–250 m | 200 m² | Office |
+| Apartment / condo | 18 m | 9–120 m | 150 m² | Apartment |
+| Flats (2-4 units) | 10 m | 6–20 m | 80 m² | Flats |
+| Single-family house | 8 m | 4–14 m | 40 m² | House |
+| Mixed-use | 15 m | 8–60 m | 100 m² | Mixed-use |
+| Retail / commercial | 6 m | 4–30 m | 60 m² | Retail |
+| Hotel | 30 m | 10–200 m | 300 m² | Hotel |
+| Civic / culture | 12 m | 4–60 m | 150 m² | Civic |
+| Medical office | 15 m | 6–80 m | 150 m² | Medical |
+| Industrial / PDR | 10 m | 5–30 m | 200 m² | Industrial |
+| Other / accessory | 5 m | 3–20 m | none | Other |
 
 ## Data and accuracy
 

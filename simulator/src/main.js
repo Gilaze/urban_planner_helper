@@ -8,8 +8,9 @@ import {
 import { buildTerrain, buildWater, buildBuildingMeshes, buildRoadMeshes, buildLakes, buildTrees, buildLandmarks } from './world.js';
 import { createUI, MODES } from './ui.js';
 import { createFocusBlur } from './focusBlur.js';
-import { createBuildingIndex, pickBuilding, buildingParts, createSelectionHighlight } from './picking.js';
-import { createEdits, MIN_HEIGHT_M, MAX_HEIGHT_M } from './edits.js';
+import { createBuildingIndex, pickBuilding, buildingParts, createSelectionHighlight, footprintArea } from './picking.js';
+import { BUILDING_RULES, ruleFor, ruleForMapType, validateBuilding } from './buildingRules.js';
+import { createEdits } from './edits.js';
 import GeometryWorker from './geometryWorker.js?worker';
 
 const CHUNK = 1000;      // metres per mesh chunk (frustum-culling granularity)
@@ -299,8 +300,10 @@ async function boot() {
   // User edits: delete a building or replace it with another type and height (local sketch).
   const edits = createEdits({
     scene, shared, index: buildingIndex, mats: buildingMats, chunkSize: CHUNK, vacancy: data.vacancy,
-    storageKey: `sf-sim-edits-v1:${meta.buildingCount}`,
+    storageKey: `sf-sim-edits-v1:${meta.buildingCount}`, mapTypes: meta.types,
   });
+  const colorOf = (renderId) => (meta.types.find((t) => t.id === renderId) || { color: '#ccc' }).color;
+  const CHOICES = BUILDING_RULES.map((r) => ({ ...r, color: colorOf(r.render) }));
   edits.onChange((n) => hud.setEditCount(n, () => { edits.resetAll(); if (selected >= 0) select(selected); }));
   const originalHeight = (b) => buildingIndex.h[b] +
     (buildingIndex.kind[b] === 3 ? buildingIndex.roof[b] : buildingIndex.kind[b] === 1 ? buildingIndex.roof[b] * 0.5 : 0);
@@ -314,16 +317,26 @@ async function boot() {
     }
     const e = edits.get(b);
     highlight.show(buildingParts(buildingIndex, b, shared));
+    const mapType = meta.types[buildingIndex.type[b]] || { id: 'other', label: 'Building', color: '#ccc' };
+    const rule = e && !e.deleted ? ruleFor(e.kind) : null;
+    const area = footprintArea(buildingIndex, b);
     hud.showBuilding({
-      type: e && !e.deleted ? e.type : buildingIndex.type[b],
+      title: rule ? rule.label : mapType.label,
+      color: rule ? colorOf(rule.render) : mapType.color,
+      choices: CHOICES,
+      choiceId: rule ? rule.id : ruleForMapType(mapType.id).id,
       heightM: e && !e.deleted ? e.height : originalHeight(b),
+      footprintM2: area,
       lot: data.vacancy ? data.vacancy[b] : null,
       edited: !!e,
-      minH: MIN_HEIGHT_M,
-      maxH: MAX_HEIGHT_M,
     }, {
+      validate: (id, h) => validateBuilding(ruleFor(id), h, area),
       onClose: () => select(-1),
-      onApply: (type, h) => { edits.replace(b, type, h); select(b); },
+      onApply: (id, h) => {
+        if (!validateBuilding(ruleFor(id), h, area).ok) return; // the card already blocks this
+        edits.replace(b, id, h);
+        select(b);
+      },
       onDelete: () => { edits.remove(b); select(-1); },
       onRestore: () => { edits.restore(b); select(b); },
     });
