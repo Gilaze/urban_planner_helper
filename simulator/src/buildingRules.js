@@ -115,6 +115,23 @@ export function defaultHeight(rule, ctx) {
 }
 
 /**
+ * Whether a type can be placed on this lot at all (used to filter the dropdown): its use is
+ * not "not permitted" here, open-space districts allow only civic/accessory structures, and
+ * its minimum height (e.g. Tower >= 50 m) fits under the lot's height limit.
+ */
+export function fitsLot(rule, ctx = {}) {
+  if (!rule) return false;
+  if (ctx.openSpace) return rule.id === 'civic' || rule.id === 'other';
+  const use = USE[zoningFamily(ctx.zoning)];
+  if (use && use[rule.id] === 'N') return false;
+  const { limitM } = heightRange(rule, ctx);
+  return limitM == null || rule.minH <= limitM;
+}
+
+/** Vacancy codes (vacancy.bin) on which edits are allowed: vacant lot, all businesses closed. */
+export const EDITABLE_VACANCY = new Set([2, 3]);
+
+/**
  * Check a replacement against SF rules.
  * Returns { ok, reasons[] (blocking), notes[] (shown, not blocking), summary }.
  */

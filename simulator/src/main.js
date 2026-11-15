@@ -9,7 +9,9 @@ import { buildTerrain, buildWater, buildBuildingMeshes, buildRoadMeshes, buildLa
 import { createUI, MODES } from './ui.js';
 import { createFocusBlur } from './focusBlur.js';
 import { createBuildingIndex, pickBuilding, buildingParts, createSelectionHighlight, footprintArea } from './picking.js';
-import { BUILDING_RULES, ruleFor, ruleForMapType, validateBuilding, heightRange, defaultHeight } from './buildingRules.js';
+import {
+  BUILDING_RULES, ruleFor, ruleForMapType, validateBuilding, heightRange, defaultHeight, fitsLot, EDITABLE_VACANCY,
+} from './buildingRules.js';
 import { createEdits } from './edits.js';
 import { createPlanner } from './planner.js';
 import { createParcelScene } from './parcelScene.js';
@@ -348,12 +350,26 @@ async function boot() {
     const rule = e && !e.deleted ? ruleFor(e.kind) : null;
     const area = footprintArea(buildingIndex, b);
     const ctx = lotContext(b);
+    const vac = data.vacancy ? data.vacancy[b] : null;
+    // only vacant buildings can be edited; an existing edit can always be restored
+    const editable = vac != null && EDITABLE_VACANCY.has(vac);
+    // the dropdown only offers types SF rules allow on this lot
+    const choices = CHOICES.filter((c) => fitsLot(c, ctx));
+    let choiceId = rule ? rule.id : ruleForMapType(mapType.id).id;
+    let heightM = e && !e.deleted ? e.height : originalHeight(b);
+    if (choices.length && !choices.some((c) => c.id === choiceId)) {
+      choiceId = choices[0].id; // current use is not allowed here: start from the first allowed type
+      heightM = defaultHeight(ruleFor(choiceId), ctx);
+    }
     hud.showBuilding({
       title: rule ? rule.label : mapType.label,
       color: rule ? colorOf(rule.render) : mapType.color,
-      choices: CHOICES,
-      choiceId: rule ? rule.id : ruleForMapType(mapType.id).id,
-      heightM: e && !e.deleted ? e.height : originalHeight(b),
+      choices,
+      choiceId,
+      heightM,
+      editable,
+      lockedReason: data.vacancy ? 'Only vacant buildings can be edited (vacant lot or every business closed).'
+        : 'Editing needs vacancy data: rebuild with npm run data.',
       footprintM2: area,
       hasRules: !!data.zoning,
       lot: data.vacancy ? data.vacancy[b] : null,
@@ -364,11 +380,11 @@ async function boot() {
       defaultHeight: (id) => defaultHeight(ruleFor(id), ctx),
       onClose: () => select(-1),
       onApply: (id, h) => {
-        if (!validateBuilding(ruleFor(id), h, ctx).ok) return; // the card already blocks this
+        if (!editable || !fitsLot(ruleFor(id), ctx) || !validateBuilding(ruleFor(id), h, ctx).ok) return; // the card already blocks this
         edits.replace(b, id, h);
         select(b);
       },
-      onDelete: () => { edits.remove(b); select(-1); },
+      onDelete: () => { if (editable) { edits.remove(b); select(-1); } },
       onRestore: () => { edits.restore(b); select(b); },
     });
   }

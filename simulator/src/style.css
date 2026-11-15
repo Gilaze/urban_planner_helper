@@ -141,6 +141,9 @@ html, body {
 .bcard-field input[type=number] { width: 52px; font: inherit; font-size: 12px; padding: 2px 4px; border-radius: 6px; border: 1px solid rgba(31, 42, 55, 0.15); }
 .bcard-rule { font-size: 11px; color: var(--ink-2); line-height: 1.35; }
 .bcard-cond { font-size: 12px; line-height: 1.35; color: #7a4a00; background: #fff4d6; border-radius: 8px; padding: 6px 8px; }
+.bcard-edit[hidden], .bcard-cond[hidden], .bcard-warn[hidden] { display: none; }
+.bcard-locked { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--panel-border); font-size: 12px; color: var(--ink-2); }
+.bcard-locked + .bcard-actions { margin-top: 8px; }
 .bcard-warn { font-size: 12px; line-height: 1.35; color: #8f1f16; background: #fde4e2; border-radius: 8px; padding: 6px 8px; }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .bcard-actions { display: flex; gap: 6px; flex-wrap: wrap; }

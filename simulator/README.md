@@ -29,7 +29,7 @@ npm run dev    # http://localhost:5173
 | `O` | Building outlines on/off |
 | Legend | Click a type to hide it, hover to highlight it |
 | Click a building | Yellow outline and glow, plus a card with its type and vacancy status from `vacancy.bin` (vacant lot / closed businesses / not vacant / unknown). `Esc`, `×` or clicking open ground closes it. The card never shows an address, coordinates or parcel number. |
-| Edit a building (in the card) | Pick a **Type** (services: hospital, clinic, pharmacy, grocery, bank, school; or a map building type). Picking a type fills in its default height. **Apply** replaces the building on the same footprint, but only if the type's size rule is met (see below); otherwise Apply is disabled and the card says why. **Delete** removes it. **Restore original** undoes one building; **Reset all** (bottom left) undoes every edit. Edits are a local sketch saved in this browser only; they do not change the data release or the backend. |
+| Edit a building (in the card) | **Only vacant buildings can be edited**: a vacant lot, or a building where every listed business is closed (Vacancy view, `V`). Other buildings show their info only. The **Type** list only offers types SF rules allow on that lot: no use the zoning district does not permit, and no Tower where the height limit is under 50 m. If nothing fits, the card says so. Picking a type fills in its default height. **Apply** replaces the building on the same footprint if the height is within the SF limit; **Delete** removes it. **Restore original** undoes one building; **Reset all** (bottom left) undoes every edit. Edits are a local sketch saved in this browser only. |
 
 In the browser console, `__sf.jump(lon, lat, viewHeightMeters, mode)` moves the camera.
 

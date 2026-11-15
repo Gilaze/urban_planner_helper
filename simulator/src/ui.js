@@ -213,7 +213,8 @@ export function createUI(root) {
          *          choices = [{ id, label, group, color, height, minH, maxH, minArea }]
          * actions: { onClose, onApply(choiceId, heightM), onDelete(), onRestore(), validate(choiceId, heightM) }
          */
-        showBuilding({ title, color, lot, edited = false, choices, choiceId, heightM, footprintM2, hasRules = true }, actions) {
+        showBuilding({ title, color, lot, edited = false, choices, choiceId, heightM, footprintM2, hasRules = true,
+          editable = true, lockedReason = '' }, actions) {
           onCardClose = actions.onClose;
           const [cls, head, sub] = lot == null
             ? ['unknown', 'Unavailable', 'Rebuild data (npm run data) for vacancy']
@@ -226,7 +227,11 @@ export function createUI(root) {
             <div class="bcard-type"><span class="sw" style="--c:${color}"></span>${title}${edited ? '<span class="pill edited">Edited</span>' : ''}</div>
             <div class="bcard-row"><span class="k">Status</span><span class="pill ${cls}">${head}</span></div>
             <div class="bcard-sub">${sub}</div>
-            <div class="bcard-edit">
+            ${!editable ? `<div class="bcard-locked">${lockedReason}</div>
+            ${edited ? '<div class="bcard-actions"><button class="btn" data-restore>Restore original</button></div>' : ''}` : ''}
+            ${editable && !choices.length ? `<div class="bcard-locked">No building type fits this lot under SF zoning and height rules.</div>
+            <div class="bcard-actions"><button class="btn danger" data-delete>Delete</button>${edited ? '<button class="btn" data-restore>Restore original</button>' : ''}</div>` : ''}
+            <div class="bcard-edit"${editable && choices.length ? '' : ' hidden'}>
               <label class="bcard-field"><span class="k">Type</span><select data-type>${options}</select></label>
               <label class="bcard-field"><span class="k">Height</span>
                 <input data-hrange type="range" step="1">
@@ -242,6 +247,11 @@ export function createUI(root) {
               </div>
             </div>
             <div class="bcard-note">Rules: SF height limit (Height and Bulk Districts) and a simplified SF Planning Code use table${hasRules ? '' : ' (zoning data missing: rebuild with npm run data)'}. Edits are a local sketch in this browser. Source: Parcel Planner release (SF land use, Google Maps closures). Exact location is not shown.</div>`;
+          card.querySelector('.bcard-x').addEventListener('click', () => onCardClose());
+          card.querySelectorAll('[data-restore]').forEach((el) => el.addEventListener('click', () => actions.onRestore()));
+          card.querySelectorAll('[data-delete]').forEach((el) => el.addEventListener('click', () => actions.onDelete()));
+          card.classList.remove('hidden');
+          if (!editable || !choices.length) return;
           const sel = card.querySelector('[data-type]');
           const range = card.querySelector('[data-hrange]'), num = card.querySelector('[data-hnum]');
           const ruleEl = card.querySelector('[data-rule]'), warn = card.querySelector('[data-warn]');
@@ -283,15 +293,11 @@ export function createUI(root) {
           });
           range.addEventListener('input', () => { num.value = range.value; touched = true; check(); });
           num.addEventListener('input', () => { if (num.value !== '') range.value = num.value; touched = true; check(); });
-          card.querySelector('.bcard-x').addEventListener('click', () => onCardClose());
           apply.addEventListener('click', () => {
             touched = true;
             check();
             if (!apply.disabled) actions.onApply(sel.value, Number(num.value));
           });
-          card.querySelector('[data-delete]').addEventListener('click', () => actions.onDelete());
-          card.querySelector('[data-restore]')?.addEventListener('click', () => actions.onRestore());
-          card.classList.remove('hidden');
         },
         setEditCount(n, onReset) {
           onResetAll = onReset;
