@@ -95,6 +95,18 @@ export function createPlanner(root) {
               <button type="button" data-testid="view-2d" aria-pressed="false">2D</button>
             </div>
           </div>
+          <details class="planner-preview" data-permits open hidden>
+            <summary>Preliminary permit checklist</summary>
+            <form data-permit-form>
+              <label>Proposed use <select data-permit-use></select></label>
+              <label data-permit-area-row hidden>Gross floor area (sq ft)
+                <input type="number" min="1" step="any" data-permit-area>
+              </label>
+              <button type="submit">Check permits</button>
+            </form>
+            <p class="planner-note" data-permit-status role="status"></p>
+            <ol data-permit-steps></ol>
+          </details>
           <details class="planner-weights" hidden>
             <summary>Ranking weights</summary>
             <div data-sliders></div>
@@ -121,6 +133,11 @@ export function createPlanner(root) {
   const findButton = find('[data-find]');
   const alternatives = find('[data-alternatives]');
   const weights = find('.planner-weights');
+  const permits = find('[data-permits]');
+  const permitUse = find('[data-permit-use]');
+  const permitArea = find('[data-permit-area]');
+  const permitStatus = find('[data-permit-status]');
+  const permitSteps = find('[data-permit-steps]');
   const controls = find('[data-sliders]');
   const options = new Map();
   const sliders = {};
@@ -131,6 +148,7 @@ export function createPlanner(root) {
   let view = '3d';
   let parcelRequest = null;
   let compareRequest = null;
+  let permitRequest = null;
   let compareTimer;
   let listSource = null;
 
@@ -203,6 +221,53 @@ export function createPlanner(root) {
       button.setAttribute('aria-pressed', String(button.dataset.category === id));
     }
     renderPreview();
+    permitUse.value = id;
+    updatePermitForm();
+    checkPermits();
+  }
+
+  function updatePermitForm() {
+    find('[data-permit-area-row]').hidden = permitUse.value !== 'grocery';
+  }
+
+  function resetPermits() {
+    permitRequest?.abort();
+    permitSteps.replaceChildren();
+    permitStatus.textContent = '';
+  }
+
+  async function checkPermits() {
+    resetPermits();
+    if (!parcel || !permitUse.value) return;
+    const controller = new AbortController();
+    permitRequest = controller;
+    const { signal } = controller;
+    permitStatus.textContent = 'Checking zoning and review steps…';
+    try {
+      const result = await request('/permits/check', {
+        method: 'POST', signal, headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          parcel_id: parcel.id,
+          category_id: permitUse.value,
+          floor_area_sqft: permitUse.value === 'grocery' && permitArea.value ? Number(permitArea.value) : null,
+        }),
+      });
+      if (signal.aborted) return;
+      const zoning = result.zoning_districts.join(', ') || 'Unconfirmed';
+      const overlays = result.special_use_districts.join(', ');
+      permitStatus.textContent = `Zoning: ${zoning}${overlays ? ` · Special use districts: ${overlays}` : ''}`;
+      for (const step of result.steps) {
+        const item = element('li');
+        const link = element('a', step.title);
+        link.href = step.url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        item.append(link, element('p', step.detail));
+        permitSteps.append(item);
+      }
+    } catch (cause) {
+      if (!signal.aborted) permitStatus.textContent = cause.message;
+    }
   }
 
   function renderComparison() {
@@ -307,6 +372,11 @@ export function createPlanner(root) {
     statusText.textContent = '';
     error.hidden = retry.hidden = true;
     weights.hidden = !parcel;
+    permits.hidden = !parcel;
+    resetPermits();
+    permitArea.value = '';
+    permitUse.value = '';
+    updatePermitForm();
     if (!parcel) return;
     panel.querySelector('details').open = true;
     map?.focus(parcel, view);
@@ -349,6 +419,20 @@ export function createPlanner(root) {
       renderPreview();
     });
   }
+  permitUse.add(new Option('Choose a use', ''));
+  for (const [id, name] of Object.entries(CATEGORIES)) permitUse.add(new Option(name, id));
+  permitUse.addEventListener('change', () => {
+    if (comparison && permitUse.value) {
+      selectCandidate(permitUse.value);
+      return;
+    }
+    updatePermitForm();
+    checkPermits();
+  });
+  find('[data-permit-form]').addEventListener('submit', (event) => {
+    event.preventDefault();
+    checkPermits();
+  });
   retry.addEventListener('click', compare);
   findButton.addEventListener('click', refreshParcels);
   select.addEventListener('change', () => {
