@@ -183,8 +183,16 @@ export function createUI(root) {
       // ---- help + attribution
       hud.appendChild(el('div', 'panel help',
         '<b>Click</b> building info · <b>Drag</b> pan · <b>Wheel</b> zoom · <b>Q/E</b> rotate · <b>WASD</b> move · <b>1–5</b> camera · <b>V</b> vacancy'));
-      hud.appendChild(el('div', 'attrib',
-        meta.sources.map((s) => `<a href="${s.url}" target="_blank" rel="noopener">${s.name}</a>`).join(' · ')));
+      // Data credits, collapsed behind a small button (OpenStreetMap's licence needs visible credit).
+      const attrib = el('div', 'attrib');
+      attrib.innerHTML = `<button class="attrib-btn" aria-expanded="false" title="Data sources">ⓘ Sources</button>
+        <div class="attrib-list" hidden>${meta.sources.map((s) => `<a href="${s.url}" target="_blank" rel="noopener">${s.name}</a>`).join('')}</div>`;
+      const attribBtn = attrib.querySelector('.attrib-btn'), attribList = attrib.querySelector('.attrib-list');
+      attribBtn.addEventListener('click', () => {
+        attribList.hidden = !attribList.hidden;
+        attribBtn.setAttribute('aria-expanded', String(!attribList.hidden));
+      });
+      hud.appendChild(attrib);
 
       // ---- building info card (type and lot status only; no address or coordinates)
       const card = el('div', 'panel bcard hidden');
