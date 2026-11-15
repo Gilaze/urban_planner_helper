@@ -368,8 +368,13 @@ def publish(s: Settings, out: Path, allow_missing_census: bool = False) -> None:
     kept_ids = set(lots.loc[keep, "parcel_id"])
     preds = pd.read_parquet(rd / "review_predictions.parquet")
     preds[preds["parcel_id"].isin(kept_ids)].to_parquet(out / "review_predictions.parquet", index=False)
+    # Shared copy of the manifest without machine-local file paths.
+    sm = json.loads((rd / "source_manifest.json").read_text())
+    for v in sm.get("sources", {}).values():
+        v.pop("path", None)
+    write_json(out / "source_manifest.json", sm)
     for f in BACKEND_FILES:
-        if f not in ("parcels.geoparquet", "review_predictions.parquet"):
+        if f not in ("parcels.geoparquet", "review_predictions.parquet", "source_manifest.json"):
             if (rd / f).exists():
                 shutil.copy2(rd / f, out / f)
     log.info("published %d files to %s (%d lots omitted: unusable geometry or ID outside contract)",
