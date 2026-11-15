@@ -1,12 +1,37 @@
 {
   "demographics": {
-    "skipped": true
+    "block_group": {
+      "acs_rows": 3204,
+      "boundaries": 3204,
+      "boundaries_without_acs": 0,
+      "missing": {
+        "median_gross_rent_moe_usd_month": 1140,
+        "median_gross_rent_usd_month": 594,
+        "median_household_income_moe_usd": 548,
+        "median_household_income_usd": 220,
+        "population": 0,
+        "population_moe": 0
+      }
+    },
+    "tract": {
+      "acs_rows": 1102,
+      "boundaries": 1102,
+      "boundaries_without_acs": 0,
+      "missing": {
+        "median_gross_rent_moe_usd_month": 214,
+        "median_gross_rent_usd_month": 30,
+        "median_household_income_moe_usd": 100,
+        "median_household_income_usd": 20,
+        "population": 0,
+        "population_moe": 0
+      }
+    }
   },
   "features": {
     "covariate_missing_rate_parcels": {
-      "median_gross_rent_usd_month": 1.0,
-      "median_household_income_usd": 1.0,
-      "population_density_per_km2": 1.0
+      "median_gross_rent_usd_month": 0.01686147018603091,
+      "median_household_income_usd": 0.006605258404933302,
+      "population_density_per_km2": 0.0
     },
     "parcel_rows": 775140,
     "parcels_without_rep_point": 0,

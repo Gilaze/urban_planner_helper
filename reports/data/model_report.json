@@ -25,22 +25,22 @@
     },
     "fit_on": "train+validation (Oakland + Berkeley)"
   },
-  "census_skipped": true,
-  "data_version": "0.1.0+2026-11-14.2+6cbf713c49ee",
+  "census_skipped": false,
+  "data_version": "0.1.0+2026-11-14.2+ad464d957df7",
   "degenerate_target_categories": [
     "school"
   ],
   "estimator": "sklearn.ensemble.HistGradientBoostingRegressor (scikit-learn 1.5.2)",
   "gate": {
-    "best_model_macro_rmse": 1.6486256892558147,
+    "best_model_macro_rmse": 1.5782379499466423,
     "best_params": {
       "l2_regularization": 1.0,
-      "max_leaf_nodes": 15
+      "max_leaf_nodes": 31
     },
     "category_baseline_macro_rmse": 1.8232346506989452,
     "metric": "macro-average Berkeley category log-count RMSE",
     "passed": true,
-    "relative_improvement": 0.09576878180556381,
+    "relative_improvement": 0.1343747502047431,
     "required_improvement_vs_category_baseline": 0.05
   },
   "grid": {
@@ -163,14 +163,14 @@
       "clinic": {
         "n": 5693,
         "n_predicted": 5693,
-        "rmse_log_count": 1.0600699660455075,
-        "spearman": -0.09067830048657935
+        "rmse_log_count": 1.0043983056987844,
+        "spearman": -0.0720950854410437
       },
       "grocery": {
         "n": 413,
         "n_predicted": 413,
-        "rmse_log_count": 2.1567494153907676,
-        "spearman": 0.13035039327470763
+        "rmse_log_count": 2.097844079210601,
+        "spearman": 0.19523753670960506
       },
       "pharmacy": {
         "n": 119,
@@ -185,97 +185,123 @@
         "spearman": null
       }
     },
-    "selected_macro_rmse": 1.6084096907181376,
+    "selected_macro_rmse": 1.5511211924546928,
     "slices": {
-      "median_household_income_usd": {
-        "status": "unavailable (no training values)",
-        "threshold": null
+      "median_household_income_usd:high": {
+        "mean_within_category_spearman": -0.060455444679850104,
+        "n": 5062,
+        "rmse_log_count": 1.080174935348102,
+        "threshold": 106938.0
       },
-      "population_density_per_km2": {
-        "status": "unavailable (no training values)",
-        "threshold": null
+      "median_household_income_usd:low": {
+        "mean_within_category_spearman": 0.09776310029594378,
+        "n": 1305,
+        "rmse_log_count": 1.2211694740079024,
+        "threshold": 106938.0
+      },
+      "median_household_income_usd:missing": {
+        "mean_within_category_spearman": 0.3361543654034092,
+        "n": 119,
+        "rmse_log_count": 1.3060314124163588,
+        "threshold": 106938.0
+      },
+      "population_density_per_km2:high": {
+        "mean_within_category_spearman": 0.08155649789410777,
+        "n": 4444,
+        "rmse_log_count": 1.175510279634536,
+        "threshold": 5589.701741062374
+      },
+      "population_density_per_km2:low": {
+        "mean_within_category_spearman": -0.06621634723843545,
+        "n": 2033,
+        "rmse_log_count": 0.9588697715485611,
+        "threshold": 5589.701741062374
+      },
+      "population_density_per_km2:missing": {
+        "n": 9,
+        "status": "insufficient"
       }
     },
     "worst_errors": [
       {
-        "abs_error": 6.556526740921207,
+        "abs_error": 6.870053411798126,
         "category": "clinic",
         "city": "San Francisco",
         "place_id": "ChIJs4Hdec5_j4ARyQ1Fsn83VSw",
-        "pred_selected": 0.31352667087691893,
+        "pred_selected": 0.0,
         "target_log1p_reviews_count": 6.870053411798126
       },
       {
-        "abs_error": 6.555280532853917,
+        "abs_error": 6.642486801367256,
         "category": "clinic",
         "city": "San Francisco",
         "place_id": "ChIJEyanMISAhYARVYJJPDkRukE",
-        "pred_selected": 0.0872062685133384,
+        "pred_selected": 0.0,
         "target_log1p_reviews_count": 6.642486801367256
       },
       {
-        "abs_error": 6.432423883712114,
-        "category": "clinic",
-        "city": "San Francisco",
-        "place_id": "ChIJrR9J1h9-j4ARjEhBVouRQV8",
-        "pred_selected": 0.039922410788786944,
-        "target_log1p_reviews_count": 6.472346294500901
-      },
-      {
-        "abs_error": 6.063519642613585,
-        "category": "grocery",
-        "city": "San Francisco",
-        "place_id": "ChIJK-fsXvN_j4ARuAeLcyc5ZKM",
-        "pred_selected": 6.063519642613585,
-        "target_log1p_reviews_count": 0.0
-      },
-      {
-        "abs_error": 6.047912847508215,
-        "category": "grocery",
-        "city": "San Francisco",
-        "place_id": "ChIJs6siTQB9j4ARs3lFWB7BnuA",
-        "pred_selected": 6.047912847508215,
-        "target_log1p_reviews_count": 0.0
-      },
-      {
-        "abs_error": 6.002008466243933,
+        "abs_error": 6.310457677064773,
         "category": "clinic",
         "city": "San Francisco",
         "place_id": "ChIJV-U2io6AhYARJ7UCNhdK_CI",
-        "pred_selected": 0.7801835897628578,
+        "pred_selected": 0.47173437894201886,
         "target_log1p_reviews_count": 6.782192056006791
       },
       {
-        "abs_error": 5.753720082819937,
+        "abs_error": 6.306317182165795,
+        "category": "grocery",
+        "city": "San Francisco",
+        "place_id": "ChIJs6siTQB9j4ARs3lFWB7BnuA",
+        "pred_selected": 6.306317182165795,
+        "target_log1p_reviews_count": 0.0
+      },
+      {
+        "abs_error": 6.21923921507563,
+        "category": "clinic",
+        "city": "San Francisco",
+        "place_id": "ChIJrR9J1h9-j4ARjEhBVouRQV8",
+        "pred_selected": 0.2531070794252709,
+        "target_log1p_reviews_count": 6.472346294500901
+      },
+      {
+        "abs_error": 6.154837873355225,
         "category": "clinic",
         "city": "San Francisco",
         "place_id": "ChIJqRhcpY6AhYARwQ-zDkS9q10",
-        "pred_selected": 0.5304140782508647,
+        "pred_selected": 0.1292962877155766,
         "target_log1p_reviews_count": 6.284134161070802
       },
       {
-        "abs_error": 5.688184224103249,
-        "category": "grocery",
-        "city": "San Francisco",
-        "place_id": "ChIJMdstMx5-j4ARTiRtCtd6LFg",
-        "pred_selected": 1.7865879582946205,
-        "target_log1p_reviews_count": 7.47477218239787
-      },
-      {
-        "abs_error": 5.616215569714896,
+        "abs_error": 6.148233122864017,
         "category": "clinic",
         "city": "San Francisco",
         "place_id": "ChIJAQqeDLaAhYARuOXiMtTshz0",
-        "pred_selected": 0.8970145411974111,
+        "pred_selected": 0.36499698804828973,
         "target_log1p_reviews_count": 6.513230110912307
       },
       {
-        "abs_error": 5.574043972283546,
+        "abs_error": 5.491877280414604,
+        "category": "grocery",
+        "city": "San Francisco",
+        "place_id": "ChIJ___coZF9j4AR0PperWqavY0",
+        "pred_selected": 5.491877280414604,
+        "target_log1p_reviews_count": 0.0
+      },
+      {
+        "abs_error": 5.421697368911885,
         "category": "clinic",
         "city": "San Francisco",
-        "place_id": "ChIJwQ93q9aAhYARbkbasCMwYvo",
-        "pred_selected": 0.5636830818026886,
-        "target_log1p_reviews_count": 6.137727054086234
+        "place_id": "ChIJ79rp6PSAhYAReQ2527Dn7nY",
+        "pred_selected": 0.26188239842679667,
+        "target_log1p_reviews_count": 5.683579767338681
+      },
+      {
+        "abs_error": 5.369785039020617,
+        "category": "clinic",
+        "city": "San Francisco",
+        "place_id": "ChIJYVtXKr2BhYARoWainHUmHUQ",
+        "pred_selected": 0.24334306736745306,
+        "target_log1p_reviews_count": 5.6131281063880705
       }
     ]
   },
@@ -288,7 +314,7 @@
   "validation": {
     "candidates": [
       {
-        "macro_rmse": 1.6611071333066103,
+        "macro_rmse": 1.6065577838518905,
         "params": {
           "l2_regularization": 0.0,
           "max_leaf_nodes": 15
@@ -297,19 +323,19 @@
           "clinic": {
             "n": 699,
             "n_predicted": 699,
-            "rmse_log_count": 1.268885106294662,
-            "spearman": 0.02904625149989263
+            "rmse_log_count": 1.2990508625557255,
+            "spearman": -0.017351786041628094
           },
           "grocery": {
             "n": 49,
             "n_predicted": 49,
-            "rmse_log_count": 2.0533291603185586,
-            "spearman": 0.16758094824986094
+            "rmse_log_count": 1.9140647051480553,
+            "spearman": 0.4053274884131076
           }
         }
       },
       {
-        "macro_rmse": 1.6486256892558147,
+        "macro_rmse": 1.6047556579708693,
         "params": {
           "l2_regularization": 1.0,
           "max_leaf_nodes": 15
@@ -318,19 +344,19 @@
           "clinic": {
             "n": 699,
             "n_predicted": 699,
-            "rmse_log_count": 1.2620162577911112,
-            "spearman": 0.03633653670522746
+            "rmse_log_count": 1.3033504267417544,
+            "spearman": -0.002202461479217416
           },
           "grocery": {
             "n": 49,
             "n_predicted": 49,
-            "rmse_log_count": 2.035235120720518,
-            "spearman": 0.22417268747309352
+            "rmse_log_count": 1.9061608891999842,
+            "spearman": 0.3903758386453825
           }
         }
       },
       {
-        "macro_rmse": 1.663804311468882,
+        "macro_rmse": 1.60230108046176,
         "params": {
           "l2_regularization": 0.0,
           "max_leaf_nodes": 31
@@ -339,19 +365,19 @@
           "clinic": {
             "n": 699,
             "n_predicted": 699,
-            "rmse_log_count": 1.2677991656382273,
-            "spearman": 0.034135800117555376
+            "rmse_log_count": 1.2687092633896715,
+            "spearman": 0.03068174172371763
           },
           "grocery": {
             "n": 49,
             "n_predicted": 49,
-            "rmse_log_count": 2.059809457299537,
-            "spearman": 0.2176409087349747
+            "rmse_log_count": 1.9358928975338483,
+            "spearman": 0.41691118976899016
           }
         }
       },
       {
-        "macro_rmse": 1.6664352530482325,
+        "macro_rmse": 1.5782379499466423,
         "params": {
           "l2_regularization": 1.0,
           "max_leaf_nodes": 31
@@ -360,14 +386,14 @@
           "clinic": {
             "n": 699,
             "n_predicted": 699,
-            "rmse_log_count": 1.2699694321949442,
-            "spearman": 0.010159696507610538
+            "rmse_log_count": 1.2726181398948657,
+            "spearman": 0.03450823600510685
           },
           "grocery": {
             "n": 49,
             "n_predicted": 49,
-            "rmse_log_count": 2.062901073901521,
-            "spearman": 0.20483249886569485
+            "rmse_log_count": 1.8838577599984188,
+            "spearman": 0.47692190692545683
           }
         }
       }
@@ -401,94 +427,118 @@
       }
     },
     "slices": {
-      "median_household_income_usd": {
-        "status": "unavailable (no training values)",
-        "threshold": null
+      "median_household_income_usd:high": {
+        "mean_within_category_spearman": 0.02537509062418161,
+        "n": 595,
+        "rmse_log_count": 1.3634230932031084,
+        "threshold": 92500.0
       },
-      "population_density_per_km2": {
-        "status": "unavailable (no training values)",
-        "threshold": null
+      "median_household_income_usd:low": {
+        "mean_within_category_spearman": 0.019482500238260255,
+        "n": 193,
+        "rmse_log_count": 1.1694462988561463,
+        "threshold": 92500.0
+      },
+      "median_household_income_usd:missing": {
+        "n": 0,
+        "status": "insufficient"
+      },
+      "population_density_per_km2:high": {
+        "mean_within_category_spearman": 0.06207257561032769,
+        "n": 192,
+        "rmse_log_count": 1.113993465471161,
+        "threshold": 5971.051086750947
+      },
+      "population_density_per_km2:low": {
+        "mean_within_category_spearman": 0.009224452888742412,
+        "n": 596,
+        "rmse_log_count": 1.3797232626667968,
+        "threshold": 5971.051086750947
+      },
+      "population_density_per_km2:missing": {
+        "n": 0,
+        "status": "insufficient"
       }
     },
     "worst_errors": [
       {
-        "abs_error": 5.875422153566183,
-        "category": "clinic",
-        "city": "Berkeley",
-        "place_id": "ChIJg0_RrNZ9hYARmFRCnH8pZUg",
-        "pred_selected": 0.9597624325811179,
-        "target_log1p_reviews_count": 6.835184586147301
-      },
-      {
-        "abs_error": 5.763825480466551,
+        "abs_error": 5.765958498579867,
         "category": "clinic",
         "city": "Berkeley",
         "place_id": "ChIJ2-xcd4N-hYARHA3c12mc29I",
-        "pred_selected": 0.8482155543665406,
+        "pred_selected": 0.846082536253225,
         "target_log1p_reviews_count": 6.612041034833092
       },
       {
-        "abs_error": 5.346637753805685,
-        "category": "clinic",
-        "city": "Berkeley",
-        "place_id": "ChIJMQVUPfUThYARnT3JPmK9TWk",
-        "pred_selected": 0.7446721282720128,
-        "target_log1p_reviews_count": 6.091309882077698
-      },
-      {
-        "abs_error": 5.235548361042572,
-        "category": "grocery",
-        "city": "Berkeley",
-        "place_id": "ChIJ95BDMfJ-hYARYi3dzs_VvKU",
-        "pred_selected": 5.235548361042572,
-        "target_log1p_reviews_count": 0.0
-      },
-      {
-        "abs_error": 4.982540827531491,
-        "category": "clinic",
-        "city": "Berkeley",
-        "place_id": "ChIJM8zi4xZ_hYAREn_zl3rwDBE",
-        "pred_selected": 0.8345703324317135,
-        "target_log1p_reviews_count": 5.817111159963204
-      },
-      {
-        "abs_error": 4.965558442124414,
-        "category": "clinic",
-        "city": "Berkeley",
-        "place_id": "ChIJDdoQgi59hYARoHxyUnz9Z8g",
-        "pred_selected": 0.01804817958392202,
-        "target_log1p_reviews_count": 4.983606621708336
-      },
-      {
-        "abs_error": 4.818386059285468,
+        "abs_error": 5.717027701406222,
         "category": "clinic",
         "city": "Berkeley",
         "place_id": "ChIJ17TyvX1_hYARH0eLmqKbsfQ",
-        "pred_selected": 0.8986416421207531,
+        "pred_selected": 0.0,
         "target_log1p_reviews_count": 5.717027701406222
       },
       {
-        "abs_error": 4.782996227454825,
+        "abs_error": 5.674184615745754,
+        "category": "clinic",
+        "city": "Berkeley",
+        "place_id": "ChIJg0_RrNZ9hYARmFRCnH8pZUg",
+        "pred_selected": 1.160999970401547,
+        "target_log1p_reviews_count": 6.835184586147301
+      },
+      {
+        "abs_error": 5.45547783605123,
+        "category": "clinic",
+        "city": "Berkeley",
+        "place_id": "ChIJMQVUPfUThYARnT3JPmK9TWk",
+        "pred_selected": 0.6358320460264673,
+        "target_log1p_reviews_count": 6.091309882077698
+      },
+      {
+        "abs_error": 5.398303529799128,
+        "category": "clinic",
+        "city": "Berkeley",
+        "place_id": "ChIJM8zi4xZ_hYAREn_zl3rwDBE",
+        "pred_selected": 0.4188076301640761,
+        "target_log1p_reviews_count": 5.817111159963204
+      },
+      {
+        "abs_error": 4.99181204107623,
+        "category": "grocery",
+        "city": "Berkeley",
+        "place_id": "ChIJ95BDMfJ-hYARYi3dzs_VvKU",
+        "pred_selected": 4.99181204107623,
+        "target_log1p_reviews_count": 0.0
+      },
+      {
+        "abs_error": 4.8707373977423805,
+        "category": "clinic",
+        "city": "Berkeley",
+        "place_id": "ChIJDdoQgi59hYARoHxyUnz9Z8g",
+        "pred_selected": 0.112869223965956,
+        "target_log1p_reviews_count": 4.983606621708336
+      },
+      {
+        "abs_error": 4.7851292455681405,
         "category": "clinic",
         "city": "Berkeley",
         "place_id": "ChIJjfnJoNR9hYARnVswtI-_v_s",
-        "pred_selected": 0.8482155543665406,
+        "pred_selected": 0.846082536253225,
         "target_log1p_reviews_count": 5.631211781821365
       },
       {
-        "abs_error": 4.761256240818419,
+        "abs_error": 4.763389258931735,
         "category": "clinic",
         "city": "Berkeley",
         "place_id": "ChIJb0bT1DF_hYARZI1qNQcH4Gc",
-        "pred_selected": 0.8482155543665406,
+        "pred_selected": 0.846082536253225,
         "target_log1p_reviews_count": 5.60947179518496
       },
       {
-        "abs_error": 4.751281594348304,
+        "abs_error": 4.638139333361173,
         "category": "clinic",
         "city": "Berkeley",
         "place_id": "ChIJfxW9M1WHj4ARnYMmD65Bw6g",
-        "pred_selected": 0.3546638795522761,
+        "pred_selected": 0.46780614053940694,
         "target_log1p_reviews_count": 5.10594547390058
       }
     ]

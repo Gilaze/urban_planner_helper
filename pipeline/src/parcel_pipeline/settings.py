@@ -65,14 +65,17 @@ def load_dotenv(path: Path | None = None) -> None:
     path = path or REPO_ROOT / ".env"
     if not path.is_file():
         return
+    values: dict[str, str] = {}
     for line in path.read_text().splitlines():
         line = line.strip()
         if not line or line.startswith("#") or "=" not in line:
             continue
         key, _, value = line.removeprefix("export ").partition("=")
         key, value = key.strip(), value.strip().strip("'\"")
-        if key and key not in os.environ:
-            os.environ[key] = value
+        if key:
+            values[key] = value  # later lines win, as with standard dotenv tools
+    for key, value in values.items():
+        os.environ.setdefault(key, value)
 
 
 def load_settings() -> Settings:

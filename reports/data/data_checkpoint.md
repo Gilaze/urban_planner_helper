@@ -1,20 +1,22 @@
 # Data checkpoint
 
-Built: 2026-11-15T04:26:41+00:00
+Built: 2026-11-15T04:39:47+00:00
 
 ## Sources
 
 | Source | Vintage | Rows | Retrieved |
 |---|---|---|---|
-| google_places | hackathon export | 147429 | 2026-11-15T04:27:12+00:00 |
-| google_reviews | hackathon export | 213536 | 2026-11-15T04:27:12+00:00 |
+| acs_block_group | 2020-2024 ACS 5-year | 3204 | 2026-11-15T04:39:42+00:00 |
+| acs_tract | 2020-2024 ACS 5-year | 1102 | 2026-11-15T04:39:46+00:00 |
+| google_places | hackathon export | 147429 | 2026-11-15T04:40:18+00:00 |
+| google_reviews | hackathon export | 213536 | 2026-11-15T04:40:18+00:00 |
 | sf_assessor | 2025 | 211547 | 2026-11-15T04:26:39+00:00 |
 | sf_landuse | 2023 | 154476 | 2026-11-15T04:26:04+00:00 |
 | sf_landuse_current | 2026-08-17T00:00:00.000 | 153765 | 2026-11-15T04:26:17+00:00 |
 | sf_parcels | 1794680379 | 227968 | 2026-11-15T04:25:58+00:00 |
-| tiger_block_group | TIGER/Line 2024 |  | 2026-11-15T04:12:03+00:00 |
-| tiger_place | TIGER/Line 2024 |  | 2026-11-15T04:12:04+00:00 |
-| tiger_tract | TIGER/Line 2024 |  | 2026-11-15T04:12:03+00:00 |
+| tiger_block_group | TIGER/Line 2024 |  | 2026-11-15T04:39:38+00:00 |
+| tiger_place | TIGER/Line 2024 |  | 2026-11-15T04:39:38+00:00 |
+| tiger_tract | TIGER/Line 2024 |  | 2026-11-15T04:39:38+00:00 |
 
 ## Parcels
 
@@ -91,9 +93,9 @@ Built: 2026-11-15T04:26:41+00:00
   "parcel_rows": 775140,
   "parcels_without_rep_point": 0,
   "covariate_missing_rate_parcels": {
-    "population_density_per_km2": 1.0,
-    "median_household_income_usd": 1.0,
-    "median_gross_rent_usd_month": 1.0
+    "population_density_per_km2": 0.0,
+    "median_household_income_usd": 0.006605258404933302,
+    "median_gross_rent_usd_month": 0.01686147018603091
   }
 }
 ```
