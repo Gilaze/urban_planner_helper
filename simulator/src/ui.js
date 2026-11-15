@@ -98,7 +98,7 @@ export function createUI(root) {
       const left = createDrawer(hud, { side: 'left', label: 'Map key', key: 'map-key', openByDefault: !narrow });
       const legend = el('div', 'legend');
       const tabs = el('div', 'legend-tabs');
-      tabs.innerHTML = '<button data-mode="type" class="on">Building type</button><button data-mode="vacancy">Vacancy</button>';
+      tabs.innerHTML = '<button data-mode="vacancy">Vacancy</button><button data-mode="type" class="on">Building type</button>';
       legend.appendChild(tabs);
 
       const typeSec = el('div', 'legend-sec');
