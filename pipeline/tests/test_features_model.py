@@ -130,3 +130,56 @@ def test_all_zero_category_is_unlabeled_not_predicted_zero():
     assert "grocery" not in res["model_categories"]
     qf = pf[FEATURE_COLUMNS].head(1).assign(parcel_id=["a"], category=["grocery"])
     assert predict_parcels(qf, res)["source"].iloc[0] == "unavailable"
+
+
+@pytest.mark.parametrize("held_out_split", ["validation", "test"])
+def test_held_out_labels_cannot_change_training_eligibility(held_out_split):
+    rows = []
+    for split, city in (("train", "Oakland"), ("validation", "Berkeley"), ("test", "San Francisco")):
+        for i in range(3):
+            rows.append({**dict.fromkeys(FEATURE_COLUMNS, 0), "place_id": f"{split}-{i}", "category": "school",
+                         "category_code": 4, "city": city, "split": split, "labeled": True, TARGET: 0.0})
+    original = pd.DataFrame(rows)
+    changed = original.copy()
+    changed.loc[changed["split"] == held_out_split, TARGET] = np.log(2)
+    a = train_and_evaluate(original, ["school"])
+    b = train_and_evaluate(changed, ["school"])
+    assert a["report"]["degenerate_target_categories"] == b["report"]["degenerate_target_categories"] == ["school"]
+    assert a["report"]["labeled_counts"] == b["report"]["labeled_counts"]
+    assert a["model_categories"] == b["model_categories"] == []
+    assert a["baselines"].category_median == b["baselines"].category_median == {}
+
+
+def test_selected_evaluation_includes_the_served_category_fallback():
+    pf = _synthetic_places()
+    unsupported = []
+    for split, city in (("train", "Oakland"), ("validation", "Berkeley"), ("test", "San Francisco")):
+        for i in range(3):
+            row = pf.iloc[0].to_dict()
+            row.update(place_id=f"{split}-pharmacy-{i}", category="pharmacy", category_code=1,
+                       split=split, city=city, labeled=True)
+            row[TARGET] = 2.0
+            unsupported.append(row)
+    result = train_and_evaluate(pd.concat([pf, pd.DataFrame(unsupported)], ignore_index=True), list(CANDS))
+    assert result["selected"] == "model"
+    assert "pharmacy" not in result["model_categories"]
+    evaluated = result["eval_predictions"].query("category == 'pharmacy'")
+    assert len(evaluated) == 6 and (evaluated["pred_selected"] == 2).all()
+    assert (evaluated["prediction_source"] == "category_baseline").all()
+    for stage in ("validation", "test"):
+        stats = result["report"][stage]["selected"]["pharmacy"]
+        assert stats["n"] == stats["n_predicted"] == 3 and stats["rmse_log_count"] == 0
+    query = pd.DataFrame(unsupported[-3:]).assign(parcel_id=["sf:a", "sf:b", "sf:c"])
+    served = predict_parcels(query, result)
+    np.testing.assert_array_equal(served["predicted_log1p_reviews_count"], evaluated.query("stage == 'test'")["pred_selected"])
+    assert served["source"].tolist() == ["category_baseline"] * 3
+
+
+def test_category_without_training_baseline_stays_explicitly_unavailable():
+    rows = [{**dict.fromkeys(FEATURE_COLUMNS, 0), "place_id": "test-only", "category": "school",
+             "category_code": 4, "city": "San Francisco", "split": "test", "labeled": True, TARGET: 2.0}]
+    result = train_and_evaluate(pd.DataFrame(rows), ["school"])
+    evaluated = result["eval_predictions"].iloc[0]
+    assert np.isnan(evaluated["pred_selected"]) and evaluated["prediction_source"] == "unavailable"
+    served = predict_parcels(pd.DataFrame(rows).assign(parcel_id="sf:test-only"), result).iloc[0]
+    assert np.isnan(served["predicted_log1p_reviews_count"]) and served["source"] == "unavailable"

@@ -4,6 +4,8 @@
   "reported_data_version": "0.1.0+2026-11-14.2+ad464d957df7",
   "reported_gate_improvement": 0.1343747502047431,
   "reported_census_skipped": false,
+  "expected_pipeline_version": "0.1.1",
+  "reports_match_current_pipeline": false,
   "reported_common_sf_categories": [
     "clinic",
     "grocery"

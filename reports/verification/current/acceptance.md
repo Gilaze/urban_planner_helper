@@ -1,10 +1,10 @@
 # Parcel Planner verification
 
-Generated: 2026-11-15T05:05:39.842723+00:00
+Generated: 2026-11-15T05:38:57.487131+00:00
 
 Mode: **fixture**. Release accepted: **False**.
 
-20 PASS, 4 FAIL, 4 BLOCKED, 1 WARN.
+24 PASS, 0 FAIL, 5 BLOCKED, 1 WARN.
 
 Synthetic checker fixtures only; this does not validate an application or real data release.
 
@@ -13,7 +13,7 @@ Synthetic checker fixtures only; this does not validate an application or real d
 Owner: Checker. Impact: checker integrity.
 
 ........................................                                 [100%]
-40 passed in 0.04s
+40 passed in 0.03s
 
 Reproduce: `python -m tests.integration.verify_release`
 
@@ -28,6 +28,16 @@ Owner: Data. Impact: release blocker.
 Reproduce: `python -m tests.integration.verify_release --artifact-format pipeline --artifact-dir 'data/artifacts/release'`
 
 Expected: Full canonical pipeline release, not just serving projection.
+
+## BLOCKED: data_reports.release_version
+
+Owner: Data. Impact: release blocker.
+
+Reports describe 0.1.0+2026-11-14.2+ad464d957df7; fixed pipeline is 0.1.1. Old reports are historical until outputs are rebuilt.
+
+Reproduce: `python -m tests.integration.verify_release --data-reports-dir 'reports/data'`
+
+Expected: Regenerate release artifacts and reports with the current pipeline.
 
 ## PASS: data_reports.gate_arithmetic
 
@@ -113,11 +123,11 @@ Expected: Train-only mean/std and zero-variance convention.
 
 Affected categories: clinic.
 
-## FAIL: pipeline.sf_label_isolation
+## PASS: pipeline.sf_label_isolation
 
 Owner: Data. Impact: release blocker.
 
-ValueError: Changing only synthetic SF labels changed Oakland training eligibility: 0 -> 3; degenerate categories ['school'] -> []
+SF labels cannot affect pre-test category eligibility.
 
 Reproduce: `pipeline/.venv/bin/python -m tests.integration.pipeline_probes`
 
@@ -125,11 +135,11 @@ Expected: Changing SF test labels never changes Oakland/Berkeley training eligib
 
 Affected categories: school.
 
-## FAIL: pipeline.serving_fallback_evaluation
+## PASS: pipeline.serving_fallback_evaluation
 
 Owner: Data. Impact: release blocker.
 
-ValueError: Production serves pharmacy category baseline=2, but selected SF evaluation has 0/3 predictions
+Evaluation and served unsupported-category fallback use identical rows/predictions.
 
 Reproduce: `pipeline/.venv/bin/python -m tests.integration.pipeline_probes`
 
@@ -137,21 +147,21 @@ Expected: Evaluation includes the baseline fallback actually served for unsuppor
 
 Affected categories: pharmacy.
 
-## FAIL: pipeline.partial_assessment
+## PASS: pipeline.partial_assessment
 
 Owner: Data. Impact: release blocker.
 
-ValueError: Two condo APNs include an unknown improvement value, but the parcel reports a complete USD 200000 total with no partial-value label
+Unknown condo member assessment propagates null to the physical-lot total.
 
 Reproduce: `pipeline/.venv/bin/python -m tests.integration.pipeline_probes`
 
 Expected: Unknown APN values are null at physical-lot grain, or explicitly labeled partial subtotals.
 
-## FAIL: pipeline.publication_fingerprint
+## PASS: pipeline.publication_fingerprint
 
 Owner: Data. Impact: release blocker.
 
-ValueError: publish rewrites/filters parcels.geoparquet but copies the canonical checksum unchanged; published manifest does not fingerprint the served file
+Published-file fingerprints match the rewritten projection.
 
 Reproduce: `pipeline/.venv/bin/python -m tests.integration.pipeline_probes`
 
@@ -211,7 +221,7 @@ Expected: Canonical parcel detail with vacancy/hypothetical labeling.
 
 Owner: Backend. Impact: API contract.
 
-Default/repeat/reweight/unavailable-weight/reset pass; cached timings [1.02, 0.96, 0.87, 0.83] ms.
+Default/repeat/reweight/unavailable-weight/reset pass; cached timings [0.87, 0.83, 0.78, 0.8] ms.
 
 Reproduce: `python -m tests.integration.verify_release --api-base-url 'http://127.0.0.1:8765/api/v1'`
 

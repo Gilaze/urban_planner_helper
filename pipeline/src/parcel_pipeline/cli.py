@@ -13,6 +13,7 @@ Steps
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import json
 import logging
@@ -353,26 +354,74 @@ BACKEND_FILES = ["backend_manifest.json", "parcels.geoparquet", "places.parquet"
 def publish(s: Settings, out: Path, allow_missing_census: bool = False) -> None:
     """Copy the backend projection of the release to `out` (default <repo>/artifacts/person2)."""
     import shutil
+    from tempfile import TemporaryDirectory
+    import pyarrow.parquet as pq
     rd = release_dir(s)
+    if out.resolve() == rd.resolve():
+        raise ValueError("Publish destination must differ from the canonical release directory")
     missing = [f for f in BACKEND_FILES if not (rd / f).exists()]
     if missing and allow_missing_census and missing == ["demographics.geoparquet"]:
         log.warning("publishing WITHOUT demographics.geoparquet; backend_manifest records census=skipped")
         missing = []
     if missing:
         raise SystemExit(f"release is missing {missing}; run build (with Census) and train first")
-    out.mkdir(parents=True, exist_ok=True)
+    canonical_path = rd / "source_manifest.json"
+    canonical = json.loads(canonical_path.read_text())
+    canonical_outputs = canonical.get("outputs", {})
+    files = [name for name in BACKEND_FILES if name != "source_manifest.json" and (rd / name).exists()]
+    for name in files:
+        meta = canonical_outputs.get(name, {})
+        if "sha256" in meta and meta["sha256"] != sha256(rd / name):
+            raise ValueError(f"Canonical fingerprint mismatch for {name}; rebuild or restore the release")
+        if name.endswith((".parquet", ".geoparquet")) and "rows" in meta and meta["rows"] != pq.ParquetFile(rd / name).metadata.num_rows:
+            raise ValueError(f"Canonical row count mismatch for {name}")
     lots = gpd.read_parquet(rd / "parcels.geoparquet")
     keep = _publishable(lots)
-    lots[keep].to_parquet(out / "parcels.geoparquet", index=False)
     kept_ids = set(lots.loc[keep, "parcel_id"])
     preds = pd.read_parquet(rd / "review_predictions.parquet")
-    preds[preds["parcel_id"].isin(kept_ids)].to_parquet(out / "review_predictions.parquet", index=False)
-    for f in BACKEND_FILES:
-        if f not in ("parcels.geoparquet", "review_predictions.parquet"):
-            if (rd / f).exists():
-                shutil.copy2(rd / f, out / f)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with TemporaryDirectory(prefix="parcel-publish-", dir=out.parent) as temporary:
+        staged = Path(temporary)
+        lots[keep].to_parquet(staged / "parcels.geoparquet", index=False)
+        preds[preds["parcel_id"].isin(kept_ids)].to_parquet(staged / "review_predictions.parquet", index=False)
+        for name in files:
+            if name not in ("parcels.geoparquet", "review_predictions.parquet"):
+                shutil.copy2(rd / name, staged / name)
+        if "demographics.geoparquet" not in files:
+            descriptor = json.loads((staged / "backend_manifest.json").read_text())
+            descriptor.setdefault("coverage", {})["census"] = "skipped"
+            descriptor["spatial_coverage"] = None
+            write_json(staged / "backend_manifest.json", descriptor)
+
+        published = copy.deepcopy(canonical)
+        published["outputs"] = {}
+        for name in files:
+            meta = copy.deepcopy(canonical_outputs.get(name, {}))
+            meta["sha256"] = sha256(staged / name)
+            if name.endswith((".parquet", ".geoparquet")):
+                meta["rows"] = pq.ParquetFile(staged / name).metadata.num_rows
+            published["outputs"][name] = meta
+        published["census_skipped"] = "demographics.geoparquet" not in files
+        published["publication"] = {
+            "format": "backend-serving-projection-v1", "publisher_pipeline_version": PIPELINE_VERSION,
+            "canonical_manifest_sha256": sha256(canonical_path), "canonical_data_version": canonical.get("data_version"),
+            "canonical_outputs": copy.deepcopy(canonical_outputs),
+            "omitted_files": sorted(set(canonical_outputs) - set(files)),
+            "omitted_parcels": {"total": int((~keep).sum()),
+                                "unusable_geometry": int((lots["geometry_quality"] == "unusable").sum()),
+                                "id_outside_contract": int((~lots["parcel_id"].str.match(CONTRACT_PARCEL_ID)).sum()),
+                                "reason_counts_can_overlap": True},
+        }
+        write_json(staged / "source_manifest.json", published)
+        out.mkdir(parents=True, exist_ok=True)
+        for name in files:
+            (staged / name).replace(out / name)
+        if "demographics.geoparquet" not in files:
+            (out / "demographics.geoparquet").unlink(missing_ok=True)
+        # Publish the manifest only after all bytes it fingerprints are in place.
+        (staged / "source_manifest.json").replace(out / "source_manifest.json")
     log.info("published %d files to %s (%d lots omitted: unusable geometry or ID outside contract)",
-             len(BACKEND_FILES), out, int((~keep).sum()))
+             len(files) + 1, out, int((~keep).sum()))
 
 
 def audit(s: Settings, n: int = 20, seed: int = 42) -> None:
@@ -457,7 +506,7 @@ def write_model_md(rep: dict) -> None:
         lines.append(f"| {c} | {n['train']} | {n['validation']} | {n['test']} |")
     lines += ["", f"Model categories (≥100 Oakland, ≥30 Berkeley): {rep['model_categories']}  ",
               f"Unsupported: {rep['unsupported_categories']}  ",
-              f"Degenerate target (all labeled counts are 0, treated as unlabeled): "
+              f"Degenerate target (all Oakland training counts are 0, treated as unlabeled): "
               f"{rep.get('degenerate_target_categories', [])}", "",
               "## Selection (Berkeley)", "", "| params | macro RMSE |", "|---|---|"]
     for e in rep["validation"]["candidates"]:
