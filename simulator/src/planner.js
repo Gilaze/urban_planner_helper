@@ -165,7 +165,7 @@ export function createPlanner(root) {
     if (parcel) options.set(parcel.id, parcel);
     select.replaceChildren(new Option('Select a parcel', ''));
     for (const feature of options.values()) {
-      const label = feature.properties.vacancy_status === 'source_indicated_vacant' ? 'Vacancy indicated' : 'Hypothetical';
+      const label = feature.properties.vacancy_status === 'source_indicated_vacant' ? 'Vacancy indicated' : 'Unknown';
       select.add(new Option(`${label} · ${feature.id}`, feature.id));
     }
     select.value = parcel?.id || '';
