@@ -11,12 +11,15 @@
 #     maps to a group is listed here explicitly and can be audited.
 #   * primary group  = group of the Places `category` field (used for learning).
 #   * service tags   = deduplicated groups of `category` + `all_categories`
-#                      (used for supply counts and accessibility).
+#                      (used for supply counts and accessibility). A secondary
+#                      label adds one of the five candidate services only when the
+#                      primary group is itself mapped (not `other`), so lookalikes
+#                      excluded by their primary label stay out of candidate supply.
 #   * Anything unlisted maps to `other`.
 #   * `exclude_name_patterns` force a record's primary group to `other` when its
 #     name matches (case-insensitive regex). These catch lookalikes that carry a
 #     legitimate label, such as a med-spa tagged "Medical clinic".
-version: "2026-11-14.2"
+version: "2026-11-15.1"
 
 candidates: [clinic, pharmacy, grocery, bank_credit_union, school]
 
@@ -59,6 +62,8 @@ groups:
       - '\bpet\b'
       - '\bweight\s*loss\b'
       - '\biv\s*(therapy|drip|lounge)\b'
+      # Non-physician credentials without MD/DO (therapists, optometrists, lawyers, dentists, chiropractors)
+      - '^(?!.*\b(M\.?D|D\.?O)\b).*\b(L?MFT|LCSW|LPCC|O\.?D|J\.?D|D\.?D\.?S|D\.?M\.?D|D\.?C|Psy\.?D)\b'
   pharmacy:
     label: Pharmacy
     candidate: true
@@ -169,6 +174,8 @@ groups:
       - '\bswim'
       - '\btutor'
       - '\bparking\b'
+      - '\bcollege\b'
+      - '\buniversity\b'
   hospital:
     label: Hospital
     labels:

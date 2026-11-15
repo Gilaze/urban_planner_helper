@@ -1,6 +1,6 @@
 # Review-activity model report
 
-Data version: `0.1.0+2026-11-14.2+ad464d957df7`  
+Data version: `0.1.1+2026-11-15.1+ad464d957df7`  
 Estimator: sklearn.ensemble.HistGradientBoostingRegressor (scikit-learn 1.5.2)  
 Census covariates skipped: False
 
@@ -8,7 +8,7 @@ Census covariates skipped: False
 
 | category | Oakland (train) | Berkeley (validation) | SF (test) |
 |---|---|---|---|
-| clinic | 1970 | 699 | 5693 |
+| clinic | 1905 | 683 | 5584 |
 | pharmacy | 50 | 17 | 119 |
 | grocery | 235 | 49 | 413 |
 | bank_credit_union | 75 | 23 | 261 |
@@ -16,28 +16,28 @@ Census covariates skipped: False
 
 Model categories (≥100 Oakland, ≥30 Berkeley): ['clinic', 'grocery']  
 Unsupported: ['pharmacy', 'bank_credit_union', 'school']  
-Degenerate target (all labeled counts are 0, treated as unlabeled): ['school']
+Degenerate target (all Oakland training counts are 0, treated as unlabeled): ['school']
 
 ## Selection (Berkeley)
 
 | params | macro RMSE |
 |---|---|
 | {'max_leaf_nodes': 15, 'l2_regularization': 0.0} | 1.607 |
-| {'max_leaf_nodes': 15, 'l2_regularization': 1.0} | 1.605 |
-| {'max_leaf_nodes': 31, 'l2_regularization': 0.0} | 1.602 |
-| {'max_leaf_nodes': 31, 'l2_regularization': 1.0} | 1.578 |
-| category baseline | 1.823 |
+| {'max_leaf_nodes': 15, 'l2_regularization': 1.0} | 1.633 |
+| {'max_leaf_nodes': 31, 'l2_regularization': 0.0} | 1.622 |
+| {'max_leaf_nodes': 31, 'l2_regularization': 1.0} | 1.646 |
+| category baseline | 1.831 |
 
-Gate (≥5% better than category baseline): **passed** — relative improvement 0.134. Selected: **model**.
+Gate (≥5% better than category baseline): **passed** — relative improvement 0.122. Selected: **model**.
 
 ## SF test (evaluated once, refit on Oakland + Berkeley)
 
 | category | n | selected RMSE | selected Spearman | category baseline RMSE | city×category baseline RMSE |
 |---|---|---|---|---|---|
-| clinic | 5693 | 1.004 | -0.072 | 0.987 | 0.987 |
-| pharmacy | 119 | — | — | 1.769 | 1.769 |
-| grocery | 413 | 2.098 | 0.195 | 2.033 | 2.033 |
-| bank_credit_union | 261 | — | — | 1.675 | 1.675 |
+| clinic | 5584 | 1.091 | -0.065 | 0.993 | 0.993 |
+| pharmacy | 119 | 1.769 | — | 1.769 | 1.769 |
+| grocery | 413 | 2.095 | 0.158 | 2.033 | 2.033 |
+| bank_credit_union | 261 | 1.675 | — | 1.675 | 1.675 |
 | school | 0 | — | — | — | — |
 
 ## Slices
@@ -46,37 +46,37 @@ Gate (≥5% better than category baseline): **passed** — relative improvement 
 
 | slice | n | RMSE | mean within-category Spearman |
 |---|---|---|---|
-| median_household_income_usd:low | 193 | 1.169 | 0.019 |
-| median_household_income_usd:high | 595 | 1.363 | 0.025 |
+| median_household_income_usd:low | 189 | 1.223 | 0.063 |
+| median_household_income_usd:high | 583 | 1.364 | -0.013 |
 | median_household_income_usd:missing | 0 | insufficient (<30) | |
-| population_density_per_km2:low | 596 | 1.380 | 0.009 |
-| population_density_per_km2:high | 192 | 1.114 | 0.062 |
+| population_density_per_km2:low | 584 | 1.380 | -0.025 |
+| population_density_per_km2:high | 188 | 1.167 | 0.085 |
 | population_density_per_km2:missing | 0 | insufficient (<30) | |
 
 ### SF
 
 | slice | n | RMSE | mean within-category Spearman |
 |---|---|---|---|
-| median_household_income_usd:low | 1305 | 1.221 | 0.098 |
-| median_household_income_usd:high | 5062 | 1.080 | -0.060 |
-| median_household_income_usd:missing | 119 | 1.306 | 0.336 |
-| population_density_per_km2:low | 2033 | 0.959 | -0.066 |
-| population_density_per_km2:high | 4444 | 1.176 | 0.082 |
+| median_household_income_usd:low | 1281 | 1.314 | 0.031 |
+| median_household_income_usd:high | 4979 | 1.196 | -0.048 |
+| median_household_income_usd:missing | 117 | 1.390 | 0.271 |
+| population_density_per_km2:low | 2013 | 1.075 | -0.004 |
+| population_density_per_km2:high | 4355 | 1.287 | 0.054 |
 | population_density_per_km2:missing | 9 | insufficient (<30) | |
 
 ## Representative failures (SF, largest absolute log-count errors)
 
 | place_id | category | actual | predicted |
 |---|---|---|---|
-| ChIJs4Hdec5_j4ARyQ1Fsn83VSw | clinic | 6.870 | 0.000 |
-| ChIJEyanMISAhYARVYJJPDkRukE | clinic | 6.642 | 0.000 |
-| ChIJV-U2io6AhYARJ7UCNhdK_CI | clinic | 6.782 | 0.472 |
-| ChIJs6siTQB9j4ARs3lFWB7BnuA | grocery | 0.000 | 6.306 |
-| ChIJrR9J1h9-j4ARjEhBVouRQV8 | clinic | 6.472 | 0.253 |
-| ChIJqRhcpY6AhYARwQ-zDkS9q10 | clinic | 6.284 | 0.129 |
-| ChIJAQqeDLaAhYARuOXiMtTshz0 | clinic | 6.513 | 0.365 |
-| ChIJ___coZF9j4AR0PperWqavY0 | grocery | 0.000 | 5.492 |
-| ChIJ79rp6PSAhYAReQ2527Dn7nY | clinic | 5.684 | 0.262 |
-| ChIJYVtXKr2BhYARoWainHUmHUQ | clinic | 5.613 | 0.243 |
+| ChIJs4Hdec5_j4ARyQ1Fsn83VSw | clinic | 6.870 | 0.094 |
+| ChIJEyanMISAhYARVYJJPDkRukE | clinic | 6.642 | 0.135 |
+| ChIJK-fsXvN_j4ARuAeLcyc5ZKM | grocery | 0.000 | 6.483 |
+| ChIJV-U2io6AhYARJ7UCNhdK_CI | clinic | 6.782 | 0.382 |
+| ChIJrR9J1h9-j4ARjEhBVouRQV8 | clinic | 6.472 | 0.308 |
+| ChIJqRhcpY6AhYARwQ-zDkS9q10 | clinic | 6.284 | 0.466 |
+| ChIJAQqeDLaAhYARuOXiMtTshz0 | clinic | 6.513 | 0.718 |
+| ChIJs6siTQB9j4ARs3lFWB7BnuA | grocery | 0.000 | 5.750 |
+| ChIJEVjW9hx-j4ARo0UeqE-SYFg | clinic | 5.953 | 0.274 |
+| ChIJ79rp6PSAhYAReQ2527Dn7nY | clinic | 5.684 | 0.267 |
 
 The prediction is a review-activity indicator (log1p of Google review count), not a measure of demand, quality or need.

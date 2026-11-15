@@ -166,3 +166,19 @@ def test_reviews_aggregate_without_identity(places):
     out = P.review_summary_for_places(df.reset_index(), s)
     assert len(out) == len(df)  # Places rows kept without reviews
     assert out.set_index("place_id").loc["P6", "sampled_review_count"] == 0
+
+
+def test_secondary_labels_do_not_readmit_excluded_lookalikes(cats):
+    # P4-DATA-005: lookalikes whose primary label is `other` must not keep candidate supply tags.
+    assert cats.classify("Convenience store", '["Convenience store","Grocery store"]', "Quick Mart") == ("other", [])
+    assert cats.classify("Cardiologist", '["Cardiologist","Doctor"]', "Dr. A, MD") == ("other", [])
+    # Mapped primaries keep their secondary candidate services; non-candidate tags still apply.
+    assert cats.classify("Grocery store", '["Grocery store","Pharmacy"]', "Safeway") == ("grocery", ["grocery", "pharmacy"])
+    assert cats.classify("Non-profit organization", '["Food bank"]', "SF Food Bank") == ("other", ["food_assistance"])
+
+
+def test_non_physician_credentials_and_colleges_are_excluded(cats):
+    for name in ("Jared Lempert, MFT", "Jonah S. Yee, OD", "Geeta A. Davidson, JD", "Pat Chu, LCSW"):
+        assert cats.classify("Doctor", "[]", name)[0] == "other", name
+    assert cats.classify("Doctor", "[]", "Dr. Pat Kim, MD, PhD")[0] == "clinic"
+    assert cats.classify("Religious school", "[]", "Zaytuna College (Upper Campus)")[0] == "other"

@@ -285,6 +285,9 @@ def train(s: Settings) -> None:
         mp = rd / "review_activity_model.joblib"
         joblib.dump(result["final_model"], mp)
         m.output(mp, 1, note="binary; gitignored")
+    p = rd / "model_normalization.json"
+    write_json(p, result["normalization"])
+    m.output(p, len(result["normalization"]["selection"]["fit_place_ids"]), grain="category normalization fits")
     write_json(rd / "model_report.json", rep)
     write_json(REPORTS_DIR / "model_report.json", rep)
     write_model_md(rep)

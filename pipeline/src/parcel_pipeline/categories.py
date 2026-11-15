@@ -48,8 +48,14 @@ class CategoryConfig:
             tags.add(primary)
         for lab in parse_all_categories(all_categories):
             g = self.group_of(lab)
-            if g != OTHER and not self.excluded(g, name):
-                tags.add(g)
+            if g == OTHER or self.excluded(g, name):
+                continue
+            # A secondary label may add a candidate service only to a place whose own
+            # primary label is already a mapped service (a pharmacy counter inside a
+            # supermarket counts; a convenience store tagged "Grocery store" does not).
+            if g in self.candidates and primary == OTHER:
+                continue
+            tags.add(g)
         return primary, sorted(tags)
 
 

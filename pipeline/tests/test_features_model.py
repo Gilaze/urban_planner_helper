@@ -183,3 +183,15 @@ def test_category_without_training_baseline_stays_explicitly_unavailable():
     assert np.isnan(evaluated["pred_selected"]) and evaluated["prediction_source"] == "unavailable"
     served = predict_parcels(pd.DataFrame(rows).assign(parcel_id="sf:test-only"), result).iloc[0]
     assert np.isnan(served["predicted_log1p_reviews_count"]) and served["source"] == "unavailable"
+
+
+def test_normalization_export_uses_training_rows_only():
+    pf = _synthetic_places()
+    res = train_and_evaluate(pf, list(CANDS))
+    norm = res["normalization"]
+    train_ids = set(pf[(pf["split"] == "train") & pf["category"].isin(res["model_categories"])]["place_id"])
+    assert set(norm["selection"]["fit_place_ids"]) == train_ids
+    final_ids = set(pf[pf["split"].isin(["train", "validation"]) & pf["category"].isin(res["model_categories"])]["place_id"])
+    assert set(norm["final"]["fit_place_ids"]) == final_ids
+    g = pf[(pf["split"] == "train") & (pf["category"] == "clinic")][TARGET]
+    assert norm["selection"]["categories"]["clinic"]["mean"] == pytest.approx(g.mean())

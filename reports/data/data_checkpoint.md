@@ -1,6 +1,6 @@
 # Data checkpoint
 
-Built: 2026-11-15T05:44:17+00:00
+Built: 2026-11-15T06:19:19+00:00
 
 ## Sources
 
@@ -8,8 +8,8 @@ Built: 2026-11-15T05:44:17+00:00
 |---|---|---|---|
 | acs_block_group | 2020-2024 ACS 5-year | 3204 | 2026-11-15T05:44:15+00:00 |
 | acs_tract | 2020-2024 ACS 5-year | 1102 | 2026-11-15T05:44:17+00:00 |
-| google_places | hackathon export | 147429 | 2026-11-15T05:44:47+00:00 |
-| google_reviews | hackathon export | 213536 | 2026-11-15T05:44:47+00:00 |
+| google_places | hackathon export | 147429 | 2026-11-15T06:19:53+00:00 |
+| google_reviews | hackathon export | 213536 | 2026-11-15T06:19:53+00:00 |
 | sf_assessor | 2025 | 211547 | 2026-11-15T05:44:10+00:00 |
 | sf_landuse | 2023 | 154476 | 2026-11-15T05:43:34+00:00 |
 | sf_landuse_current | 2026-08-17T00:00:00.000 | 153765 | 2026-11-15T05:43:52+00:00 |
@@ -45,16 +45,16 @@ Built: 2026-11-15T05:44:17+00:00
 | alternative_finance | 13 | 120 | 177 | 2,022 |
 | bank_credit_union | 25 | 84 | 338 | 1,532 |
 | childcare | 94 | 261 | 857 | 5,426 |
-| clinic | 751 | 2,035 | 5,911 | 23,858 |
+| clinic | 734 | 1,969 | 5,800 | 23,417 |
 | dental | 179 | 406 | 1,518 | 8,788 |
 | food_assistance | 8 | 38 | 103 | 343 |
 | grocery | 66 | 292 | 528 | 2,239 |
 | hospital | 29 | 122 | 286 | 1,188 |
 | library | 7 | 18 | 39 | 260 |
 | mental_health | 1,062 | 1,514 | 4,068 | 12,561 |
-| other | 836 | 2,211 | 6,122 | 28,653 |
+| other | 856 | 2,285 | 6,240 | 29,132 |
 | pharmacy | 26 | 104 | 215 | 1,346 |
-| school | 52 | 187 | 295 | 2,479 |
+| school | 49 | 179 | 288 | 2,441 |
 | social_services | 26 | 119 | 225 | 822 |
 | transit | 704 | 2,016 | 4,227 | 17,598 |
 
@@ -69,9 +69,9 @@ Built: 2026-11-15T05:44:17+00:00
       "validation": 23
     },
     "clinic": {
-      "test": 5694,
-      "train": 1970,
-      "validation": 699
+      "test": 5585,
+      "train": 1905,
+      "validation": 683
     },
     "grocery": {
       "test": 413,
@@ -84,12 +84,12 @@ Built: 2026-11-15T05:44:17+00:00
       "validation": 17
     },
     "school": {
-      "test": 260,
-      "train": 170,
-      "validation": 46
+      "test": 253,
+      "train": 162,
+      "validation": 43
     }
   },
-  "place_labeled_rows": 10080,
+  "place_labeled_rows": 9872,
   "parcel_rows": 775140,
   "parcels_without_rep_point": 0,
   "covariate_missing_rate_parcels": {

@@ -1,6 +1,6 @@
 {
   "mode": "production-code-synthetic-inputs",
-  "python_version": "3.11.17",
+  "python_version": "3.11.14",
   "checks": [
     {
       "id": "pipeline.dotenv_precedence",
@@ -93,13 +93,13 @@
     }
   ],
   "source_sha256": {
-    "pipeline/src/parcel_pipeline/model.py": "ab8e8167f1144a3d99749ce5cfe79c55b423d64b00ec1ffb5917084e352f69eb",
+    "pipeline/src/parcel_pipeline/model.py": "3654e173178de5a1fbbf4feb91755c8a2788415ac134c3c41b5029bb0e4d41f7",
     "pipeline/src/parcel_pipeline/features.py": "1df12a1eccdeec5f26fbf7256f4d9d5e93052fa4f8c5f76c2d1a3008b322560a",
-    "pipeline/src/parcel_pipeline/cli.py": "6865320301447b28b91b65996b45060be3f4ea2b46f7026156d0a7a0e6c8731b",
+    "pipeline/src/parcel_pipeline/cli.py": "0bfdbbe2c39f1ab652c96b2a1f1928f0546c63d0ac1144d13684b906a8f6e433",
     "pipeline/src/parcel_pipeline/sources/sf.py": "3ed221857a0c6d0975bdf697569d2ab6a38393c52d03e8c9fb4dd3cd04369cfd",
     "pipeline/src/parcel_pipeline/settings.py": "5c10ff235c37cb5262207b7d09cc5710453dc8718e830fad80b861a43b495c2c",
     "pipeline/src/parcel_pipeline/sources/census.py": "9c6ca20103c1291248c7356eb4c822aa67d3856ea3ac3a161bbcd3e3a781a5a4",
     "pipeline/uv.lock": "67537bc2031380660252fca31959aabbff2cf384bb199c9770c32811bf1d506a",
-    "config/categories.yaml": "722c4ca5824c4567c30e085753e86e10458cd1db047ca9ec0b1945f9f2621ac7"
+    "config/categories.yaml": "a6aab3223ade3ee8414298bb26ec0a7270ef21c8821f4b85d554d51ef00c6614"
   }
 }

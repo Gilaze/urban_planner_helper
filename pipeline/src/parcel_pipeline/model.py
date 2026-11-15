@@ -101,6 +101,15 @@ def selected_predictions(df: pd.DataFrame, baseline: Baselines, model: ReviewAct
     return predicted, source
 
 
+def normalization_export(fit: pd.DataFrame) -> dict:
+    """Per-category target mean/std (population std, 0 -> 1) and the exact place IDs fitted."""
+    cats = {}
+    for c, g in fit.groupby("category"):
+        sd = float(g[TARGET].std(ddof=0))
+        cats[c] = {"mean": float(g[TARGET].mean()), "std": sd if sd > 0 else 1.0, "n": int(len(g))}
+    return {"fit_place_ids": sorted(fit["place_id"].astype(str)), "categories": cats}
+
+
 # ---------------------------------------------------------------- metrics
 def rmse(y: np.ndarray, p: np.ndarray) -> float | None:
     m = ~(np.isnan(y) | np.isnan(p))
@@ -259,8 +268,14 @@ def train_and_evaluate(place_features: pd.DataFrame, candidates: list[str]) -> d
         t.assign(stage="test")[["place_id", "category", "city", "split", "stage", TARGET, "pred_selected",
                                 "pred_category_baseline", "pred_category_city_baseline", "prediction_source"]],
     ], ignore_index=True)
+    normalization = {
+        "target": TARGET,
+        "selection": normalization_export(train[train["category"].isin(model_cats)]),
+        "final": normalization_export(refit[refit["category"].isin(model_cats)] if passed else refit.iloc[0:0]),
+        "final_fit_on": "train+validation (Oakland + Berkeley)" if passed else "none (category baseline selected)",
+    }
     return {"report": report, "final_model": final_model, "baselines": base2, "selected": selected,
-            "eval_predictions": eval_preds, "model_categories": model_cats}
+            "eval_predictions": eval_preds, "model_categories": model_cats, "normalization": normalization}
 
 
 def predict_parcels(parcel_features: pd.DataFrame, result: dict) -> pd.DataFrame:
