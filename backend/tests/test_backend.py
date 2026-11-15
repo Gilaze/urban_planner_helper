@@ -180,7 +180,7 @@ class APITests(unittest.TestCase):
         with TemporaryDirectory() as temporary:
             directory = Path(temporary)
             parcels = gpd.GeoDataFrame(
-                [{"parcel_id": parcel.id, "source_apns": ["0010001"], "vacancy_status": "unknown",
+                [{"parcel_id": parcel.id, "source_apns": ["0010001"], "vacancy_status": "source_indicated_vacant",
                   "geometry": shape(parcel.geometry.model_dump())} for parcel in fixture.parcels],
                 crs=4326,
             )
@@ -233,9 +233,13 @@ class APITests(unittest.TestCase):
                         detail = client.get(f"{BASE}/parcels/{PARCEL_ID}").json()
                         self.assertTrue(detail["scoring_available"])
                         self.assertEqual(detail["properties"]["source_apns"], ["0010001"])
+                        listed = client.get(f"{BASE}/parcels", params=BBOX).json()["features"][0]
+                        self.assertEqual(listed["properties"]["vacancy_status"], "source_indicated_vacant")
+                        self.assertNotIn("vacancy_unverified", listed["properties"]["quality_flags"])
                     serving["geometry"] = affinity.translate(geometry, xoff=0.0001)
                     with patch("backend.datasf.monotonic", return_value=65):
-                        self.assertEqual(client.get(f"{BASE}/parcels", params=BBOX).status_code, 200)
+                        listed = client.get(f"{BASE}/parcels", params=BBOX).json()["features"][0]
+                        self.assertEqual(listed["properties"]["vacancy_status"], "unknown")
                         compared = client.post(f"{BASE}/scenarios/compare", json={"parcel_id": PARCEL_ID}).json()
                         self.assertEqual(compared["reason"], "parcel_geometry_changed")
                     serving["down"] = True
