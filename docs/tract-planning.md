@@ -8,19 +8,19 @@ The suggested-height tick remains fixed while the slider moves. **Show only vaca
 
 ## Local data setup
 
-First install the backend release dependencies and unpack the team's parcel data bundle as described in [DATA.md](../DATA.md). Download the supplied [tract GeoJSON](https://drive.google.com/file/d/1X2oVuTAZH7kmUtnynN-LVVt4R1kZNbYx/view) from the team Drive. Its original filename is `tmph-tgz9.geojson`; it contains 244 tracts, in WGS84 longitude/latitude, with a `data_as_of` value of 2021-02-01. SHA-256: `c613b0b9df678aa095981a988e045c7db070f9e0799113481b3937b0e9591889`.
+First install the backend release dependencies and unpack the team's parcel data bundle as described in [DATA.md](../DATA.md). The supplied tract GeoJSON is included at [config/geography/sf-tracts.geojson](../config/geography/sf-tracts.geojson), so teammates do not need a separate boundary download. It is an unchanged copy of the team Drive's `tmph-tgz9.geojson`; see [source details](../config/geography/README.md). It contains 244 tracts, in WGS84 longitude/latitude, with a `data_as_of` value of 2021-02-01. SHA-256: `c613b0b9df678aa095981a988e045c7db070f9e0799113481b3937b0e9591889`.
 
 From the repository root, using the Python environment with `backend/requirements-release.lock` installed:
 
 ```bash
-python -m backend.build_planning --tracts ~/Downloads/tmph-tgz9.geojson
+python -m backend.build_planning
 PARCEL_PLANNER_MODE=live PARCEL_PLANNER_RELEASE=artifacts/release.json \
   python -m uvicorn backend.api:app --host 127.0.0.1 --port 8000
 ```
 
 Then run the simulator with `npm run dev` in `simulator/`. Its default `/api` proxy targets port 8000. Set `PARCEL_PLANNER_API_TARGET` for a different local backend port.
 
-The builder reads existing project snapshots and does not download anything. It writes the ignored `artifacts/planning/index.json`. By default it uses `artifacts/person2/`, `artifacts/release.json`, and the simulator's cached DataSF footprint pages. Use `--input`, `--release`, `--footprint-cache`, and `--output` to override these paths. `PARCEL_PLANNER_PLANNING` selects a different index at API startup. Rebuild the index after changing the parcel release or tract input.
+The builder reads existing project snapshots and does not download anything. It writes the ignored `artifacts/planning/index.json`. By default it uses the committed tract boundaries, `artifacts/person2/`, `artifacts/release.json`, and the simulator's cached DataSF footprint pages. Use `--tracts`, `--input`, `--release`, `--footprint-cache`, and `--output` to override these paths. `PARCEL_PLANNER_PLANNING` selects a different index at API startup. Rebuild the index after changing the parcel release or tract input. The parcel ZIP and generated index remain local; a Git pull supplies the boundaries and code, and the build command creates the index for each machine's release.
 
 Building footprints are optional. When all four simulator cache pages are present, their mapped footprints are subtracted from the lots before fitting concepts. When they are absent, site designs explicitly report that existing structures have not been checked. Source-indicated vacancy is a screening classification, not confirmation of present-day availability.
 

@@ -24,11 +24,12 @@ The built data is not in git. It derives partly from the hackathon's Bright Data
    environment (`cd pipeline && uv sync`), then `joblib.load(...)` and call `.predict_log_count(features)`
    with the columns listed in `pipeline/src/parcel_pipeline/features.py`.
 
-3. Run the backend on the real data:
+3. Run the backend on the real data. For Tract Planner, build the tract index before starting the server; the tract boundaries are included in Git:
 
    ```bash
    uv venv --python 3.11 .venv && source .venv/bin/activate
    uv pip install -r backend/requirements-release.lock
+   python -m backend.build_planning
    PARCEL_PLANNER_MODE=live PARCEL_PLANNER_RELEASE=artifacts/release.json \
      python -m uvicorn backend.api:app --host 127.0.0.1 --port 8000
    ```

@@ -193,7 +193,8 @@ def build_index(tract_path, input_dir, release_path, footprint_cache):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--tracts", type=Path, required=True)
+    parser.add_argument("--tracts", type=Path, default=ROOT / "config/geography/sf-tracts.geojson",
+                        help="Tract GeoJSON (defaults to the boundary file included in the repository)")
     parser.add_argument("--input", type=Path, default=ROOT / "artifacts/person2")
     parser.add_argument("--release", type=Path, default=ROOT / "artifacts/release.json")
     parser.add_argument("--footprint-cache", type=Path, default=ROOT / "simulator/pipeline/cache")
