@@ -4,11 +4,12 @@
 Sources (downloaded with curl into pipeline/cache/, then reused):
   * DataSF Building Footprints (ynuv-fyni)  - 177k footprints with LiDAR-measured heights
   * DataSF San Francisco Land Use 2023 (fdfd-xptc) - per-parcel use, joined by map-block-lot
+  * DataSF San Francisco Land Use, current (c5ge-t6pj) - recorded use today, for lot vacancy
   * OpenStreetMap via Overpass - streets, bridges, parks, forests, beaches, lakes, piers
   * AWS Terrain Tiles (Terrarium encoding, zoom 14) - ground elevation + bay bathymetry
 
 Outputs (public/data/):
-  meta.json, terrain.bin, buildings.bin, roads.bin, lakes.bin, trees.bin,
+  meta.json, terrain.bin, buildings.bin, buildings_info.bin, roads.bin, lakes.bin, trees.bin,
   landcover.png (R=grass/park, G=forest/scrub, B=sand), urban.png (built-up mask)
 
 Usage:  python pipeline/build_data.py            (needs: numpy, Pillow, curl on PATH)
@@ -376,6 +377,49 @@ TID = {t[0]: i for i, t in enumerate(TYPES)}
 TOWER_M = 50.0
 
 
+# Lot status shown when a building is clicked (buildings_info.bin, one byte per building).
+LOT_UNKNOWN, LOT_VACANT, LOT_OCCUPIED = 0, 1, 2
+
+
+def _truthy(v):
+    return str(v).strip().lower() in ("true", "1", "yes")
+
+
+def load_current_use():
+    """mapblklot -> True if the current land-use snapshot records any use on the lot."""
+    with open(os.path.join(CACHE, "landuse_current.json"), encoding="utf-8") as f:
+        rows = json.load(f)
+    used = {}
+    for r in rows:
+        lot = r.get("mapblklot")
+        if not lot or r.get("geography_type") != "parcel":
+            continue
+        try:
+            units = float(r.get("resunits") or 0)
+            comm = float(r.get("total_comm") or 0)
+        except ValueError:
+            units = comm = 0.0
+        flag = any(_truthy(r.get(k)) for k in ("parking_lo", "garage", "open_space"))
+        used[lot] = used.get(lot, False) or units > 0 or comm > 0 or flag
+    return used
+
+
+def lot_status(lot, lu, current_use):
+    """Same rule as the Parcel Planner data pipeline: vacant only with the explicit 2023
+    VACANT code AND no recorded use in the current snapshot; any current use = occupied."""
+    if lot is None:
+        return LOT_UNKNOWN
+    cur = current_use.get(lot)
+    code = (lu or {}).get("landuse")
+    if cur is True:
+        return LOT_OCCUPIED
+    if cur is False:
+        return LOT_VACANT if code == "VACANT" else LOT_UNKNOWN
+    if code and code != "VACANT":
+        return LOT_OCCUPIED
+    return LOT_UNKNOWN
+
+
 def classify(lu, height, area):
     if area < 20.0 and height < 6.0:
         return TID["other"]
@@ -413,6 +457,10 @@ def download_sources():
     fetch("https://data.sfgov.org/resource/fdfd-xptc.json?"
           "$select=mapblklot,landuse,restype,resunits,res,totalcomm,retail,cie,med,pdr,visitor,mips&$limit=200000",
           os.path.join(CACHE, "landuse.json"))
+    fetch("https://data.sfgov.org/resource/c5ge-t6pj.json?"
+          "$select=mapblklot,geography_type,resunits,total_comm,parking_lo,garage,open_space"
+          "&$where=geography_type=%27parcel%27&$limit=200000",
+          os.path.join(CACHE, "landuse_current.json"))
     fetch_overpass(os.path.join(HERE, "overpass.ql"), os.path.join(CACHE, "osm.json"))
 
 
@@ -518,6 +566,8 @@ def main():
     log("[4/7] buildings")
     with open(os.path.join(CACHE, "landuse.json"), encoding="utf-8") as f:
         landuse = {r["mapblklot"]: r for r in json.load(f) if r.get("mapblklot")}
+    current_use = load_current_use()
+    log(f"  current land-use lots: {len(current_use)}")
     feats = []
     for fn in sorted(glob.glob(os.path.join(CACHE, "footprints_*.geojson")), key=lambda s: int(s.rsplit("_", 1)[1].split(".")[0])):
         with open(fn, encoding="utf-8") as f:
@@ -548,7 +598,10 @@ def main():
     osm_matched = set()
     heights_by_type = defaultdict(list)
 
-    def write_building(tid, height, elev, bottom, rings, roof=0.0, roof_kind=0, extra=0):
+    lot_bytes = bytearray()
+    lot_counts = Counter()
+
+    def write_building(tid, height, elev, bottom, rings, roof=0.0, roof_kind=0, extra=0, lot=LOT_UNKNOWN):
         """Record: type, rings, wall height, base elevation, wall bottom (rel.), roof rise, roof kind,
         extra (stepped: upper-block scale * 255). Roof kinds: 0 flat, 1 hipped, 2 tapered, 3 stepped."""
         nonlocal out, n_written
@@ -559,6 +612,8 @@ def main():
             out += struct.pack("<H", len(r))
             out += r.astype("<i2").tobytes()
         n_written += 1
+        lot_bytes.append(lot)
+        lot_counts[lot] += 1
         counts[tid] += 1
         roof_counts[roof_kind] += 1
         heights_by_type[tid].append(height + roof)
@@ -582,6 +637,7 @@ def main():
         peak = max(height, float(p.get("hgt_maxcm") or 0) / 100.0)
         mean = max(height, float(p.get("hgt_meancm") or 0) / 100.0)
         lu = landuse.get(mblr[2:]) if mblr.startswith("SF") else None
+        lot = lot_status(mblr[2:] if mblr.startswith("SF") else None, lu, current_use)
         if lu is not None:
             n_join += 1
         polys = g["coordinates"] if g["type"] == "MultiPolygon" else [g["coordinates"]]
@@ -630,7 +686,7 @@ def main():
                     h = max(2.6, h - roof / 2)
                     kind = 1                                   # hipped roof
             elev, bottom = ground_for(outer)
-            write_building(tid, h, elev, bottom, rings, roof, kind, extra)
+            write_building(tid, h, elev, bottom, rings, roof, kind, extra, lot)
             bdraw.polygon(to_px(outer[:, 0], outer[:, 1], LC_RES), fill=255)
 
     # Tall buildings completed after the 2016 footprint survey exist only in OSM.
@@ -667,7 +723,12 @@ def main():
     with open(os.path.join(OUT, "buildings.bin"), "wb") as f:
         f.write(b"SFB2" + struct.pack("<If", n_written, Q))
         f.write(out)
+    with open(os.path.join(OUT, "buildings_info.bin"), "wb") as f:
+        f.write(b"SFI1" + struct.pack("<I", n_written))
+        f.write(lot_bytes)
     log(f"  buildings written {n_written}, land-use join {n_join}, {len(out) / 1e6:.1f} MB")
+    log(f"  lot status: vacant {lot_counts[LOT_VACANT]}, occupied {lot_counts[LOT_OCCUPIED]}, "
+        f"unknown {lot_counts[LOT_UNKNOWN]}")
     for i, t in enumerate(TYPES):
         hs = heights_by_type.get(i, [0])
         log(f"    {t[0]:<11} {counts[i]:>7}  median h {np.median(hs):5.1f} m  max {max(hs):6.1f} m")
@@ -716,10 +777,14 @@ def main():
         "axes": "+x east, +z south, +y up, metres",
         "extent": EXT, "grid": GRID, "terrainSize": N, "quantum": Q, "towerThresholdM": TOWER_M,
         "types": [{"id": t[0], "label": t[1], "color": t[2], "count": counts[i]} for i, t in enumerate(TYPES)],
-        "buildingCount": n_written, "heightsUpdatedFromOSM": n_override, "buildingsAddedFromOSM": n_added, "roadCount": n_roads, "treeCount": len(trees) // 8, "lakeCount": len(lake_records),
+        "buildingCount": n_written,
+        "lotStatus": {"vacant": lot_counts[LOT_VACANT], "occupied": lot_counts[LOT_OCCUPIED],
+                      "unknown": lot_counts[LOT_UNKNOWN],
+                      "rule": "vacant = 2023 VACANT code and no recorded use in the current land-use snapshot"}, "heightsUpdatedFromOSM": n_override, "buildingsAddedFromOSM": n_added, "roadCount": n_roads, "treeCount": len(trees) // 8, "lakeCount": len(lake_records),
         "sources": [
             {"name": "DataSF Building Footprints (LiDAR heights)", "url": "https://data.sfgov.org/d/ynuv-fyni"},
             {"name": "DataSF San Francisco Land Use 2023", "url": "https://data.sfgov.org/d/fdfd-xptc"},
+            {"name": "DataSF San Francisco Land Use (current)", "url": "https://data.sfgov.org/d/c5ge-t6pj"},
             {"name": "OpenStreetMap contributors (ODbL)", "url": "https://www.openstreetmap.org/copyright"},
             {"name": "AWS Terrain Tiles (Mapzen Terrarium; USGS 3DEP, NOAA)", "url": "https://registry.opendata.aws/terrain-tiles/"},
         ],

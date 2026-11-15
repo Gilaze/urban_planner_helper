@@ -103,6 +103,29 @@ html, body {
 .loader-stage { margin-top: 10px; font-size: 12px; color: rgba(20, 40, 70, 0.7); font-variant-numeric: tabular-nums; }
 .loader.error .loader-stage { color: #b3261e; font-weight: 600; white-space: pre-wrap; }
 
+.bcard {
+  top: 0; left: 0; width: 240px; padding: 12px 14px 10px;
+  border: 1px solid rgba(255, 200, 40, 0.55);
+  box-shadow: var(--shadow), 0 0 0 3px rgba(255, 216, 74, 0.22), 0 0 22px rgba(255, 210, 60, 0.35);
+  will-change: transform;
+}
+.bcard.hidden { display: none; }
+.bcard-x {
+  position: absolute; top: 6px; right: 8px; border: 0; background: none; cursor: pointer;
+  font: 600 18px/1 system-ui, sans-serif; color: var(--ink-2); padding: 2px 4px; border-radius: 6px;
+}
+.bcard-x:hover { background: rgba(31, 42, 55, 0.06); color: var(--ink); }
+.bcard-type { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; padding-right: 22px; }
+.bcard-type .sw { width: 14px; height: 14px; border-radius: 4px; background: var(--c); flex: none; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.18); }
+.bcard-row { display: flex; justify-content: space-between; align-items: center; margin-top: 9px; font-size: 13px; }
+.bcard-row .k { color: var(--ink-2); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+.bcard-sub { font-size: 12px; color: var(--ink-2); margin-top: 3px; text-align: right; }
+.pill { font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 99px; }
+.pill.vacant { background: #fff1c2; color: #8a5a00; box-shadow: inset 0 0 0 1px #f2c94c; }
+.pill.occupied { background: #e3f2e6; color: #23683a; }
+.pill.unknown { background: rgba(31, 42, 55, 0.07); color: var(--ink-2); }
+.bcard-note { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--panel-border); font-size: 10.5px; color: var(--ink-2); }
+
 @media (max-width: 900px) {
   .legend { display: none; }
   .help { display: none; }

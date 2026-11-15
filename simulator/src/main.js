@@ -8,6 +8,7 @@ import {
 import { buildTerrain, buildWater, buildBuildingMeshes, buildRoadMeshes, buildLakes, buildTrees, buildLandmarks } from './world.js';
 import { createUI } from './ui.js';
 import { createFocusBlur } from './focusBlur.js';
+import { createBuildingIndex, pickBuilding, buildingParts, createSelectionHighlight } from './picking.js';
 import GeometryWorker from './geometryWorker.js?worker';
 
 const CHUNK = 1000;      // metres per mesh chunk (frustum-culling granularity)
@@ -119,6 +120,8 @@ async function boot() {
       worker.postMessage({ ...msg, part }, transfer);
     });
   };
+  // Building index for click picking (built before the buffer is transferred to the worker).
+  const buildingIndex = createBuildingIndex(data.buildingsBuf.slice(0), terrain.extent);
   const terrainMsg = { n: terrain.n, grid: terrain.grid, extent: terrain.extent, heights: terrain.heights };
   const lodPromise = runWorker('lod', { buildingsBuf: data.buildingsBuf.slice(0), terrain: terrainMsg, chunkSize: CHUNK });
   const fullPromise = runWorker('full', {
@@ -160,6 +163,7 @@ async function boot() {
   const roads = buildRoadMeshes(geom.roads, createRoadMaterials(shared));
   scene.add(buildings.group, buildings.lodGroup, roads.group);
   const blur = createFocusBlur(renderer);
+  const highlight = createSelectionHighlight(scene, renderer);
 
   // -------------------------------------------------------------------------
   // Camera rig
@@ -239,13 +243,17 @@ async function boot() {
       hud.setMode(mode);
       cam.applyCameraAngle(mode, true, ground(n.lon, n.lat), n.h);
     },
-    onToggleType: (i, off) => { shared.uHidden.value[i] = off ? 1 : 0; },
+    onToggleType: (i, off) => {
+      shared.uHidden.value[i] = off ? 1 : 0;
+      if (off && selected >= 0 && buildingIndex.type[selected] === i) select(-1);
+    },
     onFocusType: (i) => { shared.uFocus.value = i; },
     onShowAll: () => shared.uHidden.value.fill(0),
     onTerrain: (on) => {
       shared.uTerrain.value = on ? 1 : 0;
       trees.place();
       landmarks.place();
+      if (selected >= 0) select(selected); // base heights change with the hills toggle
       const t = cam.controls.target;
       const dy = elevOfJS(shared, sampleGround(t.x, t.z)) - t.y;
       t.y += dy;
@@ -266,6 +274,44 @@ async function boot() {
     const m = /(NVIDIA[^(,]*|AMD[^(,]*|Radeon[^(,]*|Intel[^(,]*|Apple[^(,]*)/.exec(name);
     if (m) hud.setGpu(m[1].replace(/\s*\(0x[0-9A-F]+\)/i, '').trim());
   }
+
+  // -------------------------------------------------------------------------
+  // Click a building: yellow glow + info card (type and lot status, never location)
+  // -------------------------------------------------------------------------
+  let selected = -1;
+  const raycaster = new THREE.Raycaster();
+  const ndc = new THREE.Vector2();
+  const groundAt = (x, z) => elevOfJS(shared, sampleGround(x, z));
+  function select(b) {
+    selected = b;
+    if (b < 0) {
+      highlight.clear();
+      hud.hideBuilding();
+      return;
+    }
+    highlight.show(buildingParts(buildingIndex, b, shared));
+    hud.showBuilding({
+      type: buildingIndex.type[b],
+      lot: data.lotStatus ? data.lotStatus[b] : null,
+    }, () => select(-1));
+  }
+  const canvas = renderer.domElement;
+  let down = null;
+  canvas.addEventListener('pointerdown', (e) => {
+    down = e.button === 0 ? { x: e.clientX, y: e.clientY, t: performance.now() } : null;
+  });
+  canvas.addEventListener('pointerup', (e) => {
+    if (!down || e.button !== 0) return;
+    const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y);
+    const quick = performance.now() - down.t < 600;
+    down = null;
+    if (moved > 5 || !quick) return; // a drag pans the camera; only treat taps as clicks
+    const rect = canvas.getBoundingClientRect();
+    ndc.set(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
+    raycaster.setFromCamera(ndc, cam.getActiveCamera());
+    select(pickBuilding(buildingIndex, raycaster.ray, shared, groundAt));
+  });
+  window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && selected >= 0) select(-1); });
 
   function setMode(id) {
     currentMode = id;
@@ -398,7 +444,14 @@ async function boot() {
     // outlines stay crisp until buildings get tiny on screen, then fade out (they would turn to mush)
     const mpp = worldH / (window.innerHeight * ratio);
     const outline = outlinesOn ? 1 - THREE.MathUtils.smoothstep(mpp, 2.5, 7) : 0;
+    if (selected >= 0) {
+      highlight.update(shared.uTime.value);
+      const p = highlight.center.clone().project(camera);
+      const onScreen = p.z > -1 && p.z < 1 && Math.abs(p.x) < 1.2 && Math.abs(p.y) < 1.2;
+      hud.placeBuilding((p.x + 1) / 2 * window.innerWidth, (1 - p.y) / 2 * window.innerHeight, onScreen);
+    }
     blur.render(scene, camera, focusPt, R, clearOn ? 3.2 * ratio : 0, outline, mpp);
+    highlight.render(camera);
     adaptResolution(dt);
     requestAnimationFrame(frame);
   }
@@ -406,6 +459,7 @@ async function boot() {
   // console / automation hook
   window.__sf = {
     scene, cam, shared, renderer, setMode,
+    select, buildingIndex,
     jump(lon, lat, worldH, mode = currentMode) {
       currentMode = mode;
       hud.setMode(mode);

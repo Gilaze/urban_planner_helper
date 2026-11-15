@@ -58,11 +58,29 @@ export async function loadCityData(onProgress = () => {}) {
   return {
     meta,
     terrain: { n, grid, extent, heights },
+    lotStatus: await loadLotStatus(base),
     buildingsBuf,
     roadsBuf,
     treesBuf,
     lakesBuf,
   };
+}
+
+/**
+ * Optional per-building lot status (buildings_info.bin, SFI1): 0 unknown, 1 vacant, 2 occupied.
+ * Returns null for older data builds; the dev server answers missing files with index.html.
+ */
+async function loadLotStatus(base) {
+  try {
+    const res = await fetch(base + 'buildings_info.bin');
+    if (!res.ok) return null;
+    const buf = await res.arrayBuffer();
+    if (buf.byteLength < 8 || new TextDecoder().decode(new Uint8Array(buf, 0, 4)) !== 'SFI1') return null;
+    const n = new DataView(buf).getUint32(4, true);
+    return new Uint8Array(buf, 8, n);
+  } catch {
+    return null;
+  }
 }
 
 /** Bilinear terrain sample (metres) at world x/z - identical to the pipeline's sampler. */

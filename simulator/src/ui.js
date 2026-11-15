@@ -139,11 +139,48 @@ export function createUI(root) {
 
       // ---- help + attribution
       hud.appendChild(el('div', 'panel help',
-        '<b>Drag</b> pan · <b>Wheel</b> zoom · <b>Q/E</b> rotate · <b>WASD</b> move · <b>1–5</b> camera'));
+        '<b>Click</b> building info · <b>Drag</b> pan · <b>Wheel</b> zoom · <b>Q/E</b> rotate · <b>WASD</b> move · <b>1–5</b> camera'));
       hud.appendChild(el('div', 'attrib',
         meta.sources.map((s) => `<a href="${s.url}" target="_blank" rel="noopener">${s.name}</a>`).join(' · ')));
 
+      // ---- building info card (type and lot status only; no address or coordinates)
+      const card = el('div', 'panel bcard hidden');
+      card.setAttribute('role', 'dialog');
+      card.setAttribute('aria-label', 'Building details');
+      hud.appendChild(card);
+      let onCardClose = () => {};
+      const LOT = {
+        1: ['vacant', 'Vacant lot', 'No recorded use on this lot'],
+        2: ['occupied', 'Not vacant', 'Lot has a recorded use'],
+        0: ['unknown', 'Unknown', 'No land-use record for this lot'],
+      };
+
       return {
+        showBuilding({ type, lot }, onClose) {
+          onCardClose = onClose;
+          const t = meta.types[type] || { label: 'Building', color: '#ccc' };
+          const [cls, head, sub] = lot == null
+            ? ['unknown', 'Unavailable', 'Rebuild data (npm run data) for lot status']
+            : LOT[lot] || LOT[0];
+          card.innerHTML = `
+            <button class="bcard-x" aria-label="Close">×</button>
+            <div class="bcard-type"><span class="sw" style="--c:${t.color}"></span>${t.label}</div>
+            <div class="bcard-row"><span class="k">Lot</span><span class="pill ${cls}">${head}</span></div>
+            <div class="bcard-sub">${sub}</div>
+            <div class="bcard-note">Source: SF Planning land use. Exact location is not shown.</div>`;
+          card.querySelector('.bcard-x').addEventListener('click', () => onCardClose());
+          card.classList.remove('hidden');
+        },
+        hideBuilding() { card.classList.add('hidden'); },
+        /** Anchor the card above the building's screen position (or hide it when off-screen). */
+        placeBuilding(x, y, visible) {
+          card.style.visibility = visible ? 'visible' : 'hidden';
+          if (!visible) return;
+          const w = card.offsetWidth, hgt = card.offsetHeight;
+          const left = Math.min(window.innerWidth - w - 12, Math.max(12, x - w / 2));
+          const top = Math.min(window.innerHeight - hgt - 12, Math.max(12, y - hgt - 30));
+          card.style.transform = `translate(${Math.round(left)}px, ${Math.round(top)}px)`;
+        },
         setMode(id) {
           for (const k in modeBtns) modeBtns[k].classList.toggle('active', k === id);
         },

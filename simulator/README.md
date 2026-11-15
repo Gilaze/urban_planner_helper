@@ -27,6 +27,7 @@ npm run dev    # http://localhost:5173
 | `F` / slider | Focus mode on/off and its clear radius (300 m – 4 km) |
 | `O` | Building outlines on/off |
 | Legend | Click a type to hide it, hover to highlight it |
+| Click a building | Yellow outline and glow, plus a card with its type and lot status (vacant / not vacant / unknown). `Esc`, `×` or clicking open ground closes it. The card never shows an address, coordinates or parcel number. |
 
 In the browser console, `__sf.jump(lon, lat, viewHeightMeters, mode)` moves the camera.
 
@@ -70,6 +71,7 @@ The bay's colour comes from depth in the elevation data, with animated surf alon
 |---|---|---|
 | Footprints and heights | [DataSF Building Footprints](https://data.sfgov.org/d/ynuv-fyni) | LiDAR median roof height per footprint. San Mateo County footprints (`SM*`) are dropped. |
 | Building type | [SF Land Use 2023](https://data.sfgov.org/d/fdfd-xptc) | Joined on map-block-lot (97% of footprints match). Anything 50 m or taller is classed as a **Tower**, whatever its use. |
+| Lot status (click card) | [SF Land Use 2023](https://data.sfgov.org/d/fdfd-xptc) + [current SF Land Use](https://data.sfgov.org/d/c5ge-t6pj) | Same rule as the Parcel Planner pipeline: **vacant** only with the 2023 `VACANT` code and no recorded use in the current snapshot; any current recorded use means not vacant. Written to `buildings_info.bin` (one byte per building). Footprints are from 2016 LiDAR, so a few buildings stand on lots now recorded as vacant (e.g. since demolished or unused). |
 | Newer towers | OpenStreetMap `height` / `building:levels` | The LiDAR flight is from 2010. Footprints whose LiDAR *peak* is under 60% of the OSM height take the OSM height (47 buildings, e.g. Salesforce Tower at 326 m and 181 Fremont). Tall OSM buildings with no footprint are added (124). |
 | Roof shapes | LiDAR max/mean vs. median | Hipped roofs (13k small rectangular buildings), stepped podium+tower (96), tapered (Transamerica). |
 | Streets, bridges, parks, beaches, lakes, piers | OpenStreetMap (Overpass) | Bridge decks are interpolated between their ground anchors. The Golden Gate deck is fixed at 67 m. |
