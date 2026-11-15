@@ -1,0 +1,182 @@
+[
+  {
+    "stage": "selection",
+    "approach": "category_baseline",
+    "place_id": "clinic-v",
+    "category_id": "clinic",
+    "city": "Berkeley",
+    "actual_log_count": 2.772588722239781,
+    "prediction_log_count": 2.7212088552608966
+  },
+  {
+    "stage": "selection",
+    "approach": "category_city_baseline",
+    "place_id": "clinic-v",
+    "category_id": "clinic",
+    "city": "Berkeley",
+    "actual_log_count": 2.772588722239781,
+    "prediction_log_count": 2.7212088552608966
+  },
+  {
+    "stage": "selection",
+    "approach": "category_baseline",
+    "place_id": "pharmacy-v",
+    "category_id": "pharmacy",
+    "city": "Berkeley",
+    "actual_log_count": 3.044522437723423,
+    "prediction_log_count": 3.0153426301306316
+  },
+  {
+    "stage": "selection",
+    "approach": "category_city_baseline",
+    "place_id": "pharmacy-v",
+    "category_id": "pharmacy",
+    "city": "Berkeley",
+    "actual_log_count": 3.044522437723423,
+    "prediction_log_count": 3.0153426301306316
+  },
+  {
+    "stage": "selection",
+    "approach": "category_baseline",
+    "place_id": "grocery-v",
+    "category_id": "grocery",
+    "city": "Berkeley",
+    "actual_log_count": 3.258096538021482,
+    "prediction_log_count": 3.239254821104285
+  },
+  {
+    "stage": "selection",
+    "approach": "category_city_baseline",
+    "place_id": "grocery-v",
+    "category_id": "grocery",
+    "city": "Berkeley",
+    "actual_log_count": 3.258096538021482,
+    "prediction_log_count": 3.239254821104285
+  },
+  {
+    "stage": "selection",
+    "approach": "category_baseline",
+    "place_id": "bank_credit_union-v",
+    "category_id": "bank_credit_union",
+    "city": "Berkeley",
+    "actual_log_count": 3.4339872044851463,
+    "prediction_log_count": 3.4208077382387962
+  },
+  {
+    "stage": "selection",
+    "approach": "category_city_baseline",
+    "place_id": "bank_credit_union-v",
+    "category_id": "bank_credit_union",
+    "city": "Berkeley",
+    "actual_log_count": 3.4339872044851463,
+    "prediction_log_count": 3.4208077382387962
+  },
+  {
+    "stage": "selection",
+    "approach": "category_baseline",
+    "place_id": "school-v",
+    "category_id": "school",
+    "city": "Berkeley",
+    "actual_log_count": 3.58351893845611,
+    "prediction_log_count": 3.573779635594727
+  },
+  {
+    "stage": "selection",
+    "approach": "category_city_baseline",
+    "place_id": "school-v",
+    "category_id": "school",
+    "city": "Berkeley",
+    "actual_log_count": 3.58351893845611,
+    "prediction_log_count": 3.573779635594727
+  },
+  {
+    "stage": "final",
+    "approach": "category_baseline",
+    "place_id": "clinic-t",
+    "category_id": "clinic",
+    "city": "San Francisco",
+    "actual_log_count": 3.4339872044851463,
+    "prediction_log_count": 2.772588722239781
+  },
+  {
+    "stage": "final",
+    "approach": "category_city_baseline",
+    "place_id": "clinic-t",
+    "category_id": "clinic",
+    "city": "San Francisco",
+    "actual_log_count": 3.4339872044851463,
+    "prediction_log_count": 2.772588722239781
+  },
+  {
+    "stage": "final",
+    "approach": "category_baseline",
+    "place_id": "pharmacy-t",
+    "category_id": "pharmacy",
+    "city": "San Francisco",
+    "actual_log_count": 3.58351893845611,
+    "prediction_log_count": 3.044522437723423
+  },
+  {
+    "stage": "final",
+    "approach": "category_city_baseline",
+    "place_id": "pharmacy-t",
+    "category_id": "pharmacy",
+    "city": "San Francisco",
+    "actual_log_count": 3.58351893845611,
+    "prediction_log_count": 3.044522437723423
+  },
+  {
+    "stage": "final",
+    "approach": "category_baseline",
+    "place_id": "grocery-t",
+    "category_id": "grocery",
+    "city": "San Francisco",
+    "actual_log_count": 3.713572066704308,
+    "prediction_log_count": 3.258096538021482
+  },
+  {
+    "stage": "final",
+    "approach": "category_city_baseline",
+    "place_id": "grocery-t",
+    "category_id": "grocery",
+    "city": "San Francisco",
+    "actual_log_count": 3.713572066704308,
+    "prediction_log_count": 3.258096538021482
+  },
+  {
+    "stage": "final",
+    "approach": "category_baseline",
+    "place_id": "bank_credit_union-t",
+    "category_id": "bank_credit_union",
+    "city": "San Francisco",
+    "actual_log_count": 3.828641396489095,
+    "prediction_log_count": 3.4339872044851463
+  },
+  {
+    "stage": "final",
+    "approach": "category_city_baseline",
+    "place_id": "bank_credit_union-t",
+    "category_id": "bank_credit_union",
+    "city": "San Francisco",
+    "actual_log_count": 3.828641396489095,
+    "prediction_log_count": 3.4339872044851463
+  },
+  {
+    "stage": "final",
+    "approach": "category_baseline",
+    "place_id": "school-t",
+    "category_id": "school",
+    "city": "San Francisco",
+    "actual_log_count": 3.9318256327243257,
+    "prediction_log_count": 3.58351893845611
+  },
+  {
+    "stage": "final",
+    "approach": "category_city_baseline",
+    "place_id": "school-t",
+    "category_id": "school",
+    "city": "San Francisco",
+    "actual_log_count": 3.9318256327243257,
+    "prediction_log_count": 3.58351893845611
+  }
+]

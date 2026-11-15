@@ -1,0 +1,95 @@
+{
+  "model_attempted": false,
+  "selected_approach": "category_baseline",
+  "supported_model_categories": [],
+  "seed": 42,
+  "estimator_version": "stdlib-baseline-checker-v1",
+  "sf_evaluation_count": 1,
+  "fit_place_ids": {
+    "selection": [
+      "clinic-a",
+      "pharmacy-a",
+      "grocery-a",
+      "bank_credit_union-a",
+      "school-a",
+      "clinic-b",
+      "pharmacy-b",
+      "grocery-b",
+      "bank_credit_union-b",
+      "school-b"
+    ],
+    "final": [
+      "clinic-a",
+      "pharmacy-a",
+      "grocery-a",
+      "bank_credit_union-a",
+      "school-a",
+      "clinic-b",
+      "pharmacy-b",
+      "grocery-b",
+      "bank_credit_union-b",
+      "school-b",
+      "clinic-v",
+      "pharmacy-v",
+      "grocery-v",
+      "bank_credit_union-v",
+      "school-v"
+    ]
+  },
+  "normalization": {
+    "selection": {
+      "clinic": {
+        "mean": 2.7212088552608966,
+        "std": 0.3233135824625262
+      },
+      "pharmacy": {
+        "mean": 3.0153426301306316,
+        "std": 0.2427539078908505
+      },
+      "grocery": {
+        "mean": 3.239254821104285,
+        "std": 0.19473238338086163
+      },
+      "bank_credit_union": {
+        "mean": 3.4208077382387962,
+        "std": 0.1627112002173139
+      },
+      "school": {
+        "mean": 3.573779635594727,
+        "std": 0.13979243110958084
+      }
+    },
+    "final": {
+      "clinic": {
+        "mean": 2.7383354775871918,
+        "std": 0.2650932366566844
+      },
+      "pharmacy": {
+        "mean": 3.0250692326615622,
+        "std": 0.1986844737880704
+      },
+      "grocery": {
+        "mean": 3.2455353934100173,
+        "std": 0.1592462200548854
+      },
+      "bank_credit_union": {
+        "mean": 3.425200893654246,
+        "std": 0.13299833111652618
+      },
+      "school": {
+        "mean": 3.5770260698818546,
+        "std": 0.11423234160332708
+      }
+    }
+  },
+  "slice_thresholds": {
+    "selection": {
+      "income_usd": 44500.0,
+      "population_density_per_km2": 1450.0
+    },
+    "final": {
+      "income_usd": 47000,
+      "population_density_per_km2": 1700
+    }
+  }
+}

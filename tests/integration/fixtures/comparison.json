@@ -1,0 +1,403 @@
+{
+  "parcel_id": "sf:checker-0001",
+  "mode": "fixture",
+  "freshness": "fresh",
+  "versions": {
+    "schema": "checker-v1",
+    "data": "checker-v1",
+    "model": "checker-v1",
+    "assumptions": "checker-v1"
+  },
+  "scoring_available": true,
+  "geometry_hash": "checker-geometry-v1",
+  "scoring_geometry_hash": "checker-geometry-v1",
+  "active_dimensions": [
+    "need",
+    "sustainability"
+  ],
+  "effective_weights": {
+    "need": 0.5,
+    "economic": 0.0,
+    "sustainability": 0.5
+  },
+  "alternatives": [
+    {
+      "category_id": "clinic",
+      "total": 55.0,
+      "rank": 2,
+      "pareto": true,
+      "normalized": {
+        "need": 30,
+        "economic": 50,
+        "sustainability": 80
+      },
+      "raw": {
+        "need": {
+          "deficit_before": 0.2222222222222222,
+          "deficit_after": 0,
+          "benefit": 0.2222222222222222,
+          "covered_population": 300
+        },
+        "economic": {
+          "retained_tax_usd_per_year": {
+            "p10": 0,
+            "p50": 0,
+            "p90": 0
+          },
+          "operating_fte": {
+            "p10": 1,
+            "p50": 2,
+            "p90": 3
+          }
+        },
+        "sustainability": {
+          "before_m": 666.6666666666666,
+          "after_m": 400,
+          "saved_m": 266.6666666666667,
+          "baseline_coverage": 1
+        }
+      },
+      "coverage": {
+        "baseline_population_fraction": 1
+      },
+      "reason_codes": [],
+      "review_activity": {
+        "value": 10,
+        "source": "synthetic_category_baseline"
+      },
+      "proposal": {
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -122.42,
+                37.775
+              ],
+              [
+                -122.4199,
+                37.775
+              ],
+              [
+                -122.4199,
+                37.7752
+              ],
+              [
+                -122.42,
+                37.7752
+              ],
+              [
+                -122.42,
+                37.775
+              ]
+            ]
+          ]
+        },
+        "height_m": 7,
+        "illustrative": true
+      }
+    },
+    {
+      "category_id": "pharmacy",
+      "total": 45.0,
+      "rank": 4,
+      "pareto": false,
+      "normalized": {
+        "need": 70,
+        "economic": 50,
+        "sustainability": 20
+      },
+      "raw": {
+        "need": {
+          "deficit_before": 0.2222222222222222,
+          "deficit_after": 0,
+          "benefit": 0.2222222222222222,
+          "covered_population": 300
+        },
+        "economic": {
+          "retained_tax_usd_per_year": {
+            "p10": 0,
+            "p50": 0,
+            "p90": 0
+          },
+          "operating_fte": {
+            "p10": 1,
+            "p50": 2,
+            "p90": 3
+          }
+        },
+        "sustainability": {
+          "before_m": 666.6666666666666,
+          "after_m": 400,
+          "saved_m": 266.6666666666667,
+          "baseline_coverage": 1
+        }
+      },
+      "coverage": {
+        "baseline_population_fraction": 1
+      },
+      "reason_codes": [],
+      "review_activity": {
+        "value": 10,
+        "source": "synthetic_category_baseline"
+      },
+      "proposal": {
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -122.42,
+                37.775
+              ],
+              [
+                -122.4199,
+                37.775
+              ],
+              [
+                -122.4199,
+                37.7752
+              ],
+              [
+                -122.42,
+                37.7752
+              ],
+              [
+                -122.42,
+                37.775
+              ]
+            ]
+          ]
+        },
+        "height_m": 7,
+        "illustrative": true
+      }
+    },
+    {
+      "category_id": "grocery",
+      "total": 55.0,
+      "rank": 3,
+      "pareto": true,
+      "normalized": {
+        "need": 50,
+        "economic": 50,
+        "sustainability": 60
+      },
+      "raw": {
+        "need": {
+          "deficit_before": 0.2222222222222222,
+          "deficit_after": 0,
+          "benefit": 0.2222222222222222,
+          "covered_population": 300
+        },
+        "economic": {
+          "retained_tax_usd_per_year": {
+            "p10": 0,
+            "p50": 0,
+            "p90": 0
+          },
+          "operating_fte": {
+            "p10": 1,
+            "p50": 2,
+            "p90": 3
+          }
+        },
+        "sustainability": {
+          "before_m": 666.6666666666666,
+          "after_m": 400,
+          "saved_m": 266.6666666666667,
+          "baseline_coverage": 1
+        }
+      },
+      "coverage": {
+        "baseline_population_fraction": 1
+      },
+      "reason_codes": [],
+      "review_activity": {
+        "value": 10,
+        "source": "synthetic_category_baseline"
+      },
+      "proposal": {
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -122.42,
+                37.775
+              ],
+              [
+                -122.4199,
+                37.775
+              ],
+              [
+                -122.4199,
+                37.7752
+              ],
+              [
+                -122.42,
+                37.7752
+              ],
+              [
+                -122.42,
+                37.775
+              ]
+            ]
+          ]
+        },
+        "height_m": 7,
+        "illustrative": true
+      }
+    },
+    {
+      "category_id": "bank_credit_union",
+      "total": 15.0,
+      "rank": 5,
+      "pareto": false,
+      "normalized": {
+        "need": 20,
+        "economic": 50,
+        "sustainability": 10
+      },
+      "raw": {
+        "need": {
+          "deficit_before": 0.2222222222222222,
+          "deficit_after": 0,
+          "benefit": 0.2222222222222222,
+          "covered_population": 300
+        },
+        "economic": {
+          "retained_tax_usd_per_year": {
+            "p10": 0,
+            "p50": 0,
+            "p90": 0
+          },
+          "operating_fte": {
+            "p10": 1,
+            "p50": 2,
+            "p90": 3
+          }
+        },
+        "sustainability": {
+          "before_m": 666.6666666666666,
+          "after_m": 400,
+          "saved_m": 266.6666666666667,
+          "baseline_coverage": 1
+        }
+      },
+      "coverage": {
+        "baseline_population_fraction": 1
+      },
+      "reason_codes": [],
+      "review_activity": {
+        "value": 10,
+        "source": "synthetic_category_baseline"
+      },
+      "proposal": {
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -122.42,
+                37.775
+              ],
+              [
+                -122.4199,
+                37.775
+              ],
+              [
+                -122.4199,
+                37.7752
+              ],
+              [
+                -122.42,
+                37.7752
+              ],
+              [
+                -122.42,
+                37.775
+              ]
+            ]
+          ]
+        },
+        "height_m": 7,
+        "illustrative": true
+      }
+    },
+    {
+      "category_id": "school",
+      "total": 65.0,
+      "rank": 1,
+      "pareto": true,
+      "normalized": {
+        "need": 90,
+        "economic": null,
+        "sustainability": 40
+      },
+      "raw": {
+        "need": {
+          "deficit_before": 0.2222222222222222,
+          "deficit_after": 0,
+          "benefit": 0.2222222222222222,
+          "covered_population": 300
+        },
+        "economic": {
+          "retained_tax_usd_per_year": {
+            "p10": 0,
+            "p50": 0,
+            "p90": 0
+          },
+          "operating_fte": null
+        },
+        "sustainability": {
+          "before_m": 666.6666666666666,
+          "after_m": 400,
+          "saved_m": 266.6666666666667,
+          "baseline_coverage": 1
+        }
+      },
+      "coverage": {
+        "baseline_population_fraction": 1
+      },
+      "reason_codes": [
+        "missing_economic_input"
+      ],
+      "review_activity": {
+        "value": 10,
+        "source": "synthetic_category_baseline"
+      },
+      "proposal": {
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -122.42,
+                37.775
+              ],
+              [
+                -122.4199,
+                37.775
+              ],
+              [
+                -122.4199,
+                37.7752
+              ],
+              [
+                -122.42,
+                37.7752
+              ],
+              [
+                -122.42,
+                37.775
+              ]
+            ]
+          ]
+        },
+        "height_m": 7,
+        "illustrative": true
+      }
+    }
+  ]
+}

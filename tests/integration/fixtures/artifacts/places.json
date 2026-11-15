@@ -1,0 +1,246 @@
+[
+  {
+    "place_id": "clinic-a",
+    "longitude": -122.27,
+    "latitude": 37.8,
+    "city": "Oakland",
+    "primary_category": "clinic",
+    "service_tags": [
+      "clinic",
+      "hospital"
+    ],
+    "closure_status": "open",
+    "reviews_count": 10
+  },
+  {
+    "place_id": "pharmacy-a",
+    "longitude": -122.26899999999999,
+    "latitude": 37.8,
+    "city": "Oakland",
+    "primary_category": "pharmacy",
+    "service_tags": [
+      "pharmacy"
+    ],
+    "closure_status": "open",
+    "reviews_count": 15
+  },
+  {
+    "place_id": "grocery-a",
+    "longitude": -122.268,
+    "latitude": 37.8,
+    "city": "Oakland",
+    "primary_category": "grocery",
+    "service_tags": [
+      "grocery"
+    ],
+    "closure_status": "open",
+    "reviews_count": 20
+  },
+  {
+    "place_id": "bank_credit_union-a",
+    "longitude": -122.267,
+    "latitude": 37.8,
+    "city": "Oakland",
+    "primary_category": "bank_credit_union",
+    "service_tags": [
+      "bank_credit_union"
+    ],
+    "closure_status": "open",
+    "reviews_count": 25
+  },
+  {
+    "place_id": "school-a",
+    "longitude": -122.26599999999999,
+    "latitude": 37.8,
+    "city": "Oakland",
+    "primary_category": "school",
+    "service_tags": [
+      "school"
+    ],
+    "closure_status": "open",
+    "reviews_count": 30
+  },
+  {
+    "place_id": "clinic-b",
+    "longitude": -122.2701,
+    "latitude": 37.8001,
+    "city": "Oakland",
+    "primary_category": "clinic",
+    "service_tags": [
+      "clinic",
+      "hospital"
+    ],
+    "closure_status": "open",
+    "reviews_count": 20
+  },
+  {
+    "place_id": "pharmacy-b",
+    "longitude": -122.2691,
+    "latitude": 37.8001,
+    "city": "Oakland",
+    "primary_category": "pharmacy",
+    "service_tags": [
+      "pharmacy"
+    ],
+    "closure_status": "open",
+    "reviews_count": 25
+  },
+  {
+    "place_id": "grocery-b",
+    "longitude": -122.2681,
+    "latitude": 37.8001,
+    "city": "Oakland",
+    "primary_category": "grocery",
+    "service_tags": [
+      "grocery"
+    ],
+    "closure_status": "open",
+    "reviews_count": 30
+  },
+  {
+    "place_id": "bank_credit_union-b",
+    "longitude": -122.2671,
+    "latitude": 37.8001,
+    "city": "Oakland",
+    "primary_category": "bank_credit_union",
+    "service_tags": [
+      "bank_credit_union"
+    ],
+    "closure_status": "open",
+    "reviews_count": 35
+  },
+  {
+    "place_id": "school-b",
+    "longitude": -122.2661,
+    "latitude": 37.8001,
+    "city": "Oakland",
+    "primary_category": "school",
+    "service_tags": [
+      "school"
+    ],
+    "closure_status": "open",
+    "reviews_count": 40
+  },
+  {
+    "place_id": "clinic-v",
+    "longitude": -122.27,
+    "latitude": 37.87,
+    "city": "Berkeley",
+    "primary_category": "clinic",
+    "service_tags": [
+      "clinic",
+      "hospital"
+    ],
+    "closure_status": "open",
+    "reviews_count": 15
+  },
+  {
+    "place_id": "pharmacy-v",
+    "longitude": -122.26899999999999,
+    "latitude": 37.87,
+    "city": "Berkeley",
+    "primary_category": "pharmacy",
+    "service_tags": [
+      "pharmacy"
+    ],
+    "closure_status": "open",
+    "reviews_count": 20
+  },
+  {
+    "place_id": "grocery-v",
+    "longitude": -122.268,
+    "latitude": 37.87,
+    "city": "Berkeley",
+    "primary_category": "grocery",
+    "service_tags": [
+      "grocery"
+    ],
+    "closure_status": "open",
+    "reviews_count": 25
+  },
+  {
+    "place_id": "bank_credit_union-v",
+    "longitude": -122.267,
+    "latitude": 37.87,
+    "city": "Berkeley",
+    "primary_category": "bank_credit_union",
+    "service_tags": [
+      "bank_credit_union"
+    ],
+    "closure_status": "open",
+    "reviews_count": 30
+  },
+  {
+    "place_id": "school-v",
+    "longitude": -122.26599999999999,
+    "latitude": 37.87,
+    "city": "Berkeley",
+    "primary_category": "school",
+    "service_tags": [
+      "school"
+    ],
+    "closure_status": "open",
+    "reviews_count": 35
+  },
+  {
+    "place_id": "clinic-t",
+    "longitude": -122.419,
+    "latitude": 37.775,
+    "city": "San Francisco",
+    "primary_category": "clinic",
+    "service_tags": [
+      "clinic",
+      "hospital"
+    ],
+    "closure_status": "open",
+    "reviews_count": 30
+  },
+  {
+    "place_id": "pharmacy-t",
+    "longitude": -122.41799999999999,
+    "latitude": 37.775,
+    "city": "San Francisco",
+    "primary_category": "pharmacy",
+    "service_tags": [
+      "pharmacy"
+    ],
+    "closure_status": "open",
+    "reviews_count": 35
+  },
+  {
+    "place_id": "grocery-t",
+    "longitude": -122.417,
+    "latitude": 37.775,
+    "city": "San Francisco",
+    "primary_category": "grocery",
+    "service_tags": [
+      "grocery"
+    ],
+    "closure_status": "open",
+    "reviews_count": 40
+  },
+  {
+    "place_id": "bank_credit_union-t",
+    "longitude": -122.416,
+    "latitude": 37.775,
+    "city": "San Francisco",
+    "primary_category": "bank_credit_union",
+    "service_tags": [
+      "bank_credit_union"
+    ],
+    "closure_status": "open",
+    "reviews_count": 45
+  },
+  {
+    "place_id": "school-t",
+    "longitude": -122.41499999999999,
+    "latitude": 37.775,
+    "city": "San Francisco",
+    "primary_category": "school",
+    "service_tags": [
+      "school"
+    ],
+    "closure_status": "open",
+    "reviews_count": 50
+  }
+]

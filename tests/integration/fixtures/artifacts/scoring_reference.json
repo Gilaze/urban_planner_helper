@@ -1,0 +1,110 @@
+{
+  "method": "midpoint_ecdf",
+  "data_version": "checker-synthetic-v1",
+  "references": {
+    "need": [
+      0,
+      10,
+      20,
+      20,
+      30
+    ],
+    "retained_tax_usd_per_year": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "operating_fte": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "sustainability": [
+      0,
+      100,
+      200,
+      300,
+      400
+    ]
+  },
+  "rows": [
+    {
+      "parcel_id": "sf:checker-0001",
+      "category_id": "clinic",
+      "raw": {
+        "need": 0,
+        "retained_tax_usd_per_year": 0,
+        "operating_fte": 1,
+        "sustainability": 0
+      },
+      "normalized": {
+        "need": 10.0,
+        "sustainability": 10.0,
+        "economic": 31.25
+      }
+    },
+    {
+      "parcel_id": "sf:checker-0001",
+      "category_id": "pharmacy",
+      "raw": {
+        "need": 10,
+        "retained_tax_usd_per_year": 0,
+        "operating_fte": 2,
+        "sustainability": 100
+      },
+      "normalized": {
+        "need": 30.0,
+        "sustainability": 30.0,
+        "economic": 43.75
+      }
+    },
+    {
+      "parcel_id": "sf:checker-0001",
+      "category_id": "grocery",
+      "raw": {
+        "need": 20,
+        "retained_tax_usd_per_year": 0,
+        "operating_fte": 3,
+        "sustainability": 200
+      },
+      "normalized": {
+        "need": 60.0,
+        "sustainability": 50.0,
+        "economic": 56.25
+      }
+    },
+    {
+      "parcel_id": "sf:checker-0001",
+      "category_id": "bank_credit_union",
+      "raw": {
+        "need": 20,
+        "retained_tax_usd_per_year": 0,
+        "operating_fte": 4,
+        "sustainability": 300
+      },
+      "normalized": {
+        "need": 60.0,
+        "sustainability": 70.0,
+        "economic": 68.75
+      }
+    },
+    {
+      "parcel_id": "sf:checker-0001",
+      "category_id": "school",
+      "raw": {
+        "need": 30,
+        "retained_tax_usd_per_year": 0,
+        "operating_fte": null,
+        "sustainability": 400
+      },
+      "normalized": {
+        "need": 90.0,
+        "sustainability": 90.0,
+        "economic": null
+      }
+    }
+  ]
+}

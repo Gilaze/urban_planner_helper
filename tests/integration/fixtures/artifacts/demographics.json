@@ -1,0 +1,47 @@
+[
+  {
+    "geoid": "060750101001",
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -122.42,
+            37.775
+          ],
+          [
+            -122.4198,
+            37.775
+          ],
+          [
+            -122.4198,
+            37.7752
+          ],
+          [
+            -122.42,
+            37.7752
+          ],
+          [
+            -122.42,
+            37.775
+          ]
+        ]
+      ]
+    },
+    "representative_point": {
+      "type": "Point",
+      "coordinates": [
+        -122.4199,
+        37.7751
+      ]
+    },
+    "population": 300,
+    "land_area_m2": 10000,
+    "median_household_income_usd": null,
+    "median_gross_rent_usd": 2000,
+    "source_vintage": "synthetic-2026",
+    "population_moe": 10,
+    "income_moe": null,
+    "rent_moe": 50
+  }
+]

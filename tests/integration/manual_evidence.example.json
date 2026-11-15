@@ -1,0 +1,17 @@
+{
+  "machine": "",
+  "observed_at": "",
+  "reviewer": "",
+  "observations": {
+    "privacy": { "status": "NOT_RUN", "evidence": "" },
+    "attribution": { "status": "NOT_RUN", "evidence": "" },
+    "zoning_language": { "status": "NOT_RUN", "evidence": "" },
+    "vacancy_label": { "status": "NOT_RUN", "evidence": "" },
+    "economic_scenarios": { "status": "NOT_RUN", "evidence": "" },
+    "boundary_coverage": { "status": "NOT_RUN", "evidence": "" },
+    "category_audit": { "status": "NOT_RUN", "evidence": "" },
+    "sf_evaluation": { "status": "NOT_RUN", "evidence": "" },
+    "payload_agreement": { "status": "NOT_RUN", "evidence": "" },
+    "geometry_clipping": { "status": "NOT_RUN", "evidence": "" }
+  }
+}
