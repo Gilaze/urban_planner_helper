@@ -17,6 +17,7 @@ from backend.build_release import build_inputs
 from backend.datasf import PAGE_SIZE, PARCEL_URL, DataSF, DataSFParcels, ProviderUnavailable
 from backend.economics import load_assumptions, summarize_economics
 from backend.geometry import unproject
+from backend.permits import PermitRequest, permit_checklist
 from backend.ranking import percentile
 from backend.release import ROOT, ReleaseInputs, freeze
 from backend.schemas import Point, ServiceFeature, ServiceProperties
@@ -147,6 +148,30 @@ class ProviderTests(unittest.TestCase):
 
 
 class APITests(unittest.TestCase):
+    def test_fixture_permit_checklist_and_invalid_floor_area(self):
+        with TestClient(create_app(mode="fixture")) as client:
+            path = f"{BASE}/permits/check"
+            proposal = {"parcel_id": PARCEL_ID, "category_id": "grocery"}
+            response = client.post(path, json=proposal)
+            self.assertEqual(response.status_code, 200)
+            checklist = response.json()
+            self.assertEqual(checklist["zoning_districts"], [])
+            self.assertTrue(any(s["title"] == "Public Health plan review" for s in checklist["steps"]))
+            self.assertEqual(client.post(path, json=proposal | {"floor_area_sqft": 0}).status_code, 422)
+            self.assertEqual(client.post(path, json=proposal | {"parcel_id": "sf:missing"}).status_code, 404)
+
+    def test_nc2_grocery_flags_floor_area_above_threshold(self):
+        parcel = inputs_fixture().parcels[0]
+        geometry = shape(parcel.geometry.model_dump())
+        with patch("backend.permits.mapped_districts", side_effect=[{"NC-2": [geometry]}, {}] * 2):
+            for area, expected in [(4000, False), (4001, True)]:
+                proposal = PermitRequest(parcel_id=parcel.id, category_id="grocery", floor_area_sqft=area)
+                checklist = permit_checklist(parcel, proposal, fixture=False)
+                self.assertEqual(checklist.zoning_districts, ["NC-2"])
+                self.assertEqual(
+                    any(s.title == "Conditional Use Authorization application" for s in checklist.steps), expected
+                )
+
     def test_fixture_reweighting_and_errors(self):
         with TestClient(create_app(mode="fixture")) as client:
             def compare(**request_fields):
