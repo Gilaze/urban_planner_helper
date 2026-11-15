@@ -351,6 +351,7 @@ export function createUI(root) {
           setRange(choiceOf());
           range.value = h0;
           check();
+          actions.onDetails?.(sel.value, card);
           sel.addEventListener('change', () => {
             const c = choiceOf();
             touched = true;
@@ -359,6 +360,7 @@ export function createUI(root) {
             setRange(c);
             range.value = h;
             check();
+            actions.onDetails?.(sel.value, card);
           });
           range.addEventListener('input', () => { num.value = range.value; touched = true; check(); });
           num.addEventListener('input', () => { if (num.value !== '') range.value = num.value; touched = true; check(); });

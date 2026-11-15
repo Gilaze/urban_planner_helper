@@ -16,6 +16,7 @@ import { createEdits } from './edits.js';
 import { createPlanner } from './planner.js';
 import { createParcelScene } from './parcelScene.js';
 import { createVacantLotEditor } from './vacantLotEditor.js';
+import { mountLotEffects } from './lotEffects.js';
 import GeometryWorker from './geometryWorker.js?worker';
 
 const CHUNK = 1000;      // metres per mesh chunk (frustum-culling granularity)
@@ -416,6 +417,7 @@ async function boot() {
       validate: (id, h) => validateBuilding(ruleFor(id), h, ctx),
       range: (id) => heightRange(ruleFor(id), ctx),
       defaultHeight: (id) => defaultHeight(ruleFor(id), ctx),
+      onDetails: editable ? (id, card) => mountLotEffects(card, { point: lotPoint, category: id, tract }) : null,
       onClose: () => select(-1),
       onJumpToTract: tract ? () => {
         hud.openPlanner();

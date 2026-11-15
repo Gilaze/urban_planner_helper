@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { containsPoint } from './parcelGeometry.js';
 import { fitsLot, heightRange, ruleFor, validateBuilding } from './buildingRules.js';
+import { mountLotEffects } from './lotEffects.js';
 
 const API = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '');
 
@@ -59,6 +60,7 @@ export function createVacantLotEditor({ scene, projection, groundAt, parcels, hu
       range: id => heightRange(ruleFor(id), ctx),
       defaultHeight: id => plan.designs[id].height_m,
       validate: (id, height) => validateBuilding(ruleFor(id), height, ctx),
+      onDetails: (id, card) => mountLotEffects(card, { feature, point: location, category: id, tract, design: plan?.designs[id] }),
       onApply(id, height) {
         if (!available.some(choice => choice.id === id) || !validateBuilding(ruleFor(id), height, ctx).ok) return;
         const current = entries.get(feature.id) || { group: new THREE.Group() };

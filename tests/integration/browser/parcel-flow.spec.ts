@@ -282,6 +282,11 @@ test('empty vacant land supports building sketches and a tract shortcut with the
   const sketchCount = () => page.evaluate(() => (window as any).__sf.scene.getObjectByName('vacant-lot-sketches').children.length);
   await expect.poll(sketchCount).toBe(1);
   await expect(card).toContainText('Edited');
+  await card.getByTestId('lot-effects').locator('summary').click();
+  await expect(card.getByTestId('lot-effects')).toContainText('Operating jobs (FTE)', { timeout: 15000 });
+  await expect(card.getByTestId('lot-effects')).toContainText('Local sales tax / year');
+  await expect(card.getByTestId('lot-effects')).toContainText('Local access data');
+  await expect(page.locator('.drawer.right .drawer-tab')).toHaveAttribute('aria-expanded', 'false');
   await card.getByRole('button', { name: 'Close', exact: true }).click();
   await expect(card).toBeHidden();
   await page.mouse.click(viewport.width / 2, viewport.height / 2);

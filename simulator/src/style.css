@@ -138,7 +138,14 @@ html, body {
 .pill.occupied { background: #e3f2e6; color: #23683a; }
 .pill.unknown { background: rgba(31, 42, 55, 0.07); color: var(--ink-2); }
 .pill.edited { margin-left: 8px; font-size: 10px; padding: 1px 7px; background: #fff1c2; color: #8a5a00; }
-.bcard { width: 268px; }
+.bcard { width: 300px; max-height: calc(100dvh - 32px); overflow-y: auto; }
+.bcard [data-lot-effects] { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--panel-border); font-size: 12px; line-height: 1.45; }
+.bcard [data-lot-effects] summary { cursor: pointer; font-weight: 700; }
+.bcard [data-lot-effects] p { margin: 8px 0; }
+.bcard [data-lot-effects] dl { margin: 8px 0; }
+.bcard [data-lot-effects] dt { font-weight: 600; }
+.bcard [data-lot-effects] dd { margin: 0 0 7px; }
+.bcard [data-lot-effects] ol { padding-left: 18px; }
 .bcard-edit { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--panel-border); display: grid; gap: 7px; }
 .bcard-field { display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: 8px; font-size: 13px; }
 .bcard-field .k { font-size: 11px; color: var(--ink-2); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
