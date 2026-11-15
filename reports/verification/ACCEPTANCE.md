@@ -1,5 +1,7 @@
 # Person 4 acceptance report
 
+> Latest update: Person 2's new 0.1.1 Drive handoff passes the quick integrity check and is ready for functional testing. See [PERSON2_HANDOFF.md](PERSON2_HANDOFF.md). The full audit below predates main `4cebb7f`; its old artifact/category/browser statuses are a historical snapshot, not a verdict on the new handoff.
+
 Date: November 14, 2026 (America/Los_Angeles). Audited main: `35f3947`.
 Final scope: **Person 4 only, using committed repository inputs**. Delivery is a
 direct push to main without a PR. Changes are confined to `tests/integration/`
