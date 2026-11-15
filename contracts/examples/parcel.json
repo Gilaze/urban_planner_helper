@@ -1,0 +1,62 @@
+{
+  "geometry": {
+    "coordinates": [
+      [
+        [
+          -122.421,
+          37.7746
+        ],
+        [
+          -122.4202,
+          37.7746
+        ],
+        [
+          -122.4202,
+          37.7752
+        ],
+        [
+          -122.421,
+          37.7752
+        ],
+        [
+          -122.421,
+          37.7746
+        ]
+      ]
+    ],
+    "type": "Polygon"
+  },
+  "id": "sf:fixture-001",
+  "properties": {
+    "area_m2": 4692.0,
+    "assessed_improvement_usd": null,
+    "assessed_land_usd": null,
+    "assessment_year": null,
+    "existing_use": null,
+    "hypothetical": true,
+    "parcel_id": "sf:fixture-001",
+    "quality_flags": [
+      "synthetic",
+      "hypothetical_site"
+    ],
+    "representative_point": {
+      "coordinates": [
+        -122.4206,
+        37.7749
+      ],
+      "type": "Point"
+    },
+    "source_apns": [],
+    "source_vintage": "synthetic-sf-1",
+    "vacancy_status": "unknown",
+    "zoning": null
+  },
+  "scoring_available": true,
+  "scoring_reason": null,
+  "source": {
+    "freshness": "fixture",
+    "retrieved_at": null,
+    "version": "synthetic-parcel-1"
+  },
+  "type": "Feature"
+}

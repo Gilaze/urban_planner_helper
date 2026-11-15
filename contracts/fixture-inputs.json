@@ -1,0 +1,262 @@
+{
+  "data_version": "synthetic-sf-1",
+  "model_version": "synthetic-review-1",
+  "parcel_source_version": "synthetic-parcel-1",
+  "sources": {
+    "parcels": "Synthetic hypothetical parcel",
+    "services": "Synthetic locations",
+    "population": "Synthetic populations",
+    "reviews": "Synthetic review activity",
+    "economics": "config/economics.fixture.json"
+  },
+  "coverage": {
+    "description": "Synthetic population and service catchments within illustrative San Francisco bounds."
+  },
+  "spatial_coverage": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [
+          -122.49,
+          37.72
+        ],
+        [
+          -122.36,
+          37.72
+        ],
+        [
+          -122.36,
+          37.82
+        ],
+        [
+          -122.49,
+          37.82
+        ],
+        [
+          -122.49,
+          37.72
+        ]
+      ]
+    ]
+  },
+  "parcels": [
+    {
+      "id": "sf:fixture-001",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -122.421,
+              37.7746
+            ],
+            [
+              -122.4202,
+              37.7746
+            ],
+            [
+              -122.4202,
+              37.7752
+            ],
+            [
+              -122.421,
+              37.7752
+            ],
+            [
+              -122.421,
+              37.7746
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "parcel_id": "sf:fixture-001",
+        "representative_point": {
+          "type": "Point",
+          "coordinates": [
+            -122.4206,
+            37.7749
+          ]
+        },
+        "area_m2": 4692,
+        "source_vintage": "synthetic-sf-1",
+        "quality_flags": [
+          "synthetic",
+          "hypothetical_site"
+        ]
+      }
+    }
+  ],
+  "services": [
+    {
+      "id": "fixture-service-1",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.415,
+          37.772
+        ]
+      },
+      "properties": {
+        "place_id": "fixture-service-1",
+        "categories": [
+          "bank_credit_union"
+        ],
+        "status": "active"
+      }
+    },
+    {
+      "id": "fixture-service-2",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.414,
+          37.778
+        ]
+      },
+      "properties": {
+        "place_id": "fixture-service-2",
+        "categories": [
+          "clinic"
+        ],
+        "status": "active"
+      }
+    },
+    {
+      "id": "fixture-service-3",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.417,
+          37.774
+        ]
+      },
+      "properties": {
+        "place_id": "fixture-service-3",
+        "categories": [
+          "grocery"
+        ],
+        "status": "active"
+      }
+    },
+    {
+      "id": "fixture-service-4",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.428,
+          37.776
+        ]
+      },
+      "properties": {
+        "place_id": "fixture-service-4",
+        "categories": [
+          "pharmacy"
+        ],
+        "status": "active"
+      }
+    },
+    {
+      "id": "fixture-service-5",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.425,
+          37.77
+        ]
+      },
+      "properties": {
+        "place_id": "fixture-service-5",
+        "categories": [
+          "school"
+        ],
+        "status": "active"
+      }
+    }
+  ],
+  "populations": [
+    {
+      "geoid": "fixture-pop-1",
+      "coordinates": [
+        -122.4195,
+        37.7755
+      ],
+      "population": 180
+    },
+    {
+      "geoid": "fixture-pop-2",
+      "coordinates": [
+        -122.413,
+        37.776
+      ],
+      "population": 100
+    },
+    {
+      "geoid": "fixture-pop-3",
+      "coordinates": [
+        -122.4265,
+        37.7746
+      ],
+      "population": 95
+    },
+    {
+      "geoid": "fixture-pop-4",
+      "coordinates": [
+        -122.421,
+        37.7795
+      ],
+      "population": 155
+    },
+    {
+      "geoid": "fixture-pop-5",
+      "coordinates": [
+        -122.424,
+        37.77
+      ],
+      "population": 215
+    },
+    {
+      "geoid": "fixture-pop-6",
+      "coordinates": [
+        -122.414,
+        37.7715
+      ],
+      "population": 120
+    },
+    {
+      "geoid": "fixture-pop-7",
+      "coordinates": [
+        -122.412,
+        37.78
+      ],
+      "population": 95
+    },
+    {
+      "geoid": "fixture-pop-8",
+      "coordinates": [
+        -122.427,
+        37.778
+      ],
+      "population": 80
+    }
+  ],
+  "predictions": {
+    "sf:fixture-001": {
+      "clinic": {
+        "predicted_log1p_reviews_count": 3.2,
+        "source": "fixture",
+        "reason": null
+      },
+      "grocery": {
+        "predicted_log1p_reviews_count": 4.5,
+        "source": "fixture",
+        "reason": null
+      },
+      "pharmacy": {
+        "predicted_log1p_reviews_count": 2.9,
+        "source": "fixture",
+        "reason": null
+      }
+    }
+  }
+}

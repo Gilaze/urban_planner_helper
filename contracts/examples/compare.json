@@ -1,0 +1,351 @@
+{
+  "active_dimensions": [
+    "need",
+    "sustainability"
+  ],
+  "alternatives": [
+    {
+      "category_id": "clinic",
+      "category_priority": 1.0,
+      "economic": {
+        "geography": "Illustrative San Francisco parcel",
+        "operating_fte": {
+          "p10": 13.622119586092582,
+          "p50": 19.48102937313137,
+          "p90": 26.3398089204079
+        },
+        "reason": null,
+        "retained_sales_tax_usd_per_year": {
+          "p10": 472.79240211093594,
+          "p50": 821.5002672608853,
+          "p90": 1255.3883915605031
+        },
+        "source": "Synthetic demonstration assumptions",
+        "year": null
+      },
+      "need": {
+        "covered_population": 945.0,
+        "deficit_after": 0.10271604938271602,
+        "deficit_before": 0.4126984126984127,
+        "deficit_reduction": 0.3099823633156967,
+        "reason": null,
+        "target_accessibility": 0.001183431952662722,
+        "zero_population_facilities": 0
+      },
+      "normalized": {
+        "economic": 56.25,
+        "need": 90.0,
+        "operating_fte": 62.5,
+        "retained_sales_tax": 50.0,
+        "sustainability": 90.0
+      },
+      "pareto": true,
+      "rank": 1,
+      "review_activity": {
+        "predicted_log1p_reviews_count": 3.2,
+        "reason": null,
+        "source": "fixture"
+      },
+      "sustainability": {
+        "avoided_vehicle_miles_per_day": {
+          "base": 20.978233984795338,
+          "high": 62.934701954386014,
+          "low": 5.2445584961988345
+        },
+        "baseline_coverage_pct": 100.0,
+        "censored_baseline_population": 0.0,
+        "distance_after_m": 469.0068048323657,
+        "distance_before_m": 826.2681275204764,
+        "local_population": 945.0,
+        "missing_baseline_population": 0.0,
+        "reason": null,
+        "usable_baseline_population": 945.0
+      },
+      "total": 90.0
+    },
+    {
+      "category_id": "school",
+      "category_priority": 1.0,
+      "economic": {
+        "geography": "Illustrative San Francisco parcel",
+        "operating_fte": null,
+        "reason": "economic_inputs_missing",
+        "retained_sales_tax_usd_per_year": {
+          "p10": 0.0,
+          "p50": 0.0,
+          "p90": 0.0
+        },
+        "source": "Synthetic demonstration assumptions",
+        "year": null
+      },
+      "need": {
+        "covered_population": 945.0,
+        "deficit_after": 0.1797530864197531,
+        "deficit_before": 0.48148148148148145,
+        "deficit_reduction": 0.3017283950617283,
+        "reason": null,
+        "target_accessibility": 0.0014184397163120568,
+        "zero_population_facilities": 0
+      },
+      "normalized": {
+        "economic": null,
+        "need": 70.0,
+        "operating_fte": null,
+        "retained_sales_tax": 20.0,
+        "sustainability": 70.0
+      },
+      "pareto": false,
+      "rank": 2,
+      "review_activity": {
+        "predicted_log1p_reviews_count": null,
+        "reason": "review_prediction_unavailable",
+        "source": "unavailable"
+      },
+      "sustainability": {
+        "avoided_vehicle_miles_per_day": {
+          "base": 20.126834819375055,
+          "high": 60.380504458125166,
+          "low": 5.031708704843764
+        },
+        "baseline_coverage_pct": 100.0,
+        "censored_baseline_population": 0.0,
+        "distance_after_m": 394.5648785143484,
+        "distance_before_m": 737.3267923297169,
+        "local_population": 945.0,
+        "missing_baseline_population": 0.0,
+        "reason": null,
+        "usable_baseline_population": 945.0
+      },
+      "total": 70.0
+    },
+    {
+      "category_id": "bank_credit_union",
+      "category_priority": 1.0,
+      "economic": {
+        "geography": "Illustrative San Francisco parcel",
+        "operating_fte": {
+          "p10": 5.839750225685872,
+          "p50": 8.229270866800984,
+          "p90": 11.006677720774396
+        },
+        "reason": null,
+        "retained_sales_tax_usd_per_year": {
+          "p10": 0.0,
+          "p50": 0.0,
+          "p90": 0.0
+        },
+        "source": "Synthetic demonstration assumptions",
+        "year": null
+      },
+      "need": {
+        "covered_population": 945.0,
+        "deficit_after": 0.3101469723691946,
+        "deficit_before": 0.5767195767195767,
+        "deficit_reduction": 0.26657260435038216,
+        "reason": null,
+        "target_accessibility": 0.0019230769230769232,
+        "zero_population_facilities": 0
+      },
+      "normalized": {
+        "economic": 16.25,
+        "need": 50.0,
+        "operating_fte": 12.5,
+        "retained_sales_tax": 20.0,
+        "sustainability": 30.0
+      },
+      "pareto": false,
+      "rank": 3,
+      "review_activity": {
+        "predicted_log1p_reviews_count": null,
+        "reason": "review_prediction_unavailable",
+        "source": "unavailable"
+      },
+      "sustainability": {
+        "avoided_vehicle_miles_per_day": {
+          "base": 18.231840716538578,
+          "high": 54.695522149615734,
+          "low": 4.5579601791346445
+        },
+        "baseline_coverage_pct": 100.0,
+        "censored_baseline_population": 0.0,
+        "distance_after_m": 419.4950877461044,
+        "distance_before_m": 729.985071514539,
+        "local_population": 945.0,
+        "missing_baseline_population": 0.0,
+        "reason": null,
+        "usable_baseline_population": 945.0
+      },
+      "total": 40.0
+    },
+    {
+      "category_id": "pharmacy",
+      "category_priority": 1.0,
+      "economic": {
+        "geography": "Illustrative San Francisco parcel",
+        "operating_fte": {
+          "p10": 10.388565611987488,
+          "p50": 14.520887816527,
+          "p90": 19.596704718281437
+        },
+        "reason": null,
+        "retained_sales_tax_usd_per_year": {
+          "p10": 4332.141068865067,
+          "p50": 6649.63800510166,
+          "p90": 9750.050587256603
+        },
+        "source": "Synthetic demonstration assumptions",
+        "year": null
+      },
+      "need": {
+        "covered_population": 945.0,
+        "deficit_after": 0.046560846560846546,
+        "deficit_before": 0.2328042328042328,
+        "deficit_reduction": 0.18624338624338624,
+        "reason": null,
+        "target_accessibility": 0.0011111111111111111,
+        "zero_population_facilities": 0
+      },
+      "normalized": {
+        "economic": 53.75,
+        "need": 30.0,
+        "operating_fte": 37.5,
+        "retained_sales_tax": 70.0,
+        "sustainability": 50.0
+      },
+      "pareto": false,
+      "rank": 4,
+      "review_activity": {
+        "predicted_log1p_reviews_count": 2.9,
+        "reason": null,
+        "source": "fixture"
+      },
+      "sustainability": {
+        "avoided_vehicle_miles_per_day": {
+          "base": 19.673352330915225,
+          "high": 59.02005699274568,
+          "low": 4.918338082728806
+        },
+        "baseline_coverage_pct": 100.0,
+        "censored_baseline_population": 0.0,
+        "distance_after_m": 448.20833103885553,
+        "distance_before_m": 783.2473948869448,
+        "local_population": 945.0,
+        "missing_baseline_population": 0.0,
+        "reason": null,
+        "usable_baseline_population": 945.0
+      },
+      "total": 40.0
+    },
+    {
+      "category_id": "grocery",
+      "category_priority": 1.0,
+      "economic": {
+        "geography": "Illustrative San Francisco parcel",
+        "operating_fte": {
+          "p10": 24.298632961609727,
+          "p50": 34.81664069879344,
+          "p90": 46.73333519260161
+        },
+        "reason": null,
+        "retained_sales_tax_usd_per_year": {
+          "p10": 11429.323138122458,
+          "p50": 18753.665663479806,
+          "p90": 28837.387806850464
+        },
+        "source": "Synthetic demonstration assumptions",
+        "year": null
+      },
+      "need": {
+        "covered_population": 945.0,
+        "deficit_after": 0.0,
+        "deficit_before": 0.18518518518518517,
+        "deficit_reduction": 0.18518518518518517,
+        "reason": null,
+        "target_accessibility": 0.0008583690987124463,
+        "zero_population_facilities": 0
+      },
+      "normalized": {
+        "economic": 88.75,
+        "need": 10.0,
+        "operating_fte": 87.5,
+        "retained_sales_tax": 90.0,
+        "sustainability": 10.0
+      },
+      "pareto": false,
+      "rank": 5,
+      "review_activity": {
+        "predicted_log1p_reviews_count": 4.5,
+        "reason": null,
+        "source": "fixture"
+      },
+      "sustainability": {
+        "avoided_vehicle_miles_per_day": {
+          "base": 8.988492331624576,
+          "high": 26.965476994873725,
+          "low": 2.247123082906144
+        },
+        "baseline_coverage_pct": 100.0,
+        "censored_baseline_population": 0.0,
+        "distance_after_m": 448.4517435433924,
+        "distance_before_m": 601.5266239978477,
+        "local_population": 945.0,
+        "missing_baseline_population": 0.0,
+        "reason": null,
+        "usable_baseline_population": 945.0
+      },
+      "total": 10.0
+    }
+  ],
+  "assumption_version": "synthetic-economics-1",
+  "data_version": "synthetic-sf-1",
+  "effective_weights": {
+    "economic": 0.0,
+    "need": 0.5,
+    "sustainability": 0.5
+  },
+  "massing": {
+    "geometry": {
+      "coordinates": [
+        [
+          [
+            -122.42031715761873,
+            37.775112132378794
+          ],
+          [
+            -122.42031715694918,
+            37.7746878683046
+          ],
+          [
+            -122.42088284304367,
+            37.77468786831009
+          ],
+          [
+            -122.42088284237413,
+            37.77511213237329
+          ],
+          [
+            -122.42031715761873,
+            37.775112132378794
+          ]
+        ]
+      ],
+      "type": "Polygon"
+    },
+    "height_m": 7,
+    "illustrative": true,
+    "reason": null
+  },
+  "mode": "fixture",
+  "model_version": "synthetic-review-1",
+  "parcel_id": "sf:fixture-001",
+  "parcel_source": {
+    "freshness": "fixture",
+    "retrieved_at": null,
+    "version": "synthetic-parcel-1"
+  },
+  "reason": null,
+  "schema_version": "1.0",
+  "unavailable_dimensions": [
+    "economic"
+  ]
+}

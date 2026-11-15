@@ -1,0 +1,1917 @@
+{
+  "components": {
+    "schemas": {
+      "Alternative-Input": {
+        "additionalProperties": false,
+        "properties": {
+          "category_id": {
+            "enum": [
+              "bank_credit_union",
+              "clinic",
+              "grocery",
+              "pharmacy",
+              "school"
+            ],
+            "title": "Category Id",
+            "type": "string"
+          },
+          "category_priority": {
+            "maximum": 2.0,
+            "minimum": 0.0,
+            "title": "Category Priority",
+            "type": "number"
+          },
+          "economic": {
+            "$ref": "#/components/schemas/Economics"
+          },
+          "need": {
+            "$ref": "#/components/schemas/Need"
+          },
+          "normalized": {
+            "$ref": "#/components/schemas/NormalizedScores"
+          },
+          "pareto": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pareto"
+          },
+          "rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank"
+          },
+          "review_activity": {
+            "$ref": "#/components/schemas/ReviewActivity"
+          },
+          "sustainability": {
+            "$ref": "#/components/schemas/Sustainability"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          }
+        },
+        "required": [
+          "need",
+          "economic",
+          "sustainability",
+          "normalized",
+          "review_activity",
+          "category_id",
+          "category_priority"
+        ],
+        "title": "Alternative",
+        "type": "object"
+      },
+      "Alternative-Output": {
+        "additionalProperties": false,
+        "properties": {
+          "category_id": {
+            "enum": [
+              "bank_credit_union",
+              "clinic",
+              "grocery",
+              "pharmacy",
+              "school"
+            ],
+            "title": "Category Id",
+            "type": "string"
+          },
+          "category_priority": {
+            "maximum": 2.0,
+            "minimum": 0.0,
+            "title": "Category Priority",
+            "type": "number"
+          },
+          "economic": {
+            "$ref": "#/components/schemas/Economics"
+          },
+          "need": {
+            "$ref": "#/components/schemas/Need"
+          },
+          "normalized": {
+            "$ref": "#/components/schemas/NormalizedScores"
+          },
+          "pareto": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pareto"
+          },
+          "rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank"
+          },
+          "review_activity": {
+            "$ref": "#/components/schemas/ReviewActivity"
+          },
+          "sustainability": {
+            "$ref": "#/components/schemas/Sustainability"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          }
+        },
+        "required": [
+          "need",
+          "economic",
+          "sustainability",
+          "normalized",
+          "review_activity",
+          "category_id",
+          "category_priority"
+        ],
+        "title": "Alternative",
+        "type": "object"
+      },
+      "CategoryInfo": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "enum": [
+              "bank_credit_union",
+              "clinic",
+              "grocery",
+              "pharmacy",
+              "school"
+            ],
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label"
+        ],
+        "title": "CategoryInfo",
+        "type": "object"
+      },
+      "CompareRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "category_priorities": {
+            "additionalProperties": {
+              "maximum": 2.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            "propertyNames": {
+              "enum": [
+                "bank_credit_union",
+                "clinic",
+                "grocery",
+                "pharmacy",
+                "school"
+              ]
+            },
+            "title": "Category Priorities",
+            "type": "object"
+          },
+          "objective_weights": {
+            "$ref": "#/components/schemas/ObjectiveWeights"
+          },
+          "parcel_id": {
+            "pattern": "^sf:[A-Za-z0-9_-]{1,64}$",
+            "title": "Parcel Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "parcel_id"
+        ],
+        "title": "CompareRequest",
+        "type": "object"
+      },
+      "Comparison": {
+        "additionalProperties": false,
+        "properties": {
+          "active_dimensions": {
+            "items": {
+              "enum": [
+                "need",
+                "economic",
+                "sustainability"
+              ],
+              "type": "string"
+            },
+            "title": "Active Dimensions",
+            "type": "array"
+          },
+          "alternatives": {
+            "items": {
+              "$ref": "#/components/schemas/Alternative-Output"
+            },
+            "title": "Alternatives",
+            "type": "array"
+          },
+          "assumption_version": {
+            "title": "Assumption Version",
+            "type": "string"
+          },
+          "data_version": {
+            "title": "Data Version",
+            "type": "string"
+          },
+          "effective_weights": {
+            "$ref": "#/components/schemas/ObjectiveWeights"
+          },
+          "massing": {
+            "$ref": "#/components/schemas/Massing"
+          },
+          "mode": {
+            "enum": [
+              "fixture",
+              "live"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Version"
+          },
+          "parcel_id": {
+            "pattern": "^sf:[A-Za-z0-9_-]{1,64}$",
+            "title": "Parcel Id",
+            "type": "string"
+          },
+          "parcel_source": {
+            "$ref": "#/components/schemas/ParcelSource"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "schema_version": {
+            "const": "1.0",
+            "default": "1.0",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "unavailable_dimensions": {
+            "items": {
+              "enum": [
+                "need",
+                "economic",
+                "sustainability"
+              ],
+              "type": "string"
+            },
+            "title": "Unavailable Dimensions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "data_version",
+          "assumption_version",
+          "mode",
+          "parcel_id",
+          "parcel_source",
+          "effective_weights",
+          "active_dimensions",
+          "unavailable_dimensions",
+          "alternatives",
+          "massing"
+        ],
+        "title": "Comparison",
+        "type": "object"
+      },
+      "Economics": {
+        "additionalProperties": false,
+        "properties": {
+          "geography": {
+            "title": "Geography",
+            "type": "string"
+          },
+          "operating_fte": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Percentiles"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "retained_sales_tax_usd_per_year": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Percentiles"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        "required": [
+          "source",
+          "geography",
+          "year"
+        ],
+        "title": "Economics",
+        "type": "object"
+      },
+      "ErrorDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "issues": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issues"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorDetail",
+        "type": "object"
+      },
+      "ErrorResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorDetail"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "title": "ErrorResponse",
+        "type": "object"
+      },
+      "Health": {
+        "additionalProperties": false,
+        "properties": {
+          "mode": {
+            "enum": [
+              "fixture",
+              "live"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "ready": {
+            "title": "Ready",
+            "type": "boolean"
+          },
+          "versions": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Versions"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "ready",
+          "mode",
+          "versions"
+        ],
+        "title": "Health",
+        "type": "object"
+      },
+      "Massing": {
+        "additionalProperties": false,
+        "properties": {
+          "geometry": {
+            "anyOf": [
+              {
+                "discriminator": {
+                  "mapping": {
+                    "MultiPolygon": "#/components/schemas/MultiPolygon",
+                    "Polygon": "#/components/schemas/Polygon"
+                  },
+                  "propertyName": "type"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Polygon"
+                  },
+                  {
+                    "$ref": "#/components/schemas/MultiPolygon"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geometry"
+          },
+          "height_m": {
+            "const": 7,
+            "default": 7,
+            "title": "Height M",
+            "type": "integer"
+          },
+          "illustrative": {
+            "const": true,
+            "default": true,
+            "title": "Illustrative",
+            "type": "boolean"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "required": [
+          "geometry"
+        ],
+        "title": "Massing",
+        "type": "object"
+      },
+      "Metadata": {
+        "additionalProperties": false,
+        "properties": {
+          "assumption_version": {
+            "title": "Assumption Version",
+            "type": "string"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryInfo"
+            },
+            "title": "Categories",
+            "type": "array"
+          },
+          "category_priorities": {
+            "additionalProperties": {
+              "maximum": 2.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            "propertyNames": {
+              "enum": [
+                "bank_credit_union",
+                "clinic",
+                "grocery",
+                "pharmacy",
+                "school"
+              ]
+            },
+            "title": "Category Priorities",
+            "type": "object"
+          },
+          "coverage": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Coverage",
+            "type": "object"
+          },
+          "data_version": {
+            "title": "Data Version",
+            "type": "string"
+          },
+          "mode": {
+            "enum": [
+              "fixture",
+              "live"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Version"
+          },
+          "objective_weights": {
+            "$ref": "#/components/schemas/ObjectiveWeights"
+          },
+          "schema_version": {
+            "const": "1.0",
+            "default": "1.0",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "sources": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Sources",
+            "type": "object"
+          },
+          "sustainability_car_share": {
+            "$ref": "#/components/schemas/Sensitivity"
+          },
+          "sustainability_trips_per_person_per_day": {
+            "$ref": "#/components/schemas/Sensitivity"
+          },
+          "units": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Units",
+            "type": "object"
+          }
+        },
+        "required": [
+          "data_version",
+          "assumption_version",
+          "mode",
+          "categories",
+          "objective_weights",
+          "category_priorities",
+          "units",
+          "sources",
+          "coverage",
+          "sustainability_trips_per_person_per_day",
+          "sustainability_car_share"
+        ],
+        "title": "Metadata",
+        "type": "object"
+      },
+      "MultiPolygon": {
+        "additionalProperties": false,
+        "properties": {
+          "coordinates": {
+            "items": {
+              "items": {
+                "items": {
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "prefixItems": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ],
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            "title": "Coordinates",
+            "type": "array"
+          },
+          "type": {
+            "const": "MultiPolygon",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "coordinates"
+        ],
+        "title": "MultiPolygon",
+        "type": "object"
+      },
+      "Need": {
+        "additionalProperties": false,
+        "properties": {
+          "covered_population": {
+            "minimum": 0.0,
+            "title": "Covered Population",
+            "type": "number"
+          },
+          "deficit_after": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deficit After"
+          },
+          "deficit_before": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deficit Before"
+          },
+          "deficit_reduction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deficit Reduction"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "target_accessibility": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Accessibility"
+          },
+          "zero_population_facilities": {
+            "default": 0,
+            "title": "Zero Population Facilities",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "covered_population"
+        ],
+        "title": "Need",
+        "type": "object"
+      },
+      "NormalizedScores": {
+        "additionalProperties": false,
+        "properties": {
+          "economic": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Economic"
+          },
+          "need": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Need"
+          },
+          "operating_fte": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operating Fte"
+          },
+          "retained_sales_tax": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retained Sales Tax"
+          },
+          "sustainability": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sustainability"
+          }
+        },
+        "title": "NormalizedScores",
+        "type": "object"
+      },
+      "ObjectiveWeights": {
+        "additionalProperties": false,
+        "properties": {
+          "economic": {
+            "default": 1,
+            "minimum": 0.0,
+            "title": "Economic",
+            "type": "number"
+          },
+          "need": {
+            "default": 1,
+            "minimum": 0.0,
+            "title": "Need",
+            "type": "number"
+          },
+          "sustainability": {
+            "default": 1,
+            "minimum": 0.0,
+            "title": "Sustainability",
+            "type": "number"
+          }
+        },
+        "title": "ObjectiveWeights",
+        "type": "object"
+      },
+      "ParcelCollection": {
+        "additionalProperties": false,
+        "properties": {
+          "features": {
+            "items": {
+              "$ref": "#/components/schemas/ParcelFeature-Output"
+            },
+            "title": "Features",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "source": {
+            "$ref": "#/components/schemas/ParcelSource"
+          },
+          "truncated": {
+            "title": "Truncated",
+            "type": "boolean"
+          },
+          "type": {
+            "const": "FeatureCollection",
+            "default": "FeatureCollection",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "features",
+          "source",
+          "limit",
+          "truncated"
+        ],
+        "title": "ParcelCollection",
+        "type": "object"
+      },
+      "ParcelDetails": {
+        "additionalProperties": false,
+        "properties": {
+          "geometry": {
+            "discriminator": {
+              "mapping": {
+                "MultiPolygon": "#/components/schemas/MultiPolygon",
+                "Polygon": "#/components/schemas/Polygon"
+              },
+              "propertyName": "type"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Polygon"
+              },
+              {
+                "$ref": "#/components/schemas/MultiPolygon"
+              }
+            ],
+            "title": "Geometry"
+          },
+          "id": {
+            "pattern": "^sf:[A-Za-z0-9_-]{1,64}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "properties": {
+            "$ref": "#/components/schemas/ParcelProperties"
+          },
+          "scoring_available": {
+            "title": "Scoring Available",
+            "type": "boolean"
+          },
+          "scoring_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scoring Reason"
+          },
+          "source": {
+            "$ref": "#/components/schemas/ParcelSource"
+          },
+          "type": {
+            "const": "Feature",
+            "default": "Feature",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "geometry",
+          "properties",
+          "source",
+          "scoring_available"
+        ],
+        "title": "ParcelDetails",
+        "type": "object"
+      },
+      "ParcelFeature-Input": {
+        "additionalProperties": false,
+        "properties": {
+          "geometry": {
+            "discriminator": {
+              "mapping": {
+                "MultiPolygon": "#/components/schemas/MultiPolygon",
+                "Polygon": "#/components/schemas/Polygon"
+              },
+              "propertyName": "type"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Polygon"
+              },
+              {
+                "$ref": "#/components/schemas/MultiPolygon"
+              }
+            ],
+            "title": "Geometry"
+          },
+          "id": {
+            "pattern": "^sf:[A-Za-z0-9_-]{1,64}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "properties": {
+            "$ref": "#/components/schemas/ParcelProperties"
+          },
+          "type": {
+            "const": "Feature",
+            "default": "Feature",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "geometry",
+          "properties"
+        ],
+        "title": "ParcelFeature",
+        "type": "object"
+      },
+      "ParcelFeature-Output": {
+        "additionalProperties": false,
+        "properties": {
+          "geometry": {
+            "discriminator": {
+              "mapping": {
+                "MultiPolygon": "#/components/schemas/MultiPolygon",
+                "Polygon": "#/components/schemas/Polygon"
+              },
+              "propertyName": "type"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Polygon"
+              },
+              {
+                "$ref": "#/components/schemas/MultiPolygon"
+              }
+            ],
+            "title": "Geometry"
+          },
+          "id": {
+            "pattern": "^sf:[A-Za-z0-9_-]{1,64}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "properties": {
+            "$ref": "#/components/schemas/ParcelProperties"
+          },
+          "type": {
+            "const": "Feature",
+            "default": "Feature",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "geometry",
+          "properties"
+        ],
+        "title": "ParcelFeature",
+        "type": "object"
+      },
+      "ParcelProperties": {
+        "additionalProperties": false,
+        "properties": {
+          "area_m2": {
+            "minimum": 0.0,
+            "title": "Area M2",
+            "type": "number"
+          },
+          "assessed_improvement_usd": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assessed Improvement Usd"
+          },
+          "assessed_land_usd": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assessed Land Usd"
+          },
+          "assessment_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assessment Year"
+          },
+          "existing_use": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Existing Use"
+          },
+          "hypothetical": {
+            "default": true,
+            "title": "Hypothetical",
+            "type": "boolean"
+          },
+          "parcel_id": {
+            "pattern": "^sf:[A-Za-z0-9_-]{1,64}$",
+            "title": "Parcel Id",
+            "type": "string"
+          },
+          "quality_flags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Quality Flags",
+            "type": "array"
+          },
+          "representative_point": {
+            "$ref": "#/components/schemas/Point"
+          },
+          "source_apns": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Source Apns",
+            "type": "array"
+          },
+          "source_vintage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Vintage"
+          },
+          "vacancy_status": {
+            "default": "unknown",
+            "enum": [
+              "source_indicated_vacant",
+              "unknown",
+              "not_vacant"
+            ],
+            "title": "Vacancy Status",
+            "type": "string"
+          },
+          "zoning": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Zoning"
+          }
+        },
+        "required": [
+          "parcel_id",
+          "representative_point",
+          "area_m2"
+        ],
+        "title": "ParcelProperties",
+        "type": "object"
+      },
+      "ParcelSource": {
+        "additionalProperties": false,
+        "properties": {
+          "freshness": {
+            "enum": [
+              "fixture",
+              "live",
+              "cached",
+              "stale"
+            ],
+            "title": "Freshness",
+            "type": "string"
+          },
+          "retrieved_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retrieved At"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "freshness"
+        ],
+        "title": "ParcelSource",
+        "type": "object"
+      },
+      "Percentiles": {
+        "additionalProperties": false,
+        "properties": {
+          "p10": {
+            "minimum": 0.0,
+            "title": "P10",
+            "type": "number"
+          },
+          "p50": {
+            "minimum": 0.0,
+            "title": "P50",
+            "type": "number"
+          },
+          "p90": {
+            "minimum": 0.0,
+            "title": "P90",
+            "type": "number"
+          }
+        },
+        "required": [
+          "p10",
+          "p50",
+          "p90"
+        ],
+        "title": "Percentiles",
+        "type": "object"
+      },
+      "Point": {
+        "additionalProperties": false,
+        "properties": {
+          "coordinates": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Coordinates",
+            "type": "array"
+          },
+          "type": {
+            "const": "Point",
+            "default": "Point",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "coordinates"
+        ],
+        "title": "Point",
+        "type": "object"
+      },
+      "Polygon": {
+        "additionalProperties": false,
+        "properties": {
+          "coordinates": {
+            "items": {
+              "items": {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              "type": "array"
+            },
+            "title": "Coordinates",
+            "type": "array"
+          },
+          "type": {
+            "const": "Polygon",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "coordinates"
+        ],
+        "title": "Polygon",
+        "type": "object"
+      },
+      "ReviewActivity": {
+        "additionalProperties": false,
+        "properties": {
+          "predicted_log1p_reviews_count": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predicted Log1P Reviews Count"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": "review_prediction_unavailable",
+            "title": "Reason"
+          },
+          "source": {
+            "default": "unavailable",
+            "enum": [
+              "model",
+              "category_baseline",
+              "fixture",
+              "unavailable"
+            ],
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "title": "ReviewActivity",
+        "type": "object"
+      },
+      "Sensitivity": {
+        "additionalProperties": false,
+        "properties": {
+          "base": {
+            "minimum": 0.0,
+            "title": "Base",
+            "type": "number"
+          },
+          "high": {
+            "minimum": 0.0,
+            "title": "High",
+            "type": "number"
+          },
+          "low": {
+            "minimum": 0.0,
+            "title": "Low",
+            "type": "number"
+          }
+        },
+        "required": [
+          "low",
+          "base",
+          "high"
+        ],
+        "title": "Sensitivity",
+        "type": "object"
+      },
+      "ServiceCollection": {
+        "additionalProperties": false,
+        "properties": {
+          "data_version": {
+            "title": "Data Version",
+            "type": "string"
+          },
+          "features": {
+            "items": {
+              "$ref": "#/components/schemas/ServiceFeature"
+            },
+            "title": "Features",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "truncated": {
+            "title": "Truncated",
+            "type": "boolean"
+          },
+          "type": {
+            "const": "FeatureCollection",
+            "default": "FeatureCollection",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "features",
+          "data_version",
+          "limit",
+          "truncated"
+        ],
+        "title": "ServiceCollection",
+        "type": "object"
+      },
+      "ServiceFeature": {
+        "additionalProperties": false,
+        "properties": {
+          "geometry": {
+            "$ref": "#/components/schemas/Point"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "properties": {
+            "$ref": "#/components/schemas/ServiceProperties"
+          },
+          "type": {
+            "const": "Feature",
+            "default": "Feature",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "geometry",
+          "properties"
+        ],
+        "title": "ServiceFeature",
+        "type": "object"
+      },
+      "ServiceProperties": {
+        "additionalProperties": false,
+        "properties": {
+          "categories": {
+            "items": {
+              "enum": [
+                "bank_credit_union",
+                "clinic",
+                "grocery",
+                "pharmacy",
+                "school"
+              ],
+              "type": "string"
+            },
+            "title": "Categories",
+            "type": "array"
+          },
+          "place_id": {
+            "title": "Place Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "unknown"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "place_id",
+          "categories",
+          "status"
+        ],
+        "title": "ServiceProperties",
+        "type": "object"
+      },
+      "Sustainability": {
+        "additionalProperties": false,
+        "properties": {
+          "avoided_vehicle_miles_per_day": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Sensitivity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "baseline_coverage_pct": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Coverage Pct"
+          },
+          "censored_baseline_population": {
+            "minimum": 0.0,
+            "title": "Censored Baseline Population",
+            "type": "number"
+          },
+          "distance_after_m": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distance After M"
+          },
+          "distance_before_m": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distance Before M"
+          },
+          "local_population": {
+            "minimum": 0.0,
+            "title": "Local Population",
+            "type": "number"
+          },
+          "missing_baseline_population": {
+            "minimum": 0.0,
+            "title": "Missing Baseline Population",
+            "type": "number"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "usable_baseline_population": {
+            "minimum": 0.0,
+            "title": "Usable Baseline Population",
+            "type": "number"
+          }
+        },
+        "required": [
+          "local_population",
+          "usable_baseline_population",
+          "missing_baseline_population",
+          "censored_baseline_population"
+        ],
+        "title": "Sustainability",
+        "type": "object"
+      },
+      "Versions": {
+        "additionalProperties": false,
+        "properties": {
+          "assumption_version": {
+            "title": "Assumption Version",
+            "type": "string"
+          },
+          "data_version": {
+            "title": "Data Version",
+            "type": "string"
+          },
+          "model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Version"
+          },
+          "schema_version": {
+            "const": "1.0",
+            "default": "1.0",
+            "title": "Schema Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "data_version",
+          "assumption_version"
+        ],
+        "title": "Versions",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "Parcel Planner",
+    "version": "1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "operationId": "health_api_v1_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Health"
+      }
+    },
+    "/api/v1/metadata": {
+      "get": {
+        "operationId": "metadata_api_v1_metadata_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Metadata"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Metadata"
+      }
+    },
+    "/api/v1/parcels": {
+      "get": {
+        "operationId": "parcels_api_v1_parcels_get",
+        "parameters": [
+          {
+            "description": "WGS84 west,south,east,north. Maximum span 0.5\u00b0 per axis.",
+            "in": "query",
+            "name": "bbox",
+            "required": true,
+            "schema": {
+              "description": "WGS84 west,south,east,north. Maximum span 0.5\u00b0 per axis.",
+              "title": "Bbox",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParcelCollection"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Parcels"
+      }
+    },
+    "/api/v1/parcels/{parcel_id}": {
+      "get": {
+        "operationId": "parcel_details_api_v1_parcels__parcel_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "parcel_id",
+            "required": true,
+            "schema": {
+              "pattern": "^sf:[A-Za-z0-9_-]{1,64}$",
+              "title": "Parcel Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParcelDetails"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Parcel Details"
+      }
+    },
+    "/api/v1/scenarios/compare": {
+      "post": {
+        "operationId": "compare_api_v1_scenarios_compare_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompareRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Comparison"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Compare"
+      }
+    },
+    "/api/v1/services": {
+      "get": {
+        "operationId": "services_api_v1_services_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "bank_credit_union",
+                    "clinic",
+                    "grocery",
+                    "pharmacy",
+                    "school"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "description": "WGS84 west,south,east,north. Maximum span 0.5\u00b0 per axis.",
+            "in": "query",
+            "name": "bbox",
+            "required": true,
+            "schema": {
+              "description": "WGS84 west,south,east,north. Maximum span 0.5\u00b0 per axis.",
+              "title": "Bbox",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceCollection"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Services"
+      }
+    }
+  }
+}

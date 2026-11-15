@@ -1,0 +1,79 @@
+{
+  "assumption_version": "synthetic-economics-1",
+  "categories": [
+    {
+      "id": "bank_credit_union",
+      "label": "Bank / credit union"
+    },
+    {
+      "id": "clinic",
+      "label": "Clinic"
+    },
+    {
+      "id": "grocery",
+      "label": "Grocery"
+    },
+    {
+      "id": "pharmacy",
+      "label": "Pharmacy"
+    },
+    {
+      "id": "school",
+      "label": "School"
+    }
+  ],
+  "category_priorities": {
+    "bank_credit_union": 1.0,
+    "clinic": 1.0,
+    "grocery": 1.0,
+    "pharmacy": 1.0,
+    "school": 1.0
+  },
+  "coverage": {
+    "description": "Synthetic population and service catchments within illustrative San Francisco bounds.",
+    "population_points": 8,
+    "scored_parcels": 1,
+    "service_locations": 5
+  },
+  "data_version": "synthetic-sf-1",
+  "mode": "fixture",
+  "model_version": "synthetic-review-1",
+  "objective_weights": {
+    "economic": 1.0,
+    "need": 1.0,
+    "sustainability": 1.0
+  },
+  "schema_version": "1.0",
+  "sources": {
+    "economics": "config/economics.fixture.json",
+    "parcels": "Synthetic hypothetical parcel",
+    "population": "Synthetic populations",
+    "reviews": "Synthetic review activity",
+    "services": "Synthetic locations"
+  },
+  "sustainability_car_share": {
+    "base": 0.5,
+    "high": 0.75,
+    "low": 0.25
+  },
+  "sustainability_trips_per_person_per_day": {
+    "base": 0.1,
+    "high": 0.2,
+    "low": 0.05
+  },
+  "units": {
+    "accessibility": "locations per person",
+    "area": "m\u00b2",
+    "avoided_vehicle_miles": "vehicle miles/day",
+    "baseline_coverage": "%",
+    "deficit": "fraction",
+    "distance": "m",
+    "height": "m",
+    "normalized_score": "percentile (0\u2013100)",
+    "operating_jobs": "FTE",
+    "population": "people",
+    "retained_sales_tax": "USD/year",
+    "review_activity": "log1p(review count)",
+    "total": "ranking points"
+  }
+}

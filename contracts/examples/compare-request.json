@@ -1,0 +1,8 @@
+{
+  "objective_weights": {
+    "economic": 1,
+    "need": 1,
+    "sustainability": 1
+  },
+  "parcel_id": "sf:fixture-001"
+}
