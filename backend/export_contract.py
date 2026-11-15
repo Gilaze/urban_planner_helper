@@ -26,6 +26,9 @@ def main():
             "parcels": client.get("/api/v1/parcels", params={"bbox": BBOX}),
             "parcel": client.get(f"/api/v1/parcels/{PARCEL_ID}"),
             "services": client.get("/api/v1/services", params={"bbox": BBOX}),
+            "permit-checklist": client.post(
+                "/api/v1/permits/check", json={"parcel_id": PARCEL_ID, "category_id": "grocery"}
+            ),
             "compare": client.post("/api/v1/scenarios/compare", json=request),
         }
         for name, response in requests.items():
