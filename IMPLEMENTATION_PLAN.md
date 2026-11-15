@@ -8,7 +8,7 @@ Use React, TypeScript, Vite, MapLibre GL JS, and Recharts in `frontend/`. Use Py
 
 ```mermaid
 flowchart LR
-    A[Source snapshots] --> B[Canonical tables and spatial features]
+    A[Parcel API and other source snapshots] --> B[Canonical tables and spatial features]
     B --> C[Review model and baselines]
     B --> D[Parcel scenario metrics]
     C --> E[Versioned release artifacts]
@@ -22,7 +22,7 @@ Agree on candidate IDs before parallel development: `clinic`, `pharmacy`, `groce
 ## Person 1 — Frontend and simulator
 
 1. Create a fixture-driven desktop UI. Use a pitched SF map, a parcel selector with keyboard support, a candidate list, and a comparison panel. Show the source vintage and distinguish source-indicated vacancies from hypothetical sites. Keep the parcel list and results usable if the basemap or WebGL fails.
-2. Load parcel and service layers by viewport. Highlight the selected parcel, filter the service overlay by category, and place the proposed volume in a separate layer. Use an approximately 50% illustrative footprint and a fixed 7 m height across categories. Clip the preview footprint to the parcel and fall back to the outline for unusable geometry. Offer a 2D toggle and label the volume as illustrative massing. [MapLibre building extrusion example](https://maplibre.org/maplibre-gl-js/docs/examples/display-buildings-in-3d/)
+2. Load parcel geometry from the backend parcel endpoint and service overlays from the services endpoint by viewport. Highlight the selected parcel, filter the service overlay by category, and place the proposed volume in a separate layer. Use an approximately 50% illustrative footprint and a fixed 7 m height across categories. Clip the preview footprint to the parcel and fall back to the outline for unusable geometry. Offer a 2D toggle and label the volume as illustrative massing. [MapLibre building extrusion example](https://maplibre.org/maplibre-gl-js/docs/examples/display-buildings-in-3d/)
 3. Implement three objective sliders and a 0–2 need priority for each category. Default all values to one. Debounce comparison calls by 150 ms and abort or ignore stale responses after parcel or weight changes. Reset restores the defaults.
 4. Display raw metrics with units, normalized scores, rank, Pareto status, review-activity source, uncertainty ranges, and unavailable reasons. Use a scatterplot with two available objectives on the axes and the third, if available, encoded by color. Show only actual alternatives and visually distinguish nondominated points. Show before/after access in the selected category.
 5. Handle loading, empty lists, unavailable metrics, failed requests, and invalid geometry. Use the API as the source of ranking and score calculations.
@@ -42,13 +42,13 @@ Agree on candidate IDs before parallel development: `clinic`, `pharmacy`, `groce
 | [Google Maps Reviews](https://docs.google.com/document/d/1fvKPe99FpkOu7xNKni23rYDrm4q2eTv7eQAKa9YBJjo/edit) | Sampled reviews aggregated per place | Left join count, mean valid rating, and date coverage after aggregation. Drop reviewer identity and raw text from outputs. |
 | [ACS 2024 five-year estimates](https://www.census.gov/data/developers/data-sets/acs-5year/2024.html) and matching Census boundaries | Population, household income, gross residential rent, land area | Use block-group population where available for access and tract estimates for model covariates. Retrieve B01003, B19013, B25064 and margins of error. Calculate density from population divided by Census land area. |
 
-The two supplied SF links resolve to the same land-use dataset. Verify the distinct sources above before locking the adapters. The live SF schemas were unavailable during planning. Publish join coverage, table grains, expected columns, and the observed vintage at the first data checkpoint. Keep zoning as an attributed field and show assessed values with their vintage.
+The two supplied SF links resolve to the same land-use dataset. Verify the distinct sources above before locking the adapters. Use the upstream parcel API to retrieve geometry and parcel attributes. Configure the provider URL and map its fields to the canonical schema after verifying the live endpoint. The live SF schemas were unavailable during planning. Publish join coverage, table grains, expected columns, and the observed vintage at the first data checkpoint. Keep zoning as an attributed field and show assessed values with their vintage.
 
 Zillow is optional after integration. If added, deduplicate by `zpid`, filter to rental listings, and aggregate residential rental context by tract with sample counts. Glassdoor, Reddit, and college affordability are deferred. [Zillow README](https://docs.google.com/document/d/1lEl_Ow_tBFHTdVf_r0hVpy2Hw5OdBb83BL2zZPPWl48/edit)
 
 ### Canonical outputs
 
-- `parcels.geoparquet`: physical parcel ID, source APNs, polygon, representative point, area, existing use, vacancy status, zoning and source vintage. Classify as `source_indicated_vacant`, `unknown`, or `not_vacant`. If no vacancy survives verification, allow a labeled hypothetical site.
+- `parcels.geoparquet` (derived cache for offline scoring and demo fallback): physical parcel ID, source APNs, polygon, representative point, area, existing use, vacancy status, zoning and source vintage. Classify as `source_indicated_vacant`, `unknown`, or `not_vacant`. If no vacancy survives verification, allow a labeled hypothetical site.
 - `places.parquet`: place ID, coordinate, city, primary category, service tags, closure flag and review count. Deduplicate by latest timestamp when available, then completeness and stable source order. Exclude confirmed permanent and temporary closures from current supply. Flag unknown status.
 - `review_summary.parquet`: one row per place ID with sampled review count, mean rating and valid date range. Report unmatched IDs. Keep Places rows even when Reviews has no match.
 - `demographics.geoparquet`: string GEOID, representative point and geometry, population and available covariates with units, vintage and missingness. Preserve geographic coverage around city edges.
@@ -100,12 +100,14 @@ Use `total = w_need * priority_category * need + w_economic * economic + w_susta
 |---|---|
 | `GET /health` | Readiness, fixture/live mode, loaded artifact versions. |
 | `GET /metadata` | Category IDs and labels, defaults, units, sources and release coverage. |
-| `GET /parcels?bbox=...` | WGS84 bounding box as west,south,east,north. Return capped GeoJSON and truncation metadata. |
-| `GET /parcels/{parcel_id}` | Parcel details, geometry and quality flags. |
+| `GET /parcels?bbox=...` | WGS84 bounding box as west,south,east,north. Query the parcel provider for the bounded viewport through the backend adapter. Return capped GeoJSON, truncation metadata, source version, and freshness. |
+| `GET /parcels/{parcel_id}` | Resolve the canonical ID through the parcel provider mapping. Return details, geometry, quality flags, source version, and freshness. |
 | `GET /services?bbox=...&category=...` | Bounded active service locations for map rendering. |
 | `POST /scenarios/compare` | Parcel ID, objective weights, and optional category priorities defaulting to one. Return ranked or unranked alternatives. |
 
 Comparison response includes schema/data/model/assumption versions, effective weights, active dimensions, per-category raw and normalized metrics, coverage and reason codes, review-activity value and source, economic ranges, total, rank, Pareto flag, and proposed massing geometry/height. Use JSON null for unavailable values. Use structured 404 for unknown parcels, 422 for invalid requests and 503 for missing required artifacts.
+
+Keep parcel provider credentials on the server. Use bounded requests, deterministic pagination during batch ingestion, timeouts, and a bounded retry for transient upstream failures. Cache validated responses and fall back to the last verified parcel snapshot with a visible stale-data label. Return 503 if the provider and cache are unavailable. Match live parcel IDs and geometry to the scoring snapshot before serving precomputed comparisons. If a parcel is new or changed, display its details and mark scoring unavailable until the next refresh.
 
 Precompute spatial metrics and Monte Carlo summaries, load artifacts once at startup, and index comparisons by parcel, category and release versions. Apply slider weights to cached metrics. Serve the built frontend locally from FastAPI for the demo. Target subsecond cached requests on the presentation laptop.
 
@@ -114,6 +116,7 @@ Precompute spatial metrics and Monte Carlo summaries, load artifacts once at sta
 ## Person 4 — Checker and release verification
 
 - At kickoff, own the acceptance matrix, schema review and hand-calculated scoring fixtures. Track each issue with an owner, example, expected result and release impact.
+- Test parcel API pagination, malformed upstream records, timeout fallback and stale-data labels. Verify changed parcels cannot inherit cached scores.
 - Audit APN string handling, source vintage, physical parcel join cardinality, Places-to-Reviews row counts, category overlap, CRS, units, boundary coverage and missing values. Confirm that the scored parcel has explicit vacancy evidence or carries a hypothetical label.
 - Check geographic splits and focal exclusion, review-derived leakage, train-only normalization and common evaluation rows. Recalculate metrics from exported predictions and examine worst errors, low-income slices, density slices and city coverage.
 - Verify that adding supply never worsens calculated accessibility or nearest-service distance. Check zero populations, censored baselines, percentile ties, repeatable Monte Carlo ranges, weight resets, missing dimensions, stable ties and known Pareto cases.
