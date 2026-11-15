@@ -299,8 +299,6 @@ export function createUI(root) {
                 <input data-hrange type="range" step="1">
                 <span class="hval"><input data-hnum type="number" step="1"> m</span>
               </label>
-              <div class="bcard-rule" data-rule></div>
-              <div class="bcard-cond" data-note hidden></div>
               <div class="bcard-warn" data-warn role="alert" hidden></div>
               <div class="bcard-actions">
                 <button class="btn primary" data-apply>Apply</button>
@@ -308,7 +306,7 @@ export function createUI(root) {
                 ${edited ? '<button class="btn" data-restore>Restore original</button>' : ''}
               </div>
             </div>
-            <div class="bcard-note">Rules: SF height limit (Height and Bulk Districts) and a simplified SF Planning Code use table${hasRules ? '' : ' (zoning data missing: rebuild with npm run data)'}. Edits are a local sketch in this browser. Source: Parcel Planner release (SF land use, Google Maps closures). Exact location is not shown.</div>`;
+            <div class="bcard-note">Edits are a local sketch in this browser. Exact location is not shown.</div>`;
           card.querySelector('.bcard-x').addEventListener('click', () => onCardClose());
           card.querySelectorAll('[data-restore]').forEach((el) => el.addEventListener('click', () => actions.onRestore()));
           card.querySelectorAll('[data-delete]').forEach((el) => el.addEventListener('click', () => actions.onDelete()));
@@ -316,8 +314,7 @@ export function createUI(root) {
           if (!editable || !choices.length) return;
           const sel = card.querySelector('[data-type]');
           const range = card.querySelector('[data-hrange]'), num = card.querySelector('[data-hnum]');
-          const ruleEl = card.querySelector('[data-rule]'), warn = card.querySelector('[data-warn]');
-          const noteEl = card.querySelector('[data-note]');
+          const warn = card.querySelector('[data-warn]');
           const apply = card.querySelector('[data-apply]');
           const choiceOf = () => choices.find((c) => c.id === sel.value);
           let touched = false;
@@ -331,9 +328,6 @@ export function createUI(root) {
           const check = () => {
             const v = actions.validate(sel.value, num.value === '' ? NaN : Number(num.value));
             apply.disabled = !v.ok;
-            ruleEl.textContent = `${v.summary} · footprint ${Math.round(footprintM2).toLocaleString()} m²`;
-            noteEl.hidden = v.notes.length === 0;
-            noteEl.textContent = v.notes.join(' ');
             // the original building's own values are only flagged once the user changes something
             warn.hidden = v.ok || !touched;
             warn.textContent = v.reasons.join(' ');
