@@ -1231,6 +1231,126 @@
         "title": "Percentiles",
         "type": "object"
       },
+      "PermitChecklist": {
+        "additionalProperties": false,
+        "properties": {
+          "category_id": {
+            "enum": [
+              "bank_credit_union",
+              "clinic",
+              "grocery",
+              "pharmacy",
+              "school"
+            ],
+            "title": "Category Id",
+            "type": "string"
+          },
+          "parcel_id": {
+            "pattern": "^sf:[A-Za-z0-9_-]{1,64}$",
+            "title": "Parcel Id",
+            "type": "string"
+          },
+          "special_use_districts": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Special Use Districts",
+            "type": "array"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/PermitStep"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
+          "zoning_districts": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Zoning Districts",
+            "type": "array"
+          },
+          "zoning_note": {
+            "title": "Zoning Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "parcel_id",
+          "category_id",
+          "zoning_districts",
+          "special_use_districts",
+          "zoning_note",
+          "steps"
+        ],
+        "title": "PermitChecklist",
+        "type": "object"
+      },
+      "PermitRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "category_id": {
+            "enum": [
+              "bank_credit_union",
+              "clinic",
+              "grocery",
+              "pharmacy",
+              "school"
+            ],
+            "title": "Category Id",
+            "type": "string"
+          },
+          "floor_area_sqft": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Floor Area Sqft"
+          },
+          "parcel_id": {
+            "pattern": "^sf:[A-Za-z0-9_-]{1,64}$",
+            "title": "Parcel Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "parcel_id",
+          "category_id"
+        ],
+        "title": "PermitRequest",
+        "type": "object"
+      },
+      "PermitStep": {
+        "additionalProperties": false,
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "detail",
+          "url"
+        ],
+        "title": "PermitStep",
+        "type": "object"
+      },
       "Point": {
         "additionalProperties": false,
         "properties": {
@@ -1779,6 +1899,64 @@
           }
         },
         "summary": "Parcel Details"
+      }
+    },
+    "/api/v1/permits/check": {
+      "post": {
+        "operationId": "check_permits_api_v1_permits_check_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PermitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermitChecklist"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Check Permits"
       }
     },
     "/api/v1/scenarios/compare": {
