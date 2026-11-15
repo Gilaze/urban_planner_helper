@@ -11,7 +11,7 @@ npm run data   # one-time: downloads sources (~200 MB, cached) and writes public
 npm run dev    # http://localhost:5173
 ```
 
-`npm run data` needs Python 3.11+ with `numpy`, `Pillow` and `pyarrow`, plus `curl` on PATH. It also needs the Parcel Planner data release from the team Google Drive in `../data/artifacts/person2/`. All downloads go through curl, so Python's certificate store is not involved. A rebuild from the cache takes about 2 minutes.
+`npm run data` needs Python 3.11+ with `numpy`, `Pillow` and `pyarrow`, plus `curl` on PATH. It also needs the Parcel Planner data release from the team Google Drive in `../artifacts/person2/` (see [DATA.md](../DATA.md)). The prebuilt bundle already includes `public/data/`, so with it you can skip `npm run data`. All downloads go through curl, so Python's certificate store is not involved. A rebuild from the cache takes about 2 minutes.
 
 ## Controls
 
@@ -36,7 +36,7 @@ In the browser console, `__sf.jump(lon, lat, viewHeightMeters, mode)` moves the 
 
 Press `V`, or use the legend's **Vacancy** tab, to colour the city by vacancy instead of building type. Vacant lots without a building are hatched red on the ground.
 
-The data comes from the team's Parcel Planner data release (the shared Google Drive folder `parcel-planner-data`). `npm run data` reads it from `../data/artifacts/person2/`; set `PARCEL_PLANNER_DATA` to read it from somewhere else.
+The data comes from the team's Parcel Planner data release (the shared Google Drive folder `parcel-planner-data`). `npm run data` reads it from `../artifacts/person2/` (or `../data/artifacts/person2/`); set `PARCEL_PLANNER_DATA` to read it from somewhere else.
 
 | Colour | Class | Rule |
 |---|---|---|

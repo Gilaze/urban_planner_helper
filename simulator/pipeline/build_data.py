@@ -410,8 +410,11 @@ def classify(lu, height, area):
 VAC_UNKNOWN, VAC_OCCUPIED, VAC_VACANT_LOT, VAC_CLOSED = 0, 1, 2, 3
 TEAM_STATUS = {"source_indicated_vacant": VAC_VACANT_LOT, "not_vacant": VAC_OCCUPIED, "unknown": VAC_UNKNOWN}
 # Parcel Planner data release (the team's shared Google Drive folder, "parcel-planner-data").
-TEAM_DATA = os.environ.get("PARCEL_PLANNER_DATA",
-                           os.path.normpath(os.path.join(HERE, "..", "..", "data", "artifacts", "person2")))
+# The data bundle unzips to <repo>/artifacts/person2; older notes used <repo>/data/artifacts/person2.
+_TEAM_DATA_CANDIDATES = [os.path.normpath(os.path.join(HERE, "..", "..", *p))
+                         for p in (("artifacts", "person2"), ("data", "artifacts", "person2"))]
+TEAM_DATA = os.environ.get("PARCEL_PLANNER_DATA") or next(
+    (d for d in _TEAM_DATA_CANDIDATES if os.path.exists(os.path.join(d, "parcels.geoparquet"))), _TEAM_DATA_CANDIDATES[0])
 CURRENT_USE_TYPE = {"retail": "RETAIL/ENT", "mips": "MIPS", "cie": "CIE", "med": "MED", "pdr": "PDR", "visitor": "VISITOR"}
 
 
@@ -457,7 +460,7 @@ def load_team_release():
     for f in (pp, pl):
         if not os.path.exists(f):
             raise SystemExit(f"Missing {f}. Put the Parcel Planner release (Drive: parcel-planner-data/artifacts/person2) "
-                             f"there or set PARCEL_PLANNER_DATA.")
+                             f"there (unzip parcel-planner-data.zip at the repo root, see DATA.md) or set PARCEL_PLANNER_DATA.")
     t = pq.read_table(pp, columns=["mapblklot", "vacancy_status", "landuse_2023", "residential_units_2023",
                                    "current_uses", "current_residential_units", "geometry"]).to_pylist()
     landuse, status, geoms = {}, {}, {}
