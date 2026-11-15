@@ -1,6 +1,6 @@
 # Data checkpoint
 
-Built: 2026-11-15T06:19:19+00:00
+Built: 2026-11-15T06:43:06+00:00
 
 ## Sources
 
@@ -8,14 +8,15 @@ Built: 2026-11-15T06:19:19+00:00
 |---|---|---|---|
 | acs_block_group | 2020-2024 ACS 5-year | 3204 | 2026-11-15T05:44:15+00:00 |
 | acs_tract | 2020-2024 ACS 5-year | 1102 | 2026-11-15T05:44:17+00:00 |
-| google_places | hackathon export | 147429 | 2026-11-15T06:19:53+00:00 |
-| google_reviews | hackathon export | 213536 | 2026-11-15T06:19:53+00:00 |
+| google_places | hackathon export | 147429 | 2026-11-15T06:43:44+00:00 |
+| google_reviews | hackathon export | 213536 | 2026-11-15T06:43:44+00:00 |
 | sf_assessor | 2025 | 211547 | 2026-11-15T05:44:10+00:00 |
 | sf_landuse | 2023 | 154476 | 2026-11-15T05:43:34+00:00 |
 | sf_landuse_current | 2026-08-17T00:00:00.000 | 153765 | 2026-11-15T05:43:52+00:00 |
 | sf_parcels | 1794680379 | 227968 | 2026-11-15T05:43:28+00:00 |
 | tiger_block_group | TIGER/Line 2024 |  | 2026-11-15T05:44:10+00:00 |
 | tiger_place | TIGER/Line 2024 |  | 2026-11-15T05:44:10+00:00 |
+| tiger_sf_water | TIGER/Line 2024 |  | 2026-11-15T06:39:12+00:00 |
 | tiger_tract | TIGER/Line 2024 |  | 2026-11-15T05:44:10+00:00 |
 
 ## Parcels
@@ -25,9 +26,10 @@ Built: 2026-11-15T06:19:19+00:00
 - Active APNs 227,706 -> physical lots 155,028 (9,466 multi-APN)
 - Geometry quality: {'valid': 155028}
 - Land use matched lots: 154,177; land-use rows without an active lot: 298
-- Vacancy status: {'not_vacant': 148285, 'source_indicated_vacant': 4582, 'unknown': 2161}
-- Vacancy evidence: {'current snapshot records use': 144806, '2023 VACANT code and no recorded use in current snapshot': 4582, '2023 VACANT but current snapshot records use (developed since)': 3187, 'no recorded use in current snapshot; no explicit vacancy code': 915, 'no land-use record': 632, '2023 VACANT code; lot absent from current snapshot': 614, '2023 land use records use; lot absent from current snapshot': 292}
+- Vacancy status: {'not_vacant': 148285, 'source_indicated_vacant': 3810, 'unknown': 2933}
+- Vacancy evidence: {'current snapshot records use': 144806, '2023 VACANT code and no recorded use in current snapshot': 3810, '2023 VACANT but current snapshot records use (developed since)': 3187, 'no recorded use in current snapshot; no explicit vacancy code': 915, '2023 VACANT code but lot is mostly under water (submerged)': 772, 'no land-use record': 632, '2023 VACANT code; lot absent from current snapshot': 614, '2023 land use records use; lot absent from current snapshot': 292}
 - Current land use (c5ge-t6pj) matched lots: 153,490
+- Submerged lots (>= 50% Census water): 817; removed from vacant candidates: 772
 - Assessor roll ['2025']: matched APNs 211,163, unmatched active APNs 16,543, roll rows without active APN 384
 
 ## Places and reviews

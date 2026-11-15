@@ -127,7 +127,7 @@ def fetch_sf(s: Settings, max_rows: int | None = None) -> None:
 
 def fetch_census(s: Settings, skip_acs: bool = False) -> None:
     m = Manifest(s.raw_dir / "raw_manifest.json")
-    for level in ("block_group", "tract", "place"):
+    for level in ("block_group", "tract", "place", "sf_water"):
         gdf_path = census.download(census.TIGER_URLS[level], s.raw_dir / "census" / Path(census.TIGER_URLS[level]).name)
         m.source(f"tiger_{level}", url=census.TIGER_URLS[level], retrieved_at=now(), sha256=sha256(gdf_path),
                  vintage=f"TIGER/Line {census.TIGER_YEAR}", path=str(gdf_path))
@@ -181,8 +181,16 @@ def build(s: Settings, skip_census: bool = False) -> None:
     assessor = sf.parse_assessor_records(read_jsonl(s.raw_dir / "sf" / "sf_assessor.jsonl"), roll_year)
     parcel_vintage = parcels_raw["data_as_of"].dropna().max() if parcels_raw["data_as_of"].notna().any() else None
     current_lu = sf.parse_current_landuse_records(read_jsonl(s.raw_dir / "sf" / "sf_landuse_current.jsonl"))
+    water = census.load_tiger("sf_water", s.raw_dir)
+    water_path = s.raw_dir / "census" / Path(census.TIGER_URLS["sf_water"]).name
+    raw_m.source("tiger_sf_water", url=census.TIGER_URLS["sf_water"], vintage=f"TIGER/Line {census.TIGER_YEAR}",
+                 sha256=sha256(water_path), path=str(water_path),
+                 retrieved_at=raw_m.data["sources"].get("tiger_sf_water", {}).get("retrieved_at") or datetime.fromtimestamp(
+                     water_path.stat().st_mtime, timezone.utc).replace(microsecond=0).isoformat())
+    raw_m.save()
+    m.data["sources"]["tiger_sf_water"] = raw_m.data["sources"]["tiger_sf_water"]
     lots, lot_rep = sf.build_physical_parcels(parcels_raw, landuse, assessor, parcel_vintage,
-                                              current_landuse=current_lu)
+                                              current_landuse=current_lu, water=water)
     p = rd / "parcels.geoparquet"
     lots.to_parquet(p, index=False)
     m.output(p, len(lots), grain="physical lot (mapblklot)", key="parcel_id")
@@ -474,6 +482,8 @@ def write_checkpoint_md(checks: dict, m: Manifest) -> None:
               f"- Vacancy status: {p['vacancy_status']}",
               f"- Vacancy evidence: {p['vacancy_evidence']}",
               f"- Current land use (c5ge-t6pj) matched lots: {p['current_landuse_matched_lots']:,}",
+              f"- Submerged lots (>= 50% Census water): {p['submerged_lots']:,}; "
+              f"removed from vacant candidates: {p['submerged_lots_reclassified_from_vacant']:,}",
               f"- Assessor roll {p['assessor_roll_years']}: matched APNs {p['assessor_matched_apns']:,}, "
               f"unmatched active APNs {p['assessor_unmatched_active_apns']:,}, roll rows without active APN "
               f"{p['assessor_rows_without_active_apn']:,}",

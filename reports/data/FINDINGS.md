@@ -7,6 +7,14 @@
 totals, fingerprinted publish) and the P4-DATA-005 category fix below. **The SF test set has now been
 evaluated more than once** (0.1.0 and 0.1.1). Treat SF results as exposed, not as an untouched holdout.
 
+## Submerged parcels (fixed 2026-11-15)
+
+SF land use codes many bay and ocean tideland parcels `VACANT`, so 772 of the 4,582 "vacant" lots were
+mostly under water and were being offered to the backend as candidate sites. A lot that is at least 50% inside
+Census TIGER 2024 water areas for SF (`tl_2024_06075_areawater`) is now flagged `submerged` and is no longer
+`source_indicated_vacant`; its `vacancy_evidence` says so. **Vacant candidates: 3,810 (3,809 published)**, down from 4,582.
+27 piers with recorded uses stay `not_vacant` and are only flagged. Every lot carries `water_fraction`.
+
 ## Response to Person 4 category review (P4-DATA-005)
 
 - **Fixed:** a secondary label (`all_categories`) can add one of the five candidate services only when the
@@ -33,7 +41,7 @@ The current generated reports come from a full build with ACS 2020–2024 covari
 ## Data facts that affect other workstreams
 
 - **Parcel IDs** are `sf:<mapblklot>`. 227,968 active APNs consolidate to 155,028 physical lots, 9,466 of which have multiple APNs (condos). 262 API records have neither `mapblklot` nor geometry and are dropped. All remaining lot geometries are valid.
-- **Vacancy** combines the explicit 2023 `VACANT` code with the current land-use snapshot (c5ge-t6pj, 2026-08-17), which has no vacancy code of its own. 4,582 lots are `source_indicated_vacant` (4,581 published), 2,161 are `unknown` and 148,285 are `not_vacant`. 3,187 lots coded vacant in 2023 now record use and are treated as developed since.
+- **Vacancy** combines the explicit 2023 `VACANT` code with the current land-use snapshot (c5ge-t6pj, 2026-08-17), which has no vacancy code of its own. 3,810 lots are `source_indicated_vacant` (3,809 published) after removing submerged lots, 2,933 are `unknown` and 148,285 are `not_vacant`. 3,187 lots coded vacant in 2023 now record use and are treated as developed since.
 - **One lot key is outside the API contract:** `4591A011*` contains an asterisk and fails `ParcelID` `^sf:[A-Za-z0-9_-]{1,64}$`. `publish` omits it. Backend's live provider builds `sf:{mapblklot}` the same way, so it will produce this ID too.
 - **v3 `query.json` endpoints need an app token** (403 without one). The pipeline uses the keyless v2.1 `/resource/<id>.json` endpoints for the same datasets.
 - **Assessor:** the 2025 closed roll matches 211,163 active APNs. 16,543 active APNs have no roll row; their values stay null.

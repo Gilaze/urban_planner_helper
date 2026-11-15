@@ -362,24 +362,31 @@ async function boot() {
   // Frame loop
   // -------------------------------------------------------------------------
   // Adaptive resolution: trade pixel density for frame rate on weaker GPUs.
+  // Resizing a WebGL canvas clears it, so this runs at the START of a frame (the same
+  // frame repaints it) and with hysteresis + a cooldown so the ratio cannot bounce
+  // between two values every second (each bounce used to show as a white flash).
   const maxRatio = Math.min(window.devicePixelRatio, 2);
-  let ratio = maxRatio, acc = 0, frames = 0;
+  let ratio = maxRatio, acc = 0, frames = 0, fastStreak = 0, cooldown = 0;
   function adaptResolution(dt) {
     acc += dt;
     frames++;
-    if (acc < 1.0) return;
+    cooldown = Math.max(0, cooldown - dt);
+    if (acc < 1.0) return false;
     const ms = (acc / frames) * 1000;
     acc = 0;
     frames = 0;
+    fastStreak = ms < 12 ? fastStreak + 1 : 0;
     let next = ratio;
-    if (ms > 30) next = Math.max(0.75, ratio - 0.25);
-    else if (ms < 15) next = Math.min(maxRatio, ratio + 0.25);
-    if (next !== ratio) {
-      ratio = next;
-      renderer.setPixelRatio(ratio);
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      blur.resize();
-    }
+    if (ms > 30 && cooldown === 0) next = Math.max(0.75, ratio - 0.25);
+    else if (fastStreak >= 3 && cooldown === 0) next = Math.min(maxRatio, ratio + 0.25);
+    if (next === ratio) return false;
+    cooldown = next < ratio ? 10 : 4; // after a downgrade, hold it for a while before trying to go back up
+    fastStreak = 0;
+    ratio = next;
+    renderer.setPixelRatio(ratio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    blur.resize();
+    return true;
   }
 
   const clock = new THREE.Clock();
@@ -388,6 +395,7 @@ async function boot() {
   const LIMIT = terrain.extent - 1200;
   function frame() {
     const dt = Math.min(clock.getDelta(), 0.1);
+    adaptResolution(dt); // before rendering: a resize clears the canvas
     shared.uTime.value += dt;
     const camera = cam.getActiveCamera();
     const worldH = cam.getCurrentWorldHeight();
@@ -466,7 +474,6 @@ async function boot() {
     }
     blur.render(scene, camera, focusPt, R, clearOn ? 3.2 * ratio : 0, outline, mpp);
     highlight.render(camera);
-    adaptResolution(dt);
     requestAnimationFrame(frame);
   }
   frame();

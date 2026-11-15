@@ -51,7 +51,7 @@ of the code fixes.
 | ACS 2024 5-yr | `api.census.gov/data/2024/acs/acs5` | block group, tract | B01003, B19013, B25064 with MOEs. Alameda, Contra Costa, Marin, SF and San Mateo counties for edge coverage. |
 | TIGER/Line 2024 | `www2.census.gov/geo/tiger/TIGER2024/{BG,TRACT,PLACE}` | — | `ALAND` for density, place polygons for city assignment. |
 
-**Vacancy rule:** a lot is `source_indicated_vacant` only when it carries the 2023 `VACANT` code AND has no recorded use in the current snapshot. Any current recorded use makes it `not_vacant`, including 3,187 lots coded vacant in 2023 that have since been developed. Everything else is `unknown`. `vacancy_evidence` gives the reason for each lot.
+**Vacancy rule:** a lot is `source_indicated_vacant` only when it carries the 2023 `VACANT` code AND has no recorded use in the current snapshot. Any current recorded use makes it `not_vacant`, including 3,187 lots coded vacant in 2023 that have since been developed. Lots at least 50% under Census water (SF bay and ocean tidelands) are never vacant candidates; they are `unknown` and flagged `submerged`. Everything else is `unknown`. `vacancy_evidence` gives the reason for each lot.
 
 The two SF Land Use links in the plan resolve to the same dataset. Parcels and
 the assessor roll are separate datasets: `acdm-wktn` and `wv5m-vpq2`.

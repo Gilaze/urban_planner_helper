@@ -182,3 +182,25 @@ def test_non_physician_credentials_and_colleges_are_excluded(cats):
         assert cats.classify("Doctor", "[]", name)[0] == "other", name
     assert cats.classify("Doctor", "[]", "Dr. Pat Kim, MD, PhD")[0] == "clinic"
     assert cats.classify("Religious school", "[]", "Zaytuna College (Upper Campus)")[0] == "other"
+
+
+def test_submerged_vacant_lot_is_not_a_candidate():
+    import geopandas as gpd
+    from shapely.geometry import box
+    parcels = sf.parse_parcel_records(_load("sf_parcels_api.json"))
+    landuse = sf.parse_landuse_records(_load("sf_landuse_api.json"))
+    current = sf.parse_current_landuse_records(_load("sf_landuse_current_api.json"))
+    assessor = sf.parse_assessor_records(_load("sf_assessor_api.json"), "2025")
+    # Water covering all of the vacant lot 0012003A (lon -122.4000..-122.3995, lat 37.7900..37.7904)
+    bay = gpd.GeoDataFrame(geometry=[box(-122.4010, 37.7890, -122.3990, 37.7910)], crs="EPSG:4326")
+    out, rep = sf.build_physical_parcels(parcels, landuse, assessor, "2026-11-01", current_landuse=current, water=bay)
+    lot = out.set_index("parcel_id").loc["sf:0012003A"]
+    assert lot["submerged"] and lot["water_fraction"] > 0.99
+    assert lot["vacancy_status"] == "unknown" and lot["site_label"] == "hypothetical"
+    assert "under water" in lot["vacancy_evidence"]
+    assert rep["submerged_lots_reclassified_from_vacant"] == 1
+    # Half under water is not submerged: the lot stays vacant
+    half = gpd.GeoDataFrame(geometry=[box(-122.4010, 37.7890, -122.39975, 37.7910)], crs="EPSG:4326")
+    out2, _ = sf.build_physical_parcels(parcels, landuse, assessor, "2026-11-01", current_landuse=current, water=half)
+    lot2 = out2.set_index("parcel_id").loc["sf:0012003A"]
+    assert 0.3 < lot2["water_fraction"] < 0.5 and lot2["vacancy_status"] == "source_indicated_vacant"

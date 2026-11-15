@@ -25,6 +25,8 @@ TIGER_URLS = {
     "block_group": f"https://www2.census.gov/geo/tiger/TIGER{TIGER_YEAR}/BG/tl_{TIGER_YEAR}_{STATE_FIPS}_bg.zip",
     "tract": f"https://www2.census.gov/geo/tiger/TIGER{TIGER_YEAR}/TRACT/tl_{TIGER_YEAR}_{STATE_FIPS}_tract.zip",
     "place": f"https://www2.census.gov/geo/tiger/TIGER{TIGER_YEAR}/PLACE/tl_{TIGER_YEAR}_{STATE_FIPS}_place.zip",
+    # SF County area water (bay, ocean, lakes) for flagging submerged parcels
+    "sf_water": f"https://www2.census.gov/geo/tiger/TIGER{TIGER_YEAR}/AREAWATER/tl_{TIGER_YEAR}_{STATE_FIPS}075_areawater.zip",
 }
 ACS_VARS = {
     "B01003_001E": "population", "B01003_001M": "population_moe",

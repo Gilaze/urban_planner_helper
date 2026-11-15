@@ -1,6 +1,6 @@
 # Review-activity model report
 
-Data version: `0.1.1+2026-11-15.1+ad464d957df7`  
+Data version: `0.1.1+2026-11-15.1+bfa9e1e005fb`  
 Estimator: sklearn.ensemble.HistGradientBoostingRegressor (scikit-learn 1.5.2)  
 Census covariates skipped: False
 

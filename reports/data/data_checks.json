@@ -92,9 +92,12 @@
     "lots_with_any_assessor_match": 154051,
     "physical_lots": 155028,
     "records_missing_blklot_or_mapblklot": 262,
+    "submerged_lots": 817,
+    "submerged_lots_reclassified_from_vacant": 772,
     "vacancy_evidence": {
       "2023 VACANT but current snapshot records use (developed since)": 3187,
-      "2023 VACANT code and no recorded use in current snapshot": 4582,
+      "2023 VACANT code and no recorded use in current snapshot": 3810,
+      "2023 VACANT code but lot is mostly under water (submerged)": 772,
       "2023 VACANT code; lot absent from current snapshot": 614,
       "2023 land use records use; lot absent from current snapshot": 292,
       "current snapshot records use": 144806,
@@ -103,9 +106,10 @@
     },
     "vacancy_status": {
       "not_vacant": 148285,
-      "source_indicated_vacant": 4582,
-      "unknown": 2161
-    }
+      "source_indicated_vacant": 3810,
+      "unknown": 2933
+    },
+    "water_layer": "provided"
   },
   "places": {
     "address_city_vs_spatial_city_disagree": 101,

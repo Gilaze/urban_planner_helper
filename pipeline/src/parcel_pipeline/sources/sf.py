@@ -57,6 +57,9 @@ LANDUSE_FIELDS = ["mapblklot", "landuse", "resunits", "totalcomm"]
 VACANT_CODES = {"VACANT"}
 
 VACANCY_STATUSES = ("source_indicated_vacant", "unknown", "not_vacant")
+# A lot at least this share under Census water (bay, ocean, lakes) is treated as submerged:
+# SF land use codes many tideland parcels VACANT, but they are not buildable sites.
+SUBMERGED_WATER_FRACTION = 0.5
 
 
 def parcel_id(mapblklot: str) -> str:
@@ -209,6 +212,7 @@ def build_physical_parcels(
     parcel_vintage: str | None,
     landuse_vintage: str = LANDUSE_VINTAGE,
     current_landuse: pd.DataFrame | None = None,
+    water: gpd.GeoDataFrame | None = None,
 ) -> tuple[gpd.GeoDataFrame, dict]:
     """Consolidate APN rows to one row per physical lot (mapblklot).
 
@@ -279,6 +283,18 @@ def build_physical_parcels(
          "2023 land use records use; lot absent from current snapshot"],
         default="no land-use record",
     )
+    # Submerged lots: never a vacancy candidate, whatever the land-use code says.
+    lots["water_fraction"] = 0.0
+    if water is not None and len(water):
+        wat = water.to_crs(METRIC_CRS).geometry.union_all()
+        touch = lots.geometry.notna() & lots.geometry.intersects(wat)
+        if touch.any():
+            g = lots.loc[touch, "geometry"]
+            lots.loc[touch, "water_fraction"] = (g.intersection(wat).area / g.area).clip(0, 1).to_numpy()
+    lots["submerged"] = lots["water_fraction"] >= SUBMERGED_WATER_FRACTION
+    wet_vacant = lots["submerged"] & lots["vacancy_status"].eq("source_indicated_vacant")
+    lots.loc[wet_vacant, "vacancy_status"] = "unknown"
+    lots.loc[wet_vacant, "vacancy_evidence"] = "2023 VACANT code but lot is mostly under water (submerged)"
     lots["existing_use"] = lots["current_uses"].where(in_current, lots["landuse_2023"])
     lots.loc[in_current & ~has_use, "existing_use"] = "no recorded use"
     lots["site_label"] = np.where(lots["vacancy_status"] == "source_indicated_vacant",
@@ -319,7 +335,7 @@ def build_physical_parcels(
     cols = [
         "parcel_id", "mapblklot", "source_apns", "apn_count", "geometry", "geometry_quality",
         "representative_point", "rep_lon", "rep_lat", "area_m2", "existing_use", "vacancy_status",
-        "vacancy_evidence", "site_label", "zoning", "zoning_code", "zoning_district", "analysis_neighborhood",
+        "vacancy_evidence", "water_fraction", "submerged", "site_label", "zoning", "zoning_code", "zoning_district", "analysis_neighborhood",
         "current_uses", "current_residential_units", "current_commercial_area_sqft", "landuse_2023",
         "residential_units_2023", "commercial_area_sqft_2023", "assessed_land_usd", "assessed_improvement_usd",
         "assessor_lot_area_sqft", "assessor_use_codes", "assessor_matched_apns", "assessment_year",
@@ -341,6 +357,9 @@ def build_physical_parcels(
         "landuse_unmatched_rows": len(lu_keys - lot_keys),
         "vacancy_status": lots["vacancy_status"].value_counts().to_dict(),
         "vacancy_evidence": lots["vacancy_evidence"].value_counts().to_dict(),
+        "submerged_lots": int(lots["submerged"].sum()),
+        "submerged_lots_reclassified_from_vacant": int(wet_vacant.sum()),
+        "water_layer": "provided" if water is not None else "missing",
         "current_landuse_rows": int(len(current_landuse)),
         "current_landuse_matched_lots": int(in_current.sum()),
         "assessor_rows": int(len(assessor)),
