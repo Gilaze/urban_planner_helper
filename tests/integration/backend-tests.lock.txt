@@ -1,0 +1,5 @@
+# Combined Backend runtime + checker environment, Python 3.11+.
+-r ../../backend/requirements-release.lock
+pytest==8.3.5
+iniconfig==2.3.1
+pluggy==1.7.0

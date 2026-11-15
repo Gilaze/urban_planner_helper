@@ -1,0 +1,30 @@
+{
+  "evidence_kind": "reported-aggregate-reconciliation",
+  "raw_prediction_metrics_verified": false,
+  "reported_data_version": "0.1.0+2026-11-14.2+ad464d957df7",
+  "reported_gate_improvement": 0.1343747502047431,
+  "reported_census_skipped": false,
+  "reported_common_sf_categories": [
+    "clinic",
+    "grocery"
+  ],
+  "reported_sf_selected_common_macro_rmse": 1.5511211924546928,
+  "reported_sf_baseline_common_macro_rmse": 1.5097684953193236,
+  "category_audit_rows": 160,
+  "category_audit_by_reason": {
+    "candidate:clinic": 20,
+    "candidate:pharmacy": 20,
+    "candidate:grocery": 20,
+    "candidate:bank_credit_union": 20,
+    "candidate:school": 20,
+    "ambiguous": 20,
+    "lookalike:clinic": 20,
+    "lookalike:grocery": 20
+  },
+  "accepted_verdicts": 0,
+  "rejected_verdicts": 0,
+  "source_sha256": {
+    "model_report.json": "2cd3da5338ccd501137781c43f5c9c8b2246c3b520d1e95db989778c30972406",
+    "category_audit_sample.csv": "430ddabcb72d04c4cdbd39ce64fca346ba870538ccada4148470ceaa80bd124f"
+  }
+}

@@ -79,3 +79,37 @@ def test_unrelated_browser_results_cannot_satisfy_release_gate():
     data = {"stats": {"expected": 16, "unexpected": 0, "flaky": 0, "skipped": 0}, "errors": [],
             "config": {"metadata": {"target": "integrated-product"}}, "suites": []}
     assert browser_evidence_passed(data) is False
+
+
+def test_pipeline_evidence_must_be_complete_and_current(tmp_path):
+    from .pipeline_artifacts import sha256
+    root = Path(__file__).resolve().parents[2]
+    sources = ("pipeline/src/parcel_pipeline/model.py", "pipeline/src/parcel_pipeline/features.py",
+               "pipeline/src/parcel_pipeline/cli.py", "pipeline/src/parcel_pipeline/sources/sf.py", "pipeline/src/parcel_pipeline/settings.py",
+               "pipeline/src/parcel_pipeline/sources/census.py", "pipeline/uv.lock", "config/categories.yaml")
+    evidence = {"source_sha256": {p: sha256(root / p) for p in sources}, "checks": []}
+    path = tmp_path / "partial.json"
+    path.write_text(json.dumps(evidence))
+    output = tmp_path / "report"
+    assert main(["--pipeline-probe-results", str(path), "--report-dir", str(output)]) == 1
+    result = json.loads((output / "results.json").read_text())
+    assert any(c["id"] == "release.pipeline_probes" and c["status"] == "FAIL" and "incomplete" in c["detail"] for c in result["checks"])
+
+
+def test_imported_pipeline_failure_cannot_be_hidden(tmp_path):
+    from .pipeline_artifacts import sha256
+    root = Path(__file__).resolve().parents[2]
+    sources = ("pipeline/src/parcel_pipeline/model.py", "pipeline/src/parcel_pipeline/features.py",
+               "pipeline/src/parcel_pipeline/cli.py", "pipeline/src/parcel_pipeline/sources/sf.py", "pipeline/src/parcel_pipeline/settings.py",
+               "pipeline/src/parcel_pipeline/sources/census.py", "pipeline/uv.lock", "config/categories.yaml")
+    ids = ("pipeline.spatial_features", "pipeline.train_normalization", "pipeline.sf_label_isolation",
+           "pipeline.serving_fallback_evaluation", "pipeline.partial_assessment", "pipeline.publication_fingerprint",
+           "pipeline.dotenv_precedence", "pipeline.census_error_privacy")
+    checks = [{"id": id, "status": "FAIL" if id == "pipeline.sf_label_isolation" else "PASS", "owner": "Data",
+               "detail": "controlled regression", "reproduction": "test", "expected": "no regression", "impact": "release blocker"} for id in ids]
+    path = tmp_path / "evidence.json"
+    path.write_text(json.dumps({"source_sha256": {p: sha256(root / p) for p in sources}, "checks": checks}))
+    output = tmp_path / "report"
+    assert main(["--pipeline-probe-results", str(path), "--report-dir", str(output)]) == 1
+    result = json.loads((output / "results.json").read_text())
+    assert result["release_accepted"] is False and any(c["id"] == "pipeline.sf_label_isolation" and c["status"] == "FAIL" for c in result["checks"])

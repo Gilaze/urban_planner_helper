@@ -1,0 +1,306 @@
+{
+  "created_at": "2026-11-15T05:05:39.842723+00:00",
+  "mode": "fixture",
+  "release_accepted": false,
+  "checks": [
+    {
+      "id": "checker.hand_calculations",
+      "status": "PASS",
+      "owner": "Checker",
+      "detail": "........................................                                 [100%]\n40 passed in 0.04s",
+      "reproduction": "python -m tests.integration.verify_release",
+      "expected": "All independent hand-calculated scoring oracle checks pass.",
+      "impact": "checker integrity",
+      "categories": []
+    },
+    {
+      "id": "pipeline.manifest",
+      "status": "BLOCKED",
+      "owner": "Data",
+      "detail": "[Errno 2] No such file or directory: 'data/artifacts/release/source_manifest.json'",
+      "reproduction": "python -m tests.integration.verify_release --artifact-format pipeline --artifact-dir 'data/artifacts/release'",
+      "expected": "Full canonical pipeline release, not just serving projection.",
+      "impact": "release blocker",
+      "categories": []
+    },
+    {
+      "id": "data_reports.gate_arithmetic",
+      "status": "PASS",
+      "owner": "Data",
+      "detail": "Reported per-category RMSE, macro averages, support minimums and Berkeley gate reconcile. This is aggregate arithmetic, not verification of raw predictions.",
+      "reproduction": "python -m tests.integration.verify_release --data-reports-dir 'reports/data'",
+      "expected": "Reported gate is internally consistent.",
+      "impact": "reported aggregate consistency",
+      "categories": []
+    },
+    {
+      "id": "data_reports.census",
+      "status": "PASS",
+      "owner": "Data",
+      "detail": "Data report declares census_skipped=False; verify canonical population/coverage before live use.",
+      "reproduction": "python -m tests.integration.verify_release --data-reports-dir 'reports/data'",
+      "expected": "Census-backed population and covariates exported with margins of error.",
+      "impact": "release blocker",
+      "categories": []
+    },
+    {
+      "id": "data_reports.sf_generalization",
+      "status": "WARN",
+      "owner": "Data",
+      "detail": "On reported common SF categories ['clinic', 'grocery'], selected macro RMSE=1.551121, baseline=1.509768. Raw prediction files are unavailable in this checkout; these are reported aggregates, not a fresh SF evaluation.",
+      "reproduction": "python -m tests.integration.verify_release --data-reports-dir 'reports/data'",
+      "expected": "Describe held-out performance and keep SF out of subsequent model selection.",
+      "impact": "model interpretation",
+      "categories": []
+    },
+    {
+      "id": "data_reports.category_review",
+      "status": "BLOCKED",
+      "owner": "Data + Checker",
+      "detail": "160 sampled rows; 0 accepted, 0 rejected; blank/uncertain verdicts remain unreviewed. Samples alone do not establish classification accuracy.",
+      "reproduction": "python -m tests.integration.verify_release --data-reports-dir 'reports/data'",
+      "expected": "Review mappings against source evidence, resolve rejects, and record accept/reject verdicts.",
+      "impact": "release blocker",
+      "categories": []
+    },
+    {
+      "id": "pipeline.dotenv_precedence",
+      "status": "PASS",
+      "owner": "Data",
+      "detail": "Synthetic environment override, duplicate-line precedence and export/quote parsing verified without disclosing credentials.",
+      "reproduction": "pipeline/.venv/bin/python -m tests.integration.pipeline_probes",
+      "expected": "Existing environment wins; later dotenv duplicates win without logging values.",
+      "impact": "release blocker",
+      "categories": []
+    },
+    {
+      "id": "pipeline.census_error_privacy",
+      "status": "PASS",
+      "owner": "Data",
+      "detail": "Network, HTTP and non-JSON Census failures omit credential-bearing URLs, including formatted traceback context.",
+      "reproduction": "pipeline/.venv/bin/python -m tests.integration.pipeline_probes",
+      "expected": "Request failures never expose the Census key or request URL.",
+      "impact": "release blocker",
+      "categories": []
+    },
+    {
+      "id": "pipeline.spatial_features",
+      "status": "PASS",
+      "owner": "Data",
+      "detail": "Hand distances 300/700/1500m, closure/focal exclusion, transit complement and predictor names agree.",
+      "reproduction": "pipeline/.venv/bin/python -m tests.integration.pipeline_probes",
+      "expected": "Focal/closure exclusion and hand-calculated metric radii.",
+      "impact": "release blocker",
+      "categories": [
+        "clinic",
+        "grocery"
+      ]
+    },
+    {
+      "id": "pipeline.train_normalization",
+      "status": "PASS",
+      "owner": "Data",
+      "detail": "40 Oakland-only synthetic targets: mean=std=log(2); estimator normalization agrees.",
+      "reproduction": "pipeline/.venv/bin/python -m tests.integration.pipeline_probes",
+      "expected": "Train-only mean/std and zero-variance convention.",
+      "impact": "release blocker",
+      "categories": [
+        "clinic"
+      ]
+    },
+    {
+      "id": "pipeline.sf_label_isolation",
+      "status": "FAIL",
+      "owner": "Data",
+      "detail": "ValueError: Changing only synthetic SF labels changed Oakland training eligibility: 0 -> 3; degenerate categories ['school'] -> []",
+      "reproduction": "pipeline/.venv/bin/python -m tests.integration.pipeline_probes",
+      "expected": "Changing SF test labels never changes Oakland/Berkeley training eligibility.",
+      "impact": "release blocker",
+      "categories": [
+        "school"
+      ]
+    },
+    {
+      "id": "pipeline.serving_fallback_evaluation",
+      "status": "FAIL",
+      "owner": "Data",
+      "detail": "ValueError: Production serves pharmacy category baseline=2, but selected SF evaluation has 0/3 predictions",
+      "reproduction": "pipeline/.venv/bin/python -m tests.integration.pipeline_probes",
+      "expected": "Evaluation includes the baseline fallback actually served for unsupported categories.",
+      "impact": "release blocker",
+      "categories": [
+        "pharmacy"
+      ]
+    },
+    {
+      "id": "pipeline.partial_assessment",
+      "status": "FAIL",
+      "owner": "Data",
+      "detail": "ValueError: Two condo APNs include an unknown improvement value, but the parcel reports a complete USD 200000 total with no partial-value label",
+      "reproduction": "pipeline/.venv/bin/python -m tests.integration.pipeline_probes",
+      "expected": "Unknown APN values are null at physical-lot grain, or explicitly labeled partial subtotals.",
+      "impact": "release blocker",
+      "categories": []
+    },
+    {
+      "id": "pipeline.publication_fingerprint",
+      "status": "FAIL",
+      "owner": "Data",
+      "detail": "ValueError: publish rewrites/filters parcels.geoparquet but copies the canonical checksum unchanged; published manifest does not fingerprint the served file",
+      "reproduction": "pipeline/.venv/bin/python -m tests.integration.pipeline_probes",
+      "expected": "Published manifests contain hashes and row counts for the published bytes.",
+      "impact": "release blocker",
+      "categories": []
+    },
+    {
+      "id": "api.health",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Ready fixture API; versions {'schema_version': '1.0', 'data_version': 'synthetic-sf-1', 'model_version': 'synthetic-review-1', 'assumption_version': 'synthetic-economics-1'}.",
+      "reproduction": "python -m tests.integration.verify_release --api-base-url 'http://127.0.0.1:8765/api/v1'",
+      "expected": "Ready API with explicit mode and loaded versions.",
+      "impact": "API contract",
+      "categories": []
+    },
+    {
+      "id": "api.metadata",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Published schema 1.0 check passed.",
+      "reproduction": "python -m tests.integration.verify_release --api-base-url 'http://127.0.0.1:8765/api/v1'",
+      "expected": "Five categories, defaults, units, sources and coverage.",
+      "impact": "API contract",
+      "categories": []
+    },
+    {
+      "id": "api.parcels",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Published schema 1.0 check passed.",
+      "reproduction": "python -m tests.integration.verify_release --api-base-url 'http://127.0.0.1:8765/api/v1'",
+      "expected": "Capped, deduplicated parcels with freshness and source version.",
+      "impact": "API contract",
+      "categories": []
+    },
+    {
+      "id": "api.services",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Published schema 1.0 check passed.",
+      "reproduction": "python -m tests.integration.verify_release --api-base-url 'http://127.0.0.1:8765/api/v1'",
+      "expected": "Active deduplicated supply with category filtering.",
+      "impact": "API contract",
+      "categories": []
+    },
+    {
+      "id": "api.parcel_detail",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Published schema 1.0 check passed.",
+      "reproduction": "python -m tests.integration.verify_release --api-base-url 'http://127.0.0.1:8765/api/v1'",
+      "expected": "Canonical parcel detail with vacancy/hypothetical labeling.",
+      "impact": "API contract",
+      "categories": []
+    },
+    {
+      "id": "api.comparison",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Default/repeat/reweight/unavailable-weight/reset pass; cached timings [1.02, 0.96, 0.87, 0.83] ms.",
+      "reproduction": "python -m tests.integration.verify_release --api-base-url 'http://127.0.0.1:8765/api/v1'",
+      "expected": "Independent ranking/Pareto, unavailable axes, clipped massing and deterministic cached comparisons.",
+      "impact": "API contract",
+      "categories": []
+    },
+    {
+      "id": "api.errors",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Published schema 1.0 check passed.",
+      "reproduction": "python -m tests.integration.verify_release --api-base-url 'http://127.0.0.1:8765/api/v1'",
+      "expected": "Structured unknown-parcel and invalid bbox/weight/priority errors.",
+      "impact": "API contract",
+      "categories": []
+    },
+    {
+      "id": "api.oracle.sf:fixture-001.clinic",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Published schema 1.0 check passed.",
+      "reproduction": "python -m tests.integration.verify_release --api-base-url 'http://127.0.0.1:8765/api/v1'",
+      "expected": "Raw need/travel agrees with independently projected fixture source records.",
+      "impact": "API contract",
+      "categories": []
+    },
+    {
+      "id": "api.oracle.sf:fixture-001.pharmacy",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Published schema 1.0 check passed.",
+      "reproduction": "python -m tests.integration.verify_release --api-base-url 'http://127.0.0.1:8765/api/v1'",
+      "expected": "Raw need/travel agrees with independently projected fixture source records.",
+      "impact": "API contract",
+      "categories": []
+    },
+    {
+      "id": "api.oracle.sf:fixture-001.grocery",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Published schema 1.0 check passed.",
+      "reproduction": "python -m tests.integration.verify_release --api-base-url 'http://127.0.0.1:8765/api/v1'",
+      "expected": "Raw need/travel agrees with independently projected fixture source records.",
+      "impact": "API contract",
+      "categories": []
+    },
+    {
+      "id": "api.oracle.sf:fixture-001.bank_credit_union",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Published schema 1.0 check passed.",
+      "reproduction": "python -m tests.integration.verify_release --api-base-url 'http://127.0.0.1:8765/api/v1'",
+      "expected": "Raw need/travel agrees with independently projected fixture source records.",
+      "impact": "API contract",
+      "categories": []
+    },
+    {
+      "id": "api.oracle.sf:fixture-001.school",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Published schema 1.0 check passed.",
+      "reproduction": "python -m tests.integration.verify_release --api-base-url 'http://127.0.0.1:8765/api/v1'",
+      "expected": "Raw need/travel agrees with independently projected fixture source records.",
+      "impact": "API contract",
+      "categories": []
+    },
+    {
+      "id": "release.browser",
+      "status": "BLOCKED",
+      "owner": "Frontend + Checker",
+      "detail": "No browser results supplied",
+      "reproduction": "python -m tests.integration.verify_release",
+      "expected": "Measured browser checks against the integrated product.",
+      "impact": "release blocker",
+      "categories": []
+    },
+    {
+      "id": "release.provider",
+      "status": "PASS",
+      "owner": "Backend + Checker",
+      "detail": "Imported reports/verification/production-provider-results.json; acceptance=True.",
+      "reproduction": "python -m tests.integration.verify_release",
+      "expected": "All required product checks pass, without skips or checker-only stand-ins.",
+      "impact": "release blocker",
+      "categories": []
+    },
+    {
+      "id": "release.presentation_review",
+      "status": "BLOCKED",
+      "owner": "Checker",
+      "detail": "No presentation-machine evidence supplied",
+      "reproduction": "python -m tests.integration.verify_release",
+      "expected": "Completed presentation-machine evidence; see manual_evidence.example.json.",
+      "impact": "release blocker",
+      "categories": []
+    }
+  ]
+}

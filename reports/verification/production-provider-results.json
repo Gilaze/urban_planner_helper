@@ -1,0 +1,66 @@
+{
+  "production_driver": true,
+  "mode": "fault-injection-synthetic",
+  "python_version": "3.11.17",
+  "checks": [
+    {
+      "id": "pagination",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "1,001 records in two stable batch pages; repeat-page rejection; viewport cap 3/5."
+    },
+    {
+      "id": "malformed",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Numeric keys, missing geometry, nonpolygon geometry and swapped coordinates rejected; invalid records not cached."
+    },
+    {
+      "id": "timeout_fallback",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Real cache live/cached/stale transitions and API detail/viewport snapshot fallbacks verified."
+    },
+    {
+      "id": "unavailable",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Actual routes return structured 503 without provider/cache/artifacts."
+    },
+    {
+      "id": "changed_geometry",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Changed and new parcels stay visible with reasons and null normalized metrics/totals/ranks through actual API routes."
+    },
+    {
+      "id": "bounded_retry",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "429/503 retry once; nontransient 400 does not retry."
+    }
+  ],
+  "production_components": [
+    "backend.datasf.DataSF",
+    "backend.datasf.DataSFParcels",
+    "backend.api.create_app",
+    "backend.release.Release"
+  ],
+  "source_sha256": {
+    "backend/__init__.py": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+    "backend/api.py": "502cfd8206cf45fdd08f5549d964ece6f2c18642e7ee2469c254cdae035168f7",
+    "backend/assessment.py": "df01bd62609e044727bfe97ded5a89870795fc7245e76a70e5be483ad978cd9c",
+    "backend/build_release.py": "5638e104d70496b19cb4e0772fce43ab90c03f254addd9cf44578d4db9103512",
+    "backend/datasf.py": "5d0467a6081af2a9c7718a2eb4ca14611fc3649cfb9c7f3ebfee6cd0f7021253",
+    "backend/economics.py": "aec81bdf16925e9f05c33670e438df1e952455d9207ee5a05d41489e6ce4e065",
+    "backend/export_contract.py": "e4a14b7b15c7e657b28720cac266267b400ceb9306dfed450629424b9195c6b0",
+    "backend/geometry.py": "4d8d3c0fd08962add7f09abddf520067009a6a44c3699ae726d38e296906e3f8",
+    "backend/ranking.py": "889d26fb54ac64295d900f3dee7aa6b073b59c8a47d88bc452e99ea93b58696c",
+    "backend/release.py": "99ae84d05c8df1b7a10dfd26056e7415ae473e4dc5b341d5d5f6382b58c30740",
+    "backend/schemas.py": "46a2eab827ac9ce9fb6666d47c9c204c0a5daf26d0b053fcf57f00dfcf44f9f2",
+    "backend/snapshot.py": "c138c3f10da4b203ad2888a060a277e99bcc06e5e71d0f3cca4041c608aebee3",
+    "backend/spatial.py": "5f0f1473f2f0828f95b393a40ef27a115e4f893136b817ec3ddc04c90936cd05",
+    "backend/requirements-release.lock": "31102bbaaa64bf8c7e0b893f5fce6e66b49337e9630a5fc208efbf1e5a1bcb1b",
+    "backend/requirements.lock": "896d0c2a164c5206ac15944033ca90ea4209afadf2dd9dbc4bb6c3897cea995f"
+  }
+}

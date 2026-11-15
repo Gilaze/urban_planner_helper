@@ -1,266 +1,206 @@
 # Person 4: independent verification
 
-Parcel Planner compares five essential-service proposals on one SF physical
-parcel. The API owns ranking; Data owns source cleaning and review-activity
-predictions; Frontend owns the map and controls. This directory owns independent
-checks and release evidence. It does not implement any of those product modules.
+The Backend schema 1.0 contract and Data pipeline are on `main`. This directory
+owns independent verification and release evidence. Expected calculations never
+import production scoring functions. Product regressions belong to the affected
+owner, as specified by the implementation plan. Delivery is a direct push to
+`main`, without PRs, per the user's instruction.
 
-The starting commit (`cb642e1`) contained only `IMPLEMENTATION_PLAN.md`. After
-syncing with `main` at `2e4724d`, the Backend schema 1.0 contract and fixture API
-are available. `published_api.py` maps that contract to independent checks and
-the browser fixtures now use the published payloads. Frontend, real Data exports
-and presentation-machine acceptance remain pending.
+Start with `reports/verification/ACCEPTANCE.md` and
+`reports/verification/REGRESSIONS.md`. Passing checker/unit tests does not approve
+a release: the independent Data probes currently expose four product regressions.
+Frontend and full canonical release files are absent from this checkout.
 
-## Run from a clean checkout
+## Clean-checkout setup
 
-From the repository root (Python 3.11 is the planned production version):
-
-```sh
-python3.11 -m venv tests/integration/.venv
-source tests/integration/.venv/bin/activate
-python -m pip install -r tests/integration/requirements.lock.txt
-python -m pytest -c tests/integration/pytest.ini tests/integration -q
-```
-
-Python 3.12 can also run these checks. The initial measured run used 3.12.5;
-3.11 was not installed on that machine. Product tests explicitly skip unless
-their API URL or provider driver is supplied. A green offline pytest run is not
-release sign-off.
-
-Generate the synthetic artifact audit:
+Keep the Backend and Data environments separate so their locks remain intact:
 
 ```sh
-python -m tests.integration.verify_release \
-  --mode fixture \
-  --artifact-dir tests/integration/fixtures/artifacts \
-  --report-dir reports/verification/fixture
+python3.11 -m venv backend/.venv
+backend/.venv/bin/python -m pip install -r tests/integration/backend-tests.lock.txt
+uv sync --project pipeline --locked
+cd tests/integration/browser
+npm ci
+npm run typecheck
+npm run test:list
 ```
 
-This intentionally exits **1** while the API, browser, provider and presentation
-gates are blocked. It writes `acceptance.md`, machine-readable `results.json`, and
-`model_metrics.json`. `release_accepted` is always false in fixture mode. Empty,
-skipped or missing evidence cannot pass a gate. The synthetic records include one
-hypothetical parcel, all five candidates, a missing economic input, string APNs
-and GEOIDs, and small Oakland/Berkeley/SF records. They establish no real coverage,
-model quality, vacancy, tax revenue or access benefit.
+`uv` can provision Python 3.11 if it is not already installed. The latest runs
+used 3.11.17: the combined checker/Backend environment, Backend's 10 own tests,
+and Data's 21 own tests all execute on the planned production interpreter. The
+lighter `tests/integration/requirements.lock.txt` remains available for checker
+oracles and JSON/Parquet fixtures without Backend libraries.
 
-Regenerate fixtures deterministically after a deliberate schema change:
+Start the fixture API in another terminal from the repository root:
 
 ```sh
-python -m tests.integration.fixtures.build_fixture
+PARCEL_PLANNER_MODE=fixture backend/.venv/bin/python -m uvicorn backend.api:app \
+  --host 127.0.0.1 --port 8000
 ```
 
-## Integrated release command
-
-```sh
-python -m tests.integration.verify_release \
-  --mode release \
-  --api-base-url http://127.0.0.1:8000/api/v1 \
-  --artifact-dir /absolute/path/to/release \
-  --bbox=-122.43,37.76,-122.40,37.79 \
-  --parcel-id sf:physical-lot-key \
-  --oracle-cases /absolute/path/to/backend-loaded-oracle-cases.json \
-  --browser-results tests/integration/browser/test-results/results.json \
-  --provider-results reports/verification/provider-results.json \
-  --manual-evidence /absolute/path/to/completed-review.json
-```
-
-Use `--mode fixture` for the same core checks against a fixture-mode integrated
-app. `--oracle-cases` must describe records actually loaded into that backend;
-the included checker case must never be applied to an unrelated real parcel.
-API requests are bounded to 5 seconds and 8 MB by default. The report measures
-three cached comparison calls against the plan's subsecond target, not a load
-benchmark. Every failure includes an owner, reproduction, expected behavior,
-impact and affected categories where applicable. Fixes to product modules go to
-their owners.
-
-For the currently published Backend fixture, start its server using the root
-README, then run the checker with its matching **source** fixture:
-
-```sh
-python -m tests.integration.verify_release \
-  --mode fixture \
-  --api-base-url http://127.0.0.1:8000/api/v1 \
-  --source-fixture contracts/fixture-inputs.json \
-  --artifact-dir tests/integration/fixtures/artifacts \
-  --report-dir reports/verification/synced-main
-```
-
-`--source-fixture` independently projects the supplied population, service and
-proposal coordinates into EPSG:26910 and checks raw metrics for all five
-candidates over HTTP. It is for a matching, coverage-supported synthetic source
-fixture, not arbitrary live source records. The checker artifact fixtures and
-Backend fixture are separate synthetic datasets; this run does not prove a
-shared live artifact release. The current run records 29 passes, zero failures,
-and three missing-evidence blockers. Exact midpoint percentile parity is also
-checked against the published single-parcel fixture examples.
-
-The optional pytest product entry points use the same checks:
+Then run the checker against it:
 
 ```sh
 PARCEL_API_BASE_URL=http://127.0.0.1:8000/api/v1 \
 PARCEL_SOURCE_FIXTURE=contracts/fixture-inputs.json \
-python -m pytest -c tests/integration/pytest.ini tests/integration/test_live_api.py -m live -q
+backend/.venv/bin/python -m pytest -c tests/integration/pytest.ini tests/integration -q
+backend/.venv/bin/python -m unittest discover -s backend/tests -v
+pipeline/.venv/bin/python -m pytest pipeline/tests -q
 ```
 
-## Published API and remaining handoff
+Without an API URL, its HTTP check explicitly skips. Without Backend libraries,
+the production-provider check explicitly skips. Never interpret those skips as
+release acceptance. The two controlled-server harness tests require localhost
+binding; production provider probes themselves use an in-process mock transport.
 
-**The actual wire contract is `contracts/openapi.json`.** Schema 1.0 requests use
-`objective_weights` and `category_priorities`; comparisons have top-level
-`schema_version`, `data_version`, `model_version`, `assumption_version`,
-`parcel_source` and shared `massing`. Raw metrics live in each alternative's
-`need`, `economic` and `sustainability` objects. The API runner detects the
-published health payload and selects `published_api.py`. Frontend hooks still
-need agreement with its owner. Record that review in `payload_agreement` in the
-manual evidence.
-
-The older schema below is retained **only as an internal checker fixture
-format**, to test failure detection before any product exists. It is not the
-Backend wire contract. Keep expected math independent of backend code, and map
-Data exports explicitly when their full canonical schema is available.
-
-`fixtures/comparison.json` is the full proposed response. It has `parcel_id`,
-`versions` (`schema`, `data`, `model`, `assumptions`), `mode`, `freshness`,
-`geometry_hash`, `scoring_geometry_hash`, `scoring_available`, `active_dimensions`,
-`effective_weights`, and five `alternatives`. Each alternative has `category_id`,
-`raw`, `normalized`, `coverage`, `reason_codes`, `review_activity`, `proposal`,
-`total`, `rank` and `pareto`. Unknown values are JSON null. Changed geometry can
-still have details, but its response must have a reason and null totals/ranks.
-
-Collections use GeoJSON with top-level `limit`, `truncated`, `source_version` and
-`freshness`. Detail fields mirror the canonical parcel fixture and add
-`quality_flags` and freshness. Metadata exposes `categories: [{id, label}]`,
-`defaults: {weights, priorities}`, `units`, `sources` and `coverage`. Health has
-`ready`, `mode` and loaded `versions`. Structured errors use `detail` or `error`.
-
-Oracle conventions to agree before exact production parity:
-
-- Catchment weights are 1 through 400 m, 0.5 through 800 m, then 0. Facility
-  denominators use all supported population; the reported deficit decrease is a
-  population-weighted mean within 800 m of the proposal. Release targets stay
-  frozen. A two-point case checks exact ratios and the deficit decrease `2/9`.
-- The percentile oracle uses `100 * (below + equal/2) / n`, with 50 for constant
-  references. The plan does not settle interpolation between observations. If
-  Backend chooses another midpoint convention, agree it explicitly and update
-  the oracle and literal cases together before enforcing exact parity.
-- Category normalization uses population standard deviation of training
-  `log1p(reviews_count)`, replacing zero standard deviation with one. `target` in
-  the checker feature export is the unnormalized log count; the transform is
-  recorded separately. Map a normalized production target explicitly if needed.
-- Supply includes open and unknown-status records, excluding temporary and
-  permanent closures. A peer matches its primary category or deduplicated service
-  tags. Other-service counts count remaining locations once. Focal ID is excluded.
-  These category/tag conventions also need the Data handoff.
-- The economic oracle uses SHA256-separated category/metric random streams and
-  linear quantiles. The plan does not specify a PRNG/quantile implementation;
-  exact draw parity is not presumed. Tests require repeatability, ordered bounded
-  intervals, stable streams and explicit zeros distinct from unknown inputs.
-
-## Data and model export adapter
-
-`artifacts.py:REQUIRED` lists the proposed field names. Geography tables are
-`parcels.geoparquet` and `demographics.geoparquet`; other canonical tables are
-Parquet. JSON arrays are accepted only in checker fixture mode. GeoParquet WKB
-and declared CRS metadata are decoded; WGS84 and EPSG:26910 are checked and area
-is independently recomputed in EPSG:26910. APNs/GEOIDs remain strings. Source
-APNs cannot map to two physical parcels. Unsupported enrichments remain null.
-
-The manifest records `pipeline_version`, `fixture_mode`, `sources` with HTTPS
-attribution, retrieval timestamp, vintage, SHA256 and counts; `artifacts` with
-filename/SHA256/row count; explicit `units`; and `coverage` with city/category and
-closure counts. See the small complete example in `fixtures/artifacts/`.
-`geometry_crs` is needed for JSON fixture geography. The boundary buffer
-declaration is checked separately from the required actual spatial review.
-
-Additional audit exports, to coordinate with Data/Backend:
-
-| File | Checker input |
-| --- | --- |
-| `feature_definitions.json` | Ordered `feature_names` and `distance_crs`; required semantic predictors in `model_audit.py:PREDICTORS`. |
-| `model_manifest.json` | Fit IDs, category normalization and training-median slice thresholds for `selection` and `final`; selected approach, supported categories, seed, estimator version and SF evaluation count. A model attempt also records fixed estimator parameters and all four selection trials. |
-| `predictions.parquet` | `stage`, `approach`, `place_id`, `category_id`, `city`, `actual_log_count`, `prediction_log_count`; all approaches export the same evaluation IDs, including null predictions for unsupported categories. |
-| `scoring_reference.json` | Frozen `data_version`, agreed percentile `method`, `references` arrays and one `rows` entry per SF parcel/category with raw/normalized metrics. This audits percentile ties and the equal mean of economic component percentiles. |
-
-The model audit independently recomputes spatial counts and nearest peers for
-both training and parcel features. It recalculates log-count RMSE and tied-rank
-Spearman, macro averages on common rows, category baselines and unseen-city
-fallbacks. Oakland fits selection transforms; Oakland plus Berkeley fits final
-transforms. Berkeley selects; SF is evaluated separately. Review-derived
-predictors are rejected. Small slices are marked insufficient, constant-rank
-correlation is null, and worst errors and city/category coverage are exported.
-The single-SF-evaluation field is an audit declaration; training logs must support
-it in the manual review. The checker does not load untrusted estimator pickles.
-
-## Parcel-provider fault injection
-
-Backend supplies a thin driver around its **real** adapter, not a new provider:
-
-```python
-def create_driver(*, upstream_url, snapshot_path, page_size, max_records,
-                  timeout_s, max_retries):
-    # Configure the production provider/parser/cache with these test inputs.
-    # Return an object exposing the two methods described below.
-    ...
-```
-
-`fetch(bbox)` returns normalized GeoJSON with `features`, `truncated`,
-`source_version`, `freshness` and `quality_flags`. Unavailability returns
-`status_code: 503` or raises an exception with `.status_code == 503`.
-`compare(parcel_id)` returns a normalized comparison with `scoring_available`,
-`reason` and alternatives. The wrapper translates actual upstream field names
-and paging parameters to the controlled fixture protocol: `offset`/`limit`
-queries, `{records, next_offset, source_version}` responses, and the records in
-`fixtures/provider_records.json`. `snapshot_path` contains verified records and
-their version; load it into the actual cache through the wrapper. Keep production
-pagination, validation, timeouts, retry and fingerprint logic in the path.
+## Actual provider and Data probes
 
 ```sh
-python -m tests.integration.provider_checks \
-  --driver backend.checker_driver:create_driver \
-  --output reports/verification/provider-results.json
+backend/.venv/bin/python -m tests.integration.production_provider_checks \
+  --output reports/verification/production-provider-results.json
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 LOKY_MAX_CPU_COUNT=1 \
+  pipeline/.venv/bin/python -m tests.integration.pipeline_probes \
+  --output reports/verification/pipeline-probe-results.json
 ```
 
-Six probes exercise deterministic pagination/caps, malformed records, timeout to
-stale snapshot, 503 with no snapshot, changed geometry losing cached scores, and
-one bounded transient retry. No production driver exists at the starting commit;
-that absence is explicitly recorded as a blocker, not a passing probe.
+The provider command passes all six probes: deterministic pagination/caps,
+malformed records, timeout fallback/stale labels, no-provider/no-cache 503,
+changed/new parcels losing scores, and bounded retries. `httpx.MockTransport`
+replaces only the upstream network. Real parsers, cache, pagination, retries,
+release matching and FastAPI routes stay in the path. The live-mode setup release
+is synthetic, not real SF data.
 
-## Browser handoff and presentation review
+The Data command currently exits **1**: four checks pass and four fail. Inputs are
+small synthetic records; the actual SF test labels are never revisited. It checks
+dotenv precedence, Census error privacy, independent feature distances and train normalization, then tests SF label
+isolation, consistency between evaluated and served baseline fallbacks, unknown
+condo assessments, and published-file checksums. Failures include owner,
+reproduction, expected behavior and impact. Code/config/lock fingerprints bind
+the results to the tested sources; changing those sources requires rerunning the
+probes. Failures are imported into the acceptance report rather than hidden by
+a green unit suite.
+
+The older `provider_checks.py --driver module:factory` protocol remains for future
+providers. It is not needed to verify the current DataSF implementation.
+
+## Reproduce current acceptance
+
+With the API running:
+
+```sh
+backend/.venv/bin/python -m tests.integration.verify_release \
+  --mode fixture --artifact-format pipeline \
+  --artifact-dir data/artifacts/release \
+  --api-base-url http://127.0.0.1:8000/api/v1 \
+  --source-fixture contracts/fixture-inputs.json \
+  --provider-results reports/verification/production-provider-results.json \
+  --pipeline-probe-results reports/verification/pipeline-probe-results.json \
+  --data-reports-dir reports/data \
+  --report-dir reports/verification/current
+```
+
+The current report records 20 passes, four failures, four blockers and one
+warning. Exit 1 is intentional. It writes readable `acceptance.md`, JSON checks,
+and a qualified Data aggregate review. `release_accepted` is always false in
+fixture mode. Missing native artifacts/actual boundary coverage, category verdicts,
+Frontend/browser evidence and the presentation review remain blocked.
+
+For a real release, use `--mode release`, its live API URL, its full canonical
+artifact directory, and matching oracle cases. Also pass actual Playwright JSON
+via `--browser-results` and completed observations via `--manual-evidence`.
+`--source-fixture` is only for a matching, coverage-supported synthetic source
+fixture; use `--oracle-cases` for other deliberately backend-loaded test records.
+Never apply the bundled checker parcel to an unrelated real parcel.
+
+The API client caps responses at 8 MB and uses a five-second timeout by default.
+The latency check measures cached comparisons on this machine, not a load test.
+
+## Actual wire and artifact formats
+
+The API authority is `contracts/openapi.json`. Schema 1.0 requests use
+`objective_weights` and `category_priorities`; comparisons have explicit version
+fields, `parcel_source`, per-alternative `need`/`economic`/`sustainability`, and a
+shared `massing`. `published_api.py` maps those fields to independent checks.
+Native source-fixture checks independently project coordinates into EPSG:26910,
+then verify raw access/travel for all five candidates over HTTP.
+
+Use `--artifact-format pipeline` for Data's **full** `data/artifacts/release/`,
+rather than only the smaller `artifacts/person2/` serving projection. `auto`
+detects the native `source_manifest.outputs` format. `pipeline_artifacts.py`
+accepts the actual fields (`category`, `rep_lon`, `site_label`,
+`same_category_count_*`, `target_log1p_reviews_count`, and
+`place_eval_predictions.parquet`). It checks every key/domain/fingerprint, APN
+physical-lot mapping, Places/Reviews row preservation, split/target joins, and
+five-candidate coverage. Large parcel/category tables stream in batches.
+
+Geometry/area and independent spatial recalculation use up to 25 reproducibly
+sampled rows per table, seed 42. This limit is explicitly reported. Those checks
+exclude focal IDs, closed supply and transit from the other-service complement,
+and use native service tags. Geography uses GeoParquet WKB/CRS metadata, WGS84
+exports and EPSG:26910 distances. Population and covariate geographies remain
+separate. A complete file audit cannot establish unsupplied raw source coverage.
+
+Native frozen prediction checks recalculate baselines, common evaluation rows,
+log-count RMSE and tied-rank Spearman. Aggregate `reports/data` figures are
+reconciled separately and **never** called independent raw-prediction validation.
+Release-specific normalization still needs a fingerprinted
+`model_normalization.json` export with `selection` and `final` objects:
+
+```json
+{"selection":{"fit_place_ids":[],"categories":{}},
+ "final":{"fit_place_ids":[],"categories":{}}}
+```
+
+Use actual fit IDs and `{category: {"mean": ..., "std": ...}}`; an unfitted stage
+is explicitly empty. The checker recalculates permitted fit rows and population
+standard deviation (zero becomes one). Include its SHA256 under the native
+manifest's `outputs`. Estimator pickles are not loaded.
+
+The older JSON arrays under `fixtures/artifacts/` and `fixtures/comparison.json`
+are internal checker test formats, not instructions for other owners to rename
+their exports. `--artifact-format checker` selects that legacy format. Regenerate
+it with `python -m tests.integration.fixtures.build_fixture`. These synthetic
+records establish no real vacancy, demand, tax revenue or access improvement.
+
+The independent percentile convention is `100 * (below + equal/2) / n`, with 50
+for a constant reference; it matches the published Backend fixture. Economic
+oracles use stable category/metric streams and linear quantiles, while exact
+production PRNG parity is not presumed. Tests check repeatability, bounded ordered
+ranges, zeros versus unknowns, common dimensions, priorities and Pareto cases.
+
+## Browser and presentation handoff
+
+Once Frontend exists, run the same eight flows at 1440x900 and 1280x720:
 
 ```sh
 cd tests/integration/browser
-npm ci
 npx playwright install chromium
-npm run typecheck
-npm run test:list
 APP_BASE_URL=http://127.0.0.1:5173 \
 API_BASE_URL=http://127.0.0.1:8000/api/v1 npm test
 ```
 
-`test:list` only compiles/collects the 16 checks; it never counts as product
-acceptance. The same eight flows run at 1440×900 and 1280×720. The normal flow
-uses the actual API. Error tests intercept responses to inject stale data,
-unavailable metrics/503, invalid massing, and an older response arriving after a
-new selection. WebGL/basemap failure must leave the parcel list usable.
+`test:list` only compiles/collects 16 checks; it is not a browser execution. Normal
+selection/preview/reweight/reset uses the actual API. Error tests inject stale
+source labels, unavailable metrics/503, invalid massing, and an older comparison
+arriving after a new selection. WebGL/basemap failure must preserve the parcel
+list and results. Browser fixtures use the published Backend payloads.
 
-Proposed stable Frontend hooks (adapt to the real accessible UI at handoff):
+Proposed hooks, to agree with Frontend's actual accessible UI:
 
 | Hook | Meaning |
 | --- | --- |
-| `parcel-selector` | Native select, placeholder with empty value; keyboard operable. |
-| `comparison-results` | `data-parcel-id`, `data-status="ready"` after completion. |
-| `candidate-{id}` / `alternative-{id}` | Candidate selector and visible result with `data-rank`. |
-| `objective-{dimension}` / `priority-{id}` | Native range inputs; defaults one, allow the value two. |
-| `massing-preview` | Visible state description with `data-kind="volume"` or `"outline"`, illustrative label. |
-| `view-2d` | Toggle with `aria-pressed`; Reset is an accessible button named Reset. |
+| `parcel-selector` | Native keyboard-operable select, empty placeholder value. |
+| `comparison-results` | `data-parcel-id`, `data-status="ready"` on completion. |
+| `candidate-{id}` / `alternative-{id}` | Selector and visible result with `data-rank`. |
+| `objective-{dimension}` / `priority-{id}` | Native ranges; defaults one, allow two. |
+| `massing-preview` | Visible description, `data-kind="volume"` or `"outline"`, illustrative label. |
+| `view-2d` | Toggle with `aria-pressed`; accessible Reset button. |
 | `data-freshness` / `unavailable-reason` / `raw-metrics-{id}` | Visible stale label, reasons and raw values/units. |
 
-Copy `manual_evidence.example.json` and fill real observations with screenshots,
-source row references, audit paths and machine details. Review reviewer privacy,
-attribution, zoning as context rather than approval, explicit vacancy evidence or
-hypothetical labeling, scenario-based economics, actual edge coverage, category
-lookalikes, clipped massing and the final SF evaluation or its blocker. The
-category review should cover 20 records per candidate and 20 ambiguous records,
-including clinic and grocery lookalikes. Leave unobserved items `NOT_RUN`; the
-report will not accept them. Record any demo fallback and affected categories in
-the acceptance report.
+Complete `manual_evidence.example.json` with observed machine details,
+screenshots and source references. Review privacy, attribution, zoning as context,
+vacancy/hypothetical labeling, scenario economics, actual boundary coverage,
+category lookalikes, clipped massing and the SF evaluation history. Leave
+unobserved items `NOT_RUN`. Category verdicts in Data's CSV use `accept`, `reject`
+or `needs_review`; unresolved/rejected mappings do not pass. Do not tune against
+previously inspected SF test labels and present that as an untouched final test.

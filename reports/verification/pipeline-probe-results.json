@@ -1,0 +1,105 @@
+{
+  "mode": "production-code-synthetic-inputs",
+  "python_version": "3.11.17",
+  "checks": [
+    {
+      "id": "pipeline.dotenv_precedence",
+      "status": "PASS",
+      "owner": "Data",
+      "detail": "Synthetic environment override, duplicate-line precedence and export/quote parsing verified without disclosing credentials.",
+      "reproduction": "pipeline/.venv/bin/python -m tests.integration.pipeline_probes",
+      "expected": "Existing environment wins; later dotenv duplicates win without logging values.",
+      "impact": "release blocker",
+      "categories": []
+    },
+    {
+      "id": "pipeline.census_error_privacy",
+      "status": "PASS",
+      "owner": "Data",
+      "detail": "Network, HTTP and non-JSON Census failures omit credential-bearing URLs, including formatted traceback context.",
+      "reproduction": "pipeline/.venv/bin/python -m tests.integration.pipeline_probes",
+      "expected": "Request failures never expose the Census key or request URL.",
+      "impact": "release blocker",
+      "categories": []
+    },
+    {
+      "id": "pipeline.spatial_features",
+      "status": "PASS",
+      "owner": "Data",
+      "detail": "Hand distances 300/700/1500m, closure/focal exclusion, transit complement and predictor names agree.",
+      "reproduction": "pipeline/.venv/bin/python -m tests.integration.pipeline_probes",
+      "expected": "Focal/closure exclusion and hand-calculated metric radii.",
+      "impact": "release blocker",
+      "categories": [
+        "clinic",
+        "grocery"
+      ]
+    },
+    {
+      "id": "pipeline.train_normalization",
+      "status": "PASS",
+      "owner": "Data",
+      "detail": "40 Oakland-only synthetic targets: mean=std=log(2); estimator normalization agrees.",
+      "reproduction": "pipeline/.venv/bin/python -m tests.integration.pipeline_probes",
+      "expected": "Train-only mean/std and zero-variance convention.",
+      "impact": "release blocker",
+      "categories": [
+        "clinic"
+      ]
+    },
+    {
+      "id": "pipeline.sf_label_isolation",
+      "status": "FAIL",
+      "owner": "Data",
+      "detail": "ValueError: Changing only synthetic SF labels changed Oakland training eligibility: 0 -> 3; degenerate categories ['school'] -> []",
+      "reproduction": "pipeline/.venv/bin/python -m tests.integration.pipeline_probes",
+      "expected": "Changing SF test labels never changes Oakland/Berkeley training eligibility.",
+      "impact": "release blocker",
+      "categories": [
+        "school"
+      ]
+    },
+    {
+      "id": "pipeline.serving_fallback_evaluation",
+      "status": "FAIL",
+      "owner": "Data",
+      "detail": "ValueError: Production serves pharmacy category baseline=2, but selected SF evaluation has 0/3 predictions",
+      "reproduction": "pipeline/.venv/bin/python -m tests.integration.pipeline_probes",
+      "expected": "Evaluation includes the baseline fallback actually served for unsupported categories.",
+      "impact": "release blocker",
+      "categories": [
+        "pharmacy"
+      ]
+    },
+    {
+      "id": "pipeline.partial_assessment",
+      "status": "FAIL",
+      "owner": "Data",
+      "detail": "ValueError: Two condo APNs include an unknown improvement value, but the parcel reports a complete USD 200000 total with no partial-value label",
+      "reproduction": "pipeline/.venv/bin/python -m tests.integration.pipeline_probes",
+      "expected": "Unknown APN values are null at physical-lot grain, or explicitly labeled partial subtotals.",
+      "impact": "release blocker",
+      "categories": []
+    },
+    {
+      "id": "pipeline.publication_fingerprint",
+      "status": "FAIL",
+      "owner": "Data",
+      "detail": "ValueError: publish rewrites/filters parcels.geoparquet but copies the canonical checksum unchanged; published manifest does not fingerprint the served file",
+      "reproduction": "pipeline/.venv/bin/python -m tests.integration.pipeline_probes",
+      "expected": "Published manifests contain hashes and row counts for the published bytes.",
+      "impact": "release blocker",
+      "categories": []
+    }
+  ],
+  "source_sha256": {
+    "pipeline/src/parcel_pipeline/model.py": "56e1e3dd84b851161c05a2a815d746ac6ebcabf84a583802b6ab99cb44762d53",
+    "pipeline/src/parcel_pipeline/features.py": "1df12a1eccdeec5f26fbf7256f4d9d5e93052fa4f8c5f76c2d1a3008b322560a",
+    "pipeline/src/parcel_pipeline/cli.py": "e5954b6d1441e4d106f0df4befa1cdf2c5049843bf0f1cb80c2fe200b1cef4dd",
+    "pipeline/src/parcel_pipeline/sources/sf.py": "165c661d98cb5c168e2470fe925cd1e024fa3361aedf7e06229248b6f4f3a137",
+    "pipeline/src/parcel_pipeline/settings.py": "5c10ff235c37cb5262207b7d09cc5710453dc8718e830fad80b861a43b495c2c",
+    "pipeline/src/parcel_pipeline/sources/census.py": "9c6ca20103c1291248c7356eb4c822aa67d3856ea3ac3a161bbcd3e3a781a5a4",
+    "pipeline/uv.lock": "921fc7908dd46f45e5dfa1fb1620378406301e22ab10bd9c156872b56f4fb44f",
+    "config/categories.yaml": "722c4ca5824c4567c30e085753e86e10458cd1db047ca9ec0b1945f9f2621ac7"
+  }
+}

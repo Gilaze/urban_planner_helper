@@ -1,6 +1,7 @@
 """Opt-in product smoke tests; missing owners' implementations are explicit skips."""
 
 import importlib
+import importlib.util
 import os
 from pathlib import Path
 
@@ -33,7 +34,12 @@ def test_integrated_api_contract():
 def test_production_parcel_provider_faults():
     driver_path = os.getenv("PARCEL_CHECKER_DRIVER")
     if not driver_path:
-        pytest.skip("No production provider test driver configured: set PARCEL_CHECKER_DRIVER=module:factory")
+        if importlib.util.find_spec("fastapi") is None:
+            pytest.skip("Install Backend locked dependencies to run the actual provider probes")
+        from .production_provider_checks import run_probes as production_probes
+        result = production_probes()
+        assert all(c["status"] == "PASS" for c in result["checks"]), result
+        return
     module, name = driver_path.rsplit(":", 1)
     assert not module.startswith("tests."), "Live checks must wrap the production adapter"
     results = run_probes(getattr(importlib.import_module(module), name))
