@@ -57,7 +57,26 @@ class Settings:
         return self.data_dir / "artifacts"
 
 
+def load_dotenv(path: Path | None = None) -> None:
+    """Load KEY=VALUE lines from <repo>/.env into os.environ (existing vars win).
+
+    Values are never logged. Lines without `=` are ignored.
+    """
+    path = path or REPO_ROOT / ".env"
+    if not path.is_file():
+        return
+    for line in path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.removeprefix("export ").partition("=")
+        key, value = key.strip(), value.strip().strip("'\"")
+        if key and key not in os.environ:
+            os.environ[key] = value
+
+
 def load_settings() -> Settings:
+    load_dotenv()
     data_dir = Path(os.environ.get("PIPELINE_DATA_DIR", REPO_ROOT / "data")).expanduser()
 
     def _path(name: str) -> Path | None:

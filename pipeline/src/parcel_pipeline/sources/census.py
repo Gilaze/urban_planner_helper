@@ -74,9 +74,19 @@ def fetch_acs(level: str, api_key: str | None, session: requests.Session | None 
         else:
             params = {"get": get, "for": "tract:*", "in": f"state:{STATE_FIPS} county:{county}"}
         params["key"] = api_key
-        resp = s.get(ACS_URL, params=params, timeout=60)
-        resp.raise_for_status()
-        rows = resp.json()
+        try:
+            resp = s.get(ACS_URL, params=params, timeout=60)
+        except requests.RequestException as exc:
+            raise RuntimeError(f"ACS request failed for county {county}: {type(exc).__name__}") from None
+        # Never surface the request URL: it carries the API key.
+        if resp.status_code != 200 or "missing_key" in resp.url or "invalid_key" in resp.url:
+            raise RuntimeError(f"ACS request for county {county} failed with HTTP {resp.status_code}; "
+                               "check that CENSUS_API_KEY is valid and activated")
+        try:
+            rows = resp.json()
+        except ValueError:
+            raise RuntimeError(f"ACS returned a non-JSON response for county {county}; "
+                               "the key may be invalid or not yet activated") from None
         frames.append(pd.DataFrame(rows[1:], columns=rows[0]))
     return parse_acs(pd.concat(frames, ignore_index=True), level)
 
