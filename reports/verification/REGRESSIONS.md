@@ -1,5 +1,7 @@
 # Person 4 regression status
 
+> Update at main `4cebb7f`: all 45 previously rejected category mappings are confirmed removed in the new ZIP. Thirty-four policy decisions and one re-review remain. Earlier UI findings predate Person 1's new push. See [the current handoff check](PERSON2_HANDOFF.md); the original findings below are retained for history.
+
 Fixed in pipeline **0.1.1**, following the user's explicit request to implement
 the fixes directly. The original failures were independently reproduced at
 `f8ba4ba`; the same eight probes now all pass without changing their expected

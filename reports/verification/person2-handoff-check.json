@@ -1,0 +1,52 @@
+{
+  "audited_main": "4cebb7fe3afc478fde8cd7f8be010f4b09620404",
+  "bundle_url": "https://drive.google.com/file/d/1jFsIE2-kJqE9oNqLvLO6G0MjYBFApg3g/view",
+  "bundle_sha256": "3131d323931951a78f9b3b9668349aa42ddfd75961c35c91f067da2258d50578",
+  "data_version": "0.1.1+2026-11-15.1+ad464d957df7",
+  "published_files": [
+    {
+      "file": "backend_manifest.json",
+      "sha256_matches": true
+    },
+    {
+      "file": "demographics.geoparquet",
+      "sha256_matches": true,
+      "rows": 3204,
+      "row_count_matches": true
+    },
+    {
+      "file": "parcels.geoparquet",
+      "sha256_matches": true,
+      "rows": 155027,
+      "row_count_matches": true
+    },
+    {
+      "file": "places.parquet",
+      "sha256_matches": true,
+      "rows": 147429,
+      "row_count_matches": true
+    },
+    {
+      "file": "review_predictions.parquet",
+      "sha256_matches": true,
+      "rows": 775135,
+      "row_count_matches": true
+    }
+  ],
+  "category_response_rows_matched_to_actual_parquet": 160,
+  "rejected_mappings_removed": 45,
+  "category_response_status": {
+    "owner decision pending": 34,
+    "changed: please re-review": 1,
+    "addressed: rejected mapping removed from candidate supply": 45,
+    "unchanged": 80
+  },
+  "missing_from_bundle": [
+    "full canonical release",
+    "model_normalization.json",
+    "place_eval_predictions.parquet",
+    "splits.parquet"
+  ],
+  "data_tests": "39 passed, 4.07s",
+  "scope": "Handoff integrity for functional testing; not full release acceptance. No estimator pickle loaded and no SF evaluation rerun."
+}
