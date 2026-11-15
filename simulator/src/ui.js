@@ -195,6 +195,7 @@ export function createUI(root) {
       vacBtn.title = 'Colour buildings and lots by parcel vacancy (V)';
       vacBtn.addEventListener('click', () => setColorBy(colorBy === 'vacancy' ? 'type' : 'vacancy'));
       bar.appendChild(vacBtn);
+      setColorBy('vacancy'); // open in the vacancy view (legend tab, map colours and toolbar toggle)
       bar.appendChild(el('span', 'sep'));
       const focus = el('button', 'tb toggle on', 'Focus<kbd>F</kbd>');
       focus.title = 'Full detail inside the clear radius, blurred low-detail city outside (F)';
