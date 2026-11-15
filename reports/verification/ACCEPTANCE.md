@@ -1,61 +1,70 @@
 # Person 4 acceptance report
 
-Date: November 14, 2026 (America/Los_Angeles). Synchronized baseline: `d4347bc`.
-Fixed pipeline: **0.1.1**. Delivery: direct push to `main`, without PRs.
+Date: November 14, 2026 (America/Los_Angeles). Audited main: `35f3947`.
+Final scope: **Person 4 only, using committed repository inputs**. Delivery is a
+direct push to main without a PR. Changes are confined to `tests/integration/`
+and `reports/verification/`; no teammate's product code or Data reports changed.
 
-**All four Data code regressions are fixed and their independent proofs pass.**
-Live release remains blocked by unrebuilt/unavailable real artifacts and UI/review
-evidence. No actual SF test was rerun and no historical metrics were fabricated.
+**Verification is complete for the available fixture/code/sample inputs; release
+is not accepted.** The current command reports **24 PASS, 3 FAIL, 2 BLOCKED,
+1 WARN**. Browser/presentation readiness and category mappings fail; full real
+artifacts and refreshed release reports remain unavailable under this scope.
 
 ## Measured checks
 
-| Check | Result | Scope |
+| Check | Result | Evidence scope |
 | --- | --- | --- |
-| Combined checker suite | **135 passed, no skips**, 3.10 s | Python 3.11.17, fixture HTTP API, real provider code, independent scoring, native artifact/normalization adapters, fallback availability and producer-version checks. |
-| Data suite | **36 passed**, 3.53 s | Locked Python 3.11 environment, including new held-out-label, fallback-policy, assessment and publication regressions. |
-| Backend suite | **10 passed** | Release/schema/cache/ranking checks remain green. |
-| Independent Data probes | **8 PASS, 0 FAIL** | The same synthetic adversarial probes that previously exposed the four bugs. |
-| Provider fault probes | **6 PASS** | Actual parsers, cache, pagination/retry and API routes with controlled upstream transport. |
-| Current acceptance command | **24 PASS, 0 FAIL, 5 BLOCKED, 1 WARN** | [Readable details](current/acceptance.md), [JSON checks](current/results.json), [qualified aggregate review](current/data_report_review.json). Exit 1 means missing release evidence, not a remaining reproduced code failure. |
+| Combined checker suite | **142 passed, no skips**, 3.44 s | Python 3.11.17, actual fixture HTTP API, independent scoring, real provider code with controlled transport, artifact adapters and exact-source-bound category reviews. |
+| Data suite | **36 passed**, 3.30 s | Unchanged pipeline 0.1.1, locked Python 3.11 environment. |
+| Backend suite | **10 passed**, 0.184 s | Release/schema/cache/ranking and geometry behavior. |
+| Independent Data probes | **8 PASS, 0 FAIL** | Repository synthetic inputs; all four previously fixed Data regressions remain closed. |
+| Provider fault probes | **6 PASS** | Pagination/caps, malformed records, retries, stale fallback, unavailable sources and changed/new score invalidation. |
+| Category sample review | **160 reviewed: 80 accept, 45 reject, 35 need owner evidence** | Committed names/categories/tags only; no external facility verification or population error-rate estimate. |
+| Browser build / TypeScript | **Passed** | Existing simulator build and checker TypeScript compile; build alone does not prove UI integration. |
+| Actual browser flow | **0 passed, 16 failed, 0 skipped** | Eight planned flows at 1440×900 and 1280×720, installed Chrome. Planner entry point absent; downstream assertions not reached. |
+| Current acceptance command | **24 PASS, 3 FAIL, 2 BLOCKED, 1 WARN** | [Readable details](current/acceptance.md), [checks](current/results.json), [aggregate/sample review](current/data_report_review.json). Exit 1 is intentional. |
 
-The fixes make eligibility training-only, apply the same selected prediction policy
-in evaluation and serving, propagate unknown condo assessment components to null,
-and fingerprint each published projection while preserving canonical provenance.
-See [REGRESSIONS.md](REGRESSIONS.md) for closure details and reproductions.
+## Findings and teammate handoff
 
-Pipeline/package version and its lock advance to 0.1.1 without upgrading external
-dependencies. The publisher also rejects corrupt canonical fingerprints/counts,
-retains canonical inputs, stages output before replacing known files, and removes
-stale demographics only for an explicit missing-Census publication. The combined
-checker/Backend environment is pinned in `tests/integration/backend-tests.lock.txt`;
-Data keeps its separate `pipeline/uv.lock`.
+**Frontend / Person 1:** the current `simulator/` is a city viewer. With only
+tracked inputs, it remains at a missing-city-data error. The planned parcel
+selector, comparison panel, weights and proposal preview are not integrated.
+Both viewport screenshots show the same loader error, without horizontal overflow
+or a framework overlay. The 16 scenarios fail at entry rather than demonstrate
+16 distinct defects. See [BROWSER_QA.md](BROWSER_QA.md) for console/HTTP evidence,
+interaction limits and reproduction. The fixture API and simulator are running
+locally on ports 8765 and 5173 for inspection.
 
-## Remaining release work
+**Data / Person 2:** resolve the category findings in
+[CATEGORY_REVIEW.md](CATEGORY_REVIEW.md) and [the 160 annotated rows](category-review.csv).
+All 20 clinic lookalikes and 20 grocery lookalikes retain candidate supply tags
+despite an `other` primary group. Other notes identify credential/school-scope
+conflicts and uncertain individual-provider versus facility capacity. The review
+is stored separately; Data's original CSV and taxonomy are unchanged. The
+verifier rejects stale source hashes, changed fields and incomplete review rows.
 
-1. **Rebuild real artifacts with 0.1.1.** The committed Data reports describe
-   0.1.0 and are now explicitly historical. Their release-version gate remains
-   blocked. Full canonical Parquet and frozen predictions are gitignored and
-   absent here; corrected raw metrics, assessment totals, normalization and real
-   boundary coverage cannot be verified without them. Rebuild tables before
-   training/publishing, then freeze the Backend serving release.
-2. **Complete category review.** The 160 sampled candidate/ambiguous/lookalike
-   records still have no completed accept/reject verdicts. Resolve the individual
-   provider versus facility policy before accepting service-supply counts.
-3. **Run the integrated UI and presentation checks.** The latest main commit
-   adds a Three.js city simulator under `simulator/`; it loads its own generated
-   city binaries. The configured 16 planner browser flows were type-checked and
-   collected earlier, but their Backend integration remains unverified. Actual
-   planner behavior, source/privacy/zoning/hypothetical labels, economic scenario
-   descriptions and presentation evidence remain pending.
+**Data / Person 2:** supply the full 0.1.1 canonical and serving handoff, including
+frozen predictions and normalization fit IDs/means/std. Those outputs are
+ignored and are not supplied by tracked repository files. Existing 0.1.0 reports
+remain historical. Their arithmetic reconciles, but it cannot validate the fixed
+release's actual joins, assessment totals, normalization or boundary coverage.
+Earlier SF results have already been inspected; preserve that evaluation history.
+No actual SF re-evaluation was performed in this audit.
 
-The aggregate arithmetic from Data version
-`0.1.0+2026-11-14.2+ad464d957df7` is retained only as historical reconciliation.
-It does not measure the fixed pipeline. Earlier SF results were already inspected;
-disclose that history and freeze evaluation before claiming final-test independence.
-No live-data release or product browser experience is approved.
+**Team + Checker:** complete the actual presentation review after the integrated
+flow and permitted artifacts exist. [Recorded observations](current/manual-evidence.json)
+leave unavailable UI, real boundary and frozen-SF checks `NOT_RUN`; supplying an
+observation file does not make the presentation gate pass. The only exercised
+complete API fallback remains the explicitly synthetic fixture.
 
-The synthetic API still exercises all five categories, with school FTE deliberately
-unavailable and a hypothetical parcel. That is the only demo fallback exercised.
-`current/` controls current acceptance; `fixture/` and `synced-main/` are earlier
-milestone snapshots. Exact commands are in
-[the checker README](../../tests/integration/README.md).
+## Scope and input policy
+
+The user narrowed the task to Person 4 and repository-provided data. Preparatory
+Data edits were removed. Inputs acquired before that restriction and their
+untrained build were excluded from active pipeline paths and from all current
+verification evidence. No downloaded source rows, credentials, model binaries or
+real-data outputs are committed, and no rebuilt real 0.1.1 release is claimed.
+
+The previous four Data fixes remain on main. New product findings are recorded
+with their owners in [REGRESSIONS.md](REGRESSIONS.md). Exact checker setup and
+acceptance commands are in [the README](../../tests/integration/README.md).

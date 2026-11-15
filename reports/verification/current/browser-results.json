@@ -1,0 +1,384 @@
+{
+  "evidence_kind": "trimmed-native-playwright-report",
+  "raw_report_sha256": "287736c93bf52baa7fa1cf4c9f61c5744e8ea472a8297a03afd531d7d942db5a",
+  "trimming": "Retains every test, project, status, duration and error summary. ANSI codes, call logs, repeated source excerpts and local trace attachment records omitted.",
+  "config": {
+    "metadata": {
+      "appURL": "http://127.0.0.1:5173",
+      "apiURL": "http://127.0.0.1:8765/api/v1",
+      "target": "integrated-product",
+      "browserChannel": "installed-chrome",
+      "inputPolicy": "repository-only",
+      "actualWorkers": 1
+    }
+  },
+  "suites": [
+    {
+      "title": "parcel-flow.spec.ts",
+      "file": "parcel-flow.spec.ts",
+      "line": 0,
+      "column": 0,
+      "specs": [
+        {
+          "title": "parcel selection, preview and reset",
+          "ok": false,
+          "file": "parcel-flow.spec.ts",
+          "line": 49,
+          "column": 1,
+          "tests": [
+            {
+              "projectName": "desktop-1440",
+              "status": "unexpected",
+              "expectedStatus": "passed",
+              "results": [
+                {
+                  "status": "failed",
+                  "duration": 7834,
+                  "errors": [
+                    {
+                      "message": "Error: expect(locator).toBeEnabled() failed\n\nLocator: getByTestId('parcel-selector')\nExpected: enabled\nTimeout: 5000ms\nError: element(s) not found"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "projectName": "laptop-1280",
+              "status": "unexpected",
+              "expectedStatus": "passed",
+              "results": [
+                {
+                  "status": "failed",
+                  "duration": 7137,
+                  "errors": [
+                    {
+                      "message": "Error: expect(locator).toBeEnabled() failed\n\nLocator: getByTestId('parcel-selector')\nExpected: enabled\nTimeout: 5000ms\nError: element(s) not found"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "keyboard parcel selection",
+          "ok": false,
+          "file": "parcel-flow.spec.ts",
+          "line": 80,
+          "column": 1,
+          "tests": [
+            {
+              "projectName": "desktop-1440",
+              "status": "unexpected",
+              "expectedStatus": "passed",
+              "results": [
+                {
+                  "status": "failed",
+                  "duration": 7042,
+                  "errors": [
+                    {
+                      "message": "Error: expect(locator).toBeEnabled() failed\n\nLocator: getByTestId('parcel-selector')\nExpected: enabled\nTimeout: 5000ms\nError: element(s) not found"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "projectName": "laptop-1280",
+              "status": "unexpected",
+              "expectedStatus": "passed",
+              "results": [
+                {
+                  "status": "failed",
+                  "duration": 7309,
+                  "errors": [
+                    {
+                      "message": "Error: expect(locator).toBeEnabled() failed\n\nLocator: getByTestId('parcel-selector')\nExpected: enabled\nTimeout: 5000ms\nError: element(s) not found"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "stale snapshot label",
+          "ok": false,
+          "file": "parcel-flow.spec.ts",
+          "line": 92,
+          "column": 1,
+          "tests": [
+            {
+              "projectName": "desktop-1440",
+              "status": "unexpected",
+              "expectedStatus": "passed",
+              "results": [
+                {
+                  "status": "failed",
+                  "duration": 7527,
+                  "errors": [
+                    {
+                      "message": "Error: expect(locator).toBeEnabled() failed\n\nLocator: getByTestId('parcel-selector')\nExpected: enabled\nTimeout: 5000ms\nError: element(s) not found"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "projectName": "laptop-1280",
+              "status": "unexpected",
+              "expectedStatus": "passed",
+              "results": [
+                {
+                  "status": "failed",
+                  "duration": 7162,
+                  "errors": [
+                    {
+                      "message": "Error: expect(locator).toBeEnabled() failed\n\nLocator: getByTestId('parcel-selector')\nExpected: enabled\nTimeout: 5000ms\nError: element(s) not found"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "unavailable API preserves usable controls",
+          "ok": false,
+          "file": "parcel-flow.spec.ts",
+          "line": 109,
+          "column": 1,
+          "tests": [
+            {
+              "projectName": "desktop-1440",
+              "status": "unexpected",
+              "expectedStatus": "passed",
+              "results": [
+                {
+                  "status": "failed",
+                  "duration": 7485,
+                  "errors": [
+                    {
+                      "message": "Error: expect(locator).toBeEnabled() failed\n\nLocator: getByTestId('parcel-selector')\nExpected: enabled\nTimeout: 5000ms\nError: element(s) not found"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "projectName": "laptop-1280",
+              "status": "unexpected",
+              "expectedStatus": "passed",
+              "results": [
+                {
+                  "status": "failed",
+                  "duration": 7305,
+                  "errors": [
+                    {
+                      "message": "Error: expect(locator).toBeEnabled() failed\n\nLocator: getByTestId('parcel-selector')\nExpected: enabled\nTimeout: 5000ms\nError: element(s) not found"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "late comparison cannot replace current selection",
+          "ok": false,
+          "file": "parcel-flow.spec.ts",
+          "line": 124,
+          "column": 1,
+          "tests": [
+            {
+              "projectName": "desktop-1440",
+              "status": "unexpected",
+              "expectedStatus": "passed",
+              "results": [
+                {
+                  "status": "timedOut",
+                  "duration": 30126,
+                  "errors": [
+                    {
+                      "message": "Test timeout of 30000ms exceeded."
+                    },
+                    {
+                      "message": "Error: locator.selectOption: Test timeout of 30000ms exceeded.\nCall log:\n  - waiting for getByTestId('parcel-selector')\n\n\n  144 |   await page.goto('/');\n  145 |   const selector = page.getByTestId('parcel-selector');\n> 146 |   await selector.selectOption(ids[0]);\n      |                  ^\n  147 |   await firstRequest;\n  148 |   await selector.selectOption(ids[1]);\n  149 |   await expect(page.getByTestId('comparison-results')).toHaveAttribute('data-parcel-id', ids[1]);\n    at /Users/maxli/Documents/ChatGPT/Urban Project DSS/urban_planner_helper/tests/integration/browser/parcel-flow.spec.ts:146:18"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "projectName": "laptop-1280",
+              "status": "unexpected",
+              "expectedStatus": "passed",
+              "results": [
+                {
+                  "status": "timedOut",
+                  "duration": 30096,
+                  "errors": [
+                    {
+                      "message": "Test timeout of 30000ms exceeded."
+                    },
+                    {
+                      "message": "Error: locator.selectOption: Test timeout of 30000ms exceeded.\nCall log:\n  - waiting for getByTestId('parcel-selector')\n\n\n  144 |   await page.goto('/');\n  145 |   const selector = page.getByTestId('parcel-selector');\n> 146 |   await selector.selectOption(ids[0]);\n      |                  ^\n  147 |   await firstRequest;\n  148 |   await selector.selectOption(ids[1]);\n  149 |   await expect(page.getByTestId('comparison-results')).toHaveAttribute('data-parcel-id', ids[1]);\n    at /Users/maxli/Documents/ChatGPT/Urban Project DSS/urban_planner_helper/tests/integration/browser/parcel-flow.spec.ts:146:18"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "missing basemap preserves list and comparison",
+          "ok": false,
+          "file": "parcel-flow.spec.ts",
+          "line": 158,
+          "column": 1,
+          "tests": [
+            {
+              "projectName": "desktop-1440",
+              "status": "unexpected",
+              "expectedStatus": "passed",
+              "results": [
+                {
+                  "status": "failed",
+                  "duration": 5461,
+                  "errors": [
+                    {
+                      "message": "Error: expect(locator).toBeEnabled() failed\n\nLocator: getByTestId('parcel-selector')\nExpected: enabled\nTimeout: 5000ms\nError: element(s) not found"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "projectName": "laptop-1280",
+              "status": "unexpected",
+              "expectedStatus": "passed",
+              "results": [
+                {
+                  "status": "failed",
+                  "duration": 5392,
+                  "errors": [
+                    {
+                      "message": "Error: expect(locator).toBeEnabled() failed\n\nLocator: getByTestId('parcel-selector')\nExpected: enabled\nTimeout: 5000ms\nError: element(s) not found"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "invalid geometry uses outline fallback",
+          "ok": false,
+          "file": "parcel-flow.spec.ts",
+          "line": 175,
+          "column": 1,
+          "tests": [
+            {
+              "projectName": "desktop-1440",
+              "status": "unexpected",
+              "expectedStatus": "passed",
+              "results": [
+                {
+                  "status": "failed",
+                  "duration": 7477,
+                  "errors": [
+                    {
+                      "message": "Error: expect(locator).toBeEnabled() failed\n\nLocator: getByTestId('parcel-selector')\nExpected: enabled\nTimeout: 5000ms\nError: element(s) not found"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "projectName": "laptop-1280",
+              "status": "unexpected",
+              "expectedStatus": "passed",
+              "results": [
+                {
+                  "status": "failed",
+                  "duration": 7425,
+                  "errors": [
+                    {
+                      "message": "Error: expect(locator).toBeEnabled() failed\n\nLocator: getByTestId('parcel-selector')\nExpected: enabled\nTimeout: 5000ms\nError: element(s) not found"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "unavailable metric shows reason and raw values",
+          "ok": false,
+          "file": "parcel-flow.spec.ts",
+          "line": 189,
+          "column": 1,
+          "tests": [
+            {
+              "projectName": "desktop-1440",
+              "status": "unexpected",
+              "expectedStatus": "passed",
+              "results": [
+                {
+                  "status": "failed",
+                  "duration": 7426,
+                  "errors": [
+                    {
+                      "message": "Error: expect(locator).toBeEnabled() failed\n\nLocator: getByTestId('parcel-selector')\nExpected: enabled\nTimeout: 5000ms\nError: element(s) not found"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "projectName": "laptop-1280",
+              "status": "unexpected",
+              "expectedStatus": "passed",
+              "results": [
+                {
+                  "status": "failed",
+                  "duration": 7649,
+                  "errors": [
+                    {
+                      "message": "Error: expect(locator).toBeEnabled() failed\n\nLocator: getByTestId('parcel-selector')\nExpected: enabled\nTimeout: 5000ms\nError: element(s) not found"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "suites": []
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-15T05:56:53.831Z",
+    "duration": 168851.88,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 16,
+    "flaky": 0
+  },
+  "source_sha256": {
+    "simulator/src/camera.js": "693dc487d49b3c501533ad4e4aefc7d36eeb8c783f0aa2e28ef066b6de8ba4f6",
+    "simulator/src/data.js": "5728eb7554b126ec53be92b431202ab5559b22905bda16cb8468282d70eaa913",
+    "simulator/src/focusBlur.js": "b1bfad9076808ecca24f3b5fa69ef63984602b9384b904442a09f2758268fa43",
+    "simulator/src/geometryWorker.js": "4be9c8df7ab6dbdcc43236c4cad8e8e652c51455a5acf58562a1e675d7cb0601",
+    "simulator/src/main.js": "bd568e6d800419f86028e50feb11c532bde48d8586ff81843cd387a4caad950d",
+    "simulator/src/materials.js": "702f40dddd8ab4c218f694ecf2e514b3a2c18d93e8ef9637cca5dc15f27de9cc",
+    "simulator/src/style.css": "a8a633486fc04ebffda9e6ab87f591970de281f8981c5cfcc19393e836aec156",
+    "simulator/src/ui.js": "31ef10d6cfc7a7cb56462a0c18071c92386672736c04e7975eed7b4dde185389",
+    "simulator/src/world.js": "99f83b7a52883da78931ee749b190401d347aacca75dfbbd3ac173641355d988",
+    "simulator/package-lock.json": "b8f9316c50522a92796ee321335b1bdcba2ba8b3af9f91e4fa3ea72ae2838879",
+    "simulator/index.html": "2960d4c5952e3f535a6d371fa1b9bef1fa1bdf13912cb0397eb597360e5bfba7",
+    "tests/integration/browser/parcel-flow.spec.ts": "d04d27b33f2731e2879b2d23bddaddceeb08b49859f86cced29190d805456e4d",
+    "tests/integration/browser/playwright.config.ts": "d5ba958131466f0c8abb41b9746272c7e7057aa69133c8ab1032513c9fd55b34"
+  }
+}

@@ -54,6 +54,7 @@ def main(argv=None):
     parser.add_argument("--provider-results", type=Path, help="JSON report from the production provider probe driver")
     parser.add_argument("--pipeline-probe-results", type=Path, help="Independent production-pipeline probe results; failures block acceptance")
     parser.add_argument("--data-reports-dir", type=Path, help="Reconcile Data aggregate reports; does not replace raw artifact checks")
+    parser.add_argument("--category-review", type=Path, help="Checker review CSV bound to the exact Data category sample")
     parser.add_argument("--manual-evidence", type=Path, help="Presentation-machine observations; see README")
     parser.add_argument("--timeout", type=float, default=5)
     args = parser.parse_args(argv)
@@ -61,6 +62,8 @@ def main(argv=None):
         parser.error("--timeout must be positive")
     if args.oracle_cases and args.source_fixture:
         parser.error("Use either --oracle-cases or --source-fixture")
+    if args.category_review and not args.data_reports_dir:
+        parser.error("--category-review requires --data-reports-dir")
     report = Report(args.mode)
     reproduction = "python -m tests.integration.verify_release"
     try:
@@ -91,7 +94,7 @@ def main(argv=None):
         report.add("release.artifacts", "BLOCKED", "Data", "No artifact directory supplied.", reproduction, "Canonical data and model exports.")
     if args.data_reports_dir:
         from .pipeline_artifacts import audit_pipeline_reports
-        summary = audit_pipeline_reports(args.data_reports_dir, report)
+        summary = audit_pipeline_reports(args.data_reports_dir, report, args.category_review)
         args.report_dir.mkdir(parents=True, exist_ok=True)
         (args.report_dir / "data_report_review.json").write_text(json.dumps(summary, indent=2, allow_nan=False) + "\n")
     if args.pipeline_probe_results:
