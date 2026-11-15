@@ -11,92 +11,93 @@ import { createFocusBlur } from './focusBlur.js';
 import { createBuildingIndex, pickBuilding, buildingParts, createSelectionHighlight, footprintArea } from './picking.js';
 import { BUILDING_RULES, ruleFor, ruleForMapType, validateBuilding } from './buildingRules.js';
 import { createEdits } from './edits.js';
+import { createPlanner } from './planner.js';
+import { createParcelScene } from './parcelScene.js';
 import GeometryWorker from './geometryWorker.js?worker';
 
 const CHUNK = 1000;      // metres per mesh chunk (frustum-culling granularity)
 const WORLD_SCALE = 5;   // camera controller distance multiplier (original rig was built for ~1/5 scale)
 
-const ui = createUI(document.getElementById('ui'));
+const root = document.getElementById('ui');
+const ui = createUI(root);
+const planner = createPlanner(root);
 
-// ---------------------------------------------------------------------------
-// Renderer, scene, lighting
-// ---------------------------------------------------------------------------
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.toneMapping = THREE.NeutralToneMapping; // keeps the type colours saturated
-renderer.toneMappingExposure = 1.0;
-renderer.setClearColor(0x000000, 0);
-document.getElementById('app').appendChild(renderer.domElement);
-
-const scene = new THREE.Scene();
-
-// Sky-gradient environment so glass and water pick up believable reflections.
-function skyEnvironment() {
-  const envScene = new THREE.Scene();
-  const mat = new THREE.ShaderMaterial({
-    side: THREE.BackSide,
-    depthWrite: false,
-    vertexShader: 'varying vec3 vDir; void main(){ vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
-    fragmentShader: `varying vec3 vDir;
-      void main(){
-        float y = vDir.y;
-        vec3 zenith = vec3(0.23, 0.48, 0.80), horizon = vec3(0.80, 0.89, 0.95), ground = vec3(0.42, 0.42, 0.38);
-        vec3 c = y > 0.0 ? mix(horizon, zenith, pow(y, 0.6)) : mix(horizon, ground, pow(-y, 0.5));
-        c += vec3(1.0, 0.9, 0.7) * pow(max(dot(vDir, normalize(vec3(-0.55, 0.78, 0.42))), 0.0), 64.0) * 4.0;
-        gl_FragColor = vec4(c, 1.0);
-      }`,
-  });
-  envScene.add(new THREE.Mesh(new THREE.SphereGeometry(10, 48, 24), mat));
-  const pmrem = new THREE.PMREMGenerator(renderer);
-  const tex = pmrem.fromScene(envScene, 0.02).texture;
-  pmrem.dispose();
-  return tex;
-}
-scene.environment = skyEnvironment();
-scene.environmentIntensity = 0.35;
-
-const hemi = new THREE.HemisphereLight(0xd8e9ff, 0xbfae8c, 0.9);
-scene.add(hemi);
-const SUN_DIR = new THREE.Vector3(-0.55, 0.78, 0.42).normalize(); // afternoon sun from the south-west
-const sun = new THREE.DirectionalLight(0xfff0d6, 3.4);
-sun.castShadow = true;
-const maxTex = renderer.capabilities.maxTextureSize;
-sun.shadow.mapSize.set(Math.min(4096, maxTex), Math.min(4096, maxTex));
-sun.shadow.bias = -0.00025;
-sun.shadow.normalBias = 0;
-scene.add(sun, sun.target);
-
-const sunBasis = new THREE.Matrix4().lookAt(SUN_DIR, new THREE.Vector3(), new THREE.Vector3(0, 1, 0));
-const sunX = new THREE.Vector3().setFromMatrixColumn(sunBasis, 0);
-const sunY = new THREE.Vector3().setFromMatrixColumn(sunBasis, 1);
-let shadowRadius = 0;
-function updateSun(center, radius) {
-  const r = THREE.MathUtils.clamp(radius, 120, 9000);
-  if (Math.abs(r - shadowRadius) > shadowRadius * 0.08) {
-    shadowRadius = r;
-    const c = sun.shadow.camera;
-    c.left = -r; c.right = r; c.top = r; c.bottom = -r;
-    c.near = 1;
-    c.far = 2 * (r + 2500);
-    c.updateProjectionMatrix();
-  }
-  // snap to the shadow texel grid so edges do not shimmer while panning
-  const texel = (2 * shadowRadius) / sun.shadow.mapSize.x;
-  const lx = center.dot(sunX), ly = center.dot(sunY);
-  const p = center.clone()
-    .addScaledVector(sunX, Math.round(lx / texel) * texel - lx)
-    .addScaledVector(sunY, Math.round(ly / texel) * texel - ly);
-  sun.target.position.copy(p);
-  sun.position.copy(p).addScaledVector(SUN_DIR, shadowRadius + 2500);
-}
-
-// ---------------------------------------------------------------------------
-// Boot
-// ---------------------------------------------------------------------------
 async function boot() {
+  // ---------------------------------------------------------------------------
+  // Renderer, scene, lighting
+  // ---------------------------------------------------------------------------
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.NeutralToneMapping; // keeps the type colours saturated
+  renderer.toneMappingExposure = 1.0;
+  renderer.setClearColor(0x000000, 0);
+  document.getElementById('app').appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+
+  // Sky-gradient environment so glass and water pick up believable reflections.
+  function skyEnvironment() {
+    const envScene = new THREE.Scene();
+    const mat = new THREE.ShaderMaterial({
+      side: THREE.BackSide,
+      depthWrite: false,
+      vertexShader: 'varying vec3 vDir; void main(){ vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+      fragmentShader: `varying vec3 vDir;
+        void main(){
+          float y = vDir.y;
+          vec3 zenith = vec3(0.23, 0.48, 0.80), horizon = vec3(0.80, 0.89, 0.95), ground = vec3(0.42, 0.42, 0.38);
+          vec3 c = y > 0.0 ? mix(horizon, zenith, pow(y, 0.6)) : mix(horizon, ground, pow(-y, 0.5));
+          c += vec3(1.0, 0.9, 0.7) * pow(max(dot(vDir, normalize(vec3(-0.55, 0.78, 0.42))), 0.0), 64.0) * 4.0;
+          gl_FragColor = vec4(c, 1.0);
+        }`,
+    });
+    envScene.add(new THREE.Mesh(new THREE.SphereGeometry(10, 48, 24), mat));
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    const tex = pmrem.fromScene(envScene, 0.02).texture;
+    pmrem.dispose();
+    return tex;
+  }
+  scene.environment = skyEnvironment();
+  scene.environmentIntensity = 0.35;
+
+  const hemi = new THREE.HemisphereLight(0xd8e9ff, 0xbfae8c, 0.9);
+  scene.add(hemi);
+  const SUN_DIR = new THREE.Vector3(-0.55, 0.78, 0.42).normalize(); // afternoon sun from the south-west
+  const sun = new THREE.DirectionalLight(0xfff0d6, 3.4);
+  sun.castShadow = true;
+  const maxTex = renderer.capabilities.maxTextureSize;
+  sun.shadow.mapSize.set(Math.min(4096, maxTex), Math.min(4096, maxTex));
+  sun.shadow.bias = -0.00025;
+  sun.shadow.normalBias = 0;
+  scene.add(sun, sun.target);
+
+  const sunBasis = new THREE.Matrix4().lookAt(SUN_DIR, new THREE.Vector3(), new THREE.Vector3(0, 1, 0));
+  const sunX = new THREE.Vector3().setFromMatrixColumn(sunBasis, 0);
+  const sunY = new THREE.Vector3().setFromMatrixColumn(sunBasis, 1);
+  let shadowRadius = 0;
+  function updateSun(center, radius) {
+    const r = THREE.MathUtils.clamp(radius, 120, 9000);
+    if (Math.abs(r - shadowRadius) > shadowRadius * 0.08) {
+      shadowRadius = r;
+      const c = sun.shadow.camera;
+      c.left = -r; c.right = r; c.top = r; c.bottom = -r;
+      c.near = 1;
+      c.far = 2 * (r + 2500);
+      c.updateProjectionMatrix();
+    }
+    // snap to the shadow texel grid so edges do not shimmer while panning
+    const texel = (2 * shadowRadius) / sun.shadow.mapSize.x;
+    const lx = center.dot(sunX), ly = center.dot(sunY);
+    const p = center.clone()
+      .addScaledVector(sunX, Math.round(lx / texel) * texel - lx)
+      .addScaledVector(sunY, Math.round(ly / texel) * texel - ly);
+    sun.target.position.copy(p);
+    sun.position.copy(p).addScaledVector(SUN_DIR, shadowRadius + 2500);
+  }
+
   const data = await loadCityData((p) => ui.setProgress(`Downloading city data · ${Math.round(p * 100)}%`, p * 0.45));
   const { meta, terrain } = data;
   const proj = makeProjection(meta);
@@ -264,6 +265,7 @@ async function boot() {
       trees.place();
       landmarks.place();
       if (selected >= 0) select(selected); // base heights change with the hills toggle
+      planner.redraw();
       const t = cam.controls.target;
       const dy = elevOfJS(shared, sampleGround(t.x, t.z)) - t.y;
       t.y += dy;
@@ -295,6 +297,19 @@ async function boot() {
   const raycaster = new THREE.Raycaster();
   const ndc = new THREE.Vector2();
   const groundAt = (x, z) => elevOfJS(shared, sampleGround(x, z));
+  const parcels = createParcelScene(scene, proj, groundAt, terrain);
+  planner.connectMap({
+    draw: parcels.draw,
+    center: () => proj.toLonLat(cam.controls.target.x, cam.controls.target.z),
+    focus(parcel, view) {
+      const [lon, lat] = parcel.properties.representative_point.coordinates;
+      const mode = view === '2d' ? 'topdown' : 'clash';
+      currentMode = mode;
+      hud.setMode(mode);
+      select(-1);
+      cam.applyCameraAngle(mode, true, ground(lon, lat), 250);
+    },
+  });
   // in the vacancy view, classes hidden from the legend are not clickable either
   buildingIndex.skip = (b) => shared.uVacancyMode.value === 1 && data.vacancy && shared.uHiddenVac.value[data.vacancy[b]] > 0.5;
   // User edits: delete a building or replace it with another type and height (local sketch).
@@ -355,7 +370,12 @@ async function boot() {
     const rect = canvas.getBoundingClientRect();
     ndc.set(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
     raycaster.setFromCamera(ndc, cam.getActiveCamera());
-    select(pickBuilding(buildingIndex, raycaster.ray, shared, groundAt));
+    const building = pickBuilding(buildingIndex, raycaster.ray, shared, groundAt);
+    select(building);
+    if (building < 0) {
+      const point = parcels.groundPoint(raycaster.ray);
+      if (point) planner.pick(point);
+    }
   });
   window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && selected >= 0) select(-1); });
 
@@ -524,5 +544,5 @@ async function boot() {
 
 boot().catch((err) => {
   console.error(err);
-  ui.fail(`Could not load the city data.\n${err.message}\nRun "npm run data" first, then reload.`);
+  ui.fail(`3D city view unavailable.\n${err.message}\nBuild the map with "npm run data" and reload.`);
 });
