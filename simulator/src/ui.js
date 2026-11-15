@@ -299,7 +299,7 @@ export function createUI(root) {
             <div class="bcard-sub">${sub}</div>
             ${actions.onJumpToTract ? '<button class="btn tract-jump" data-testid="jump-to-tract">Jump to this tract</button>' : ''}
             ${!editable ? `<div class="bcard-locked">${lockedReason}</div>
-            ${edited ? '<div class="bcard-actions"><button class="btn" data-restore>Restore original</button></div>' : ''}` : ''}
+            ${edited && actions.onRestore ? '<div class="bcard-actions"><button class="btn" data-restore>Restore original</button></div>' : ''}` : ''}
             ${editable && !choices.length ? `<div class="bcard-locked">No building type fits this lot under SF zoning and height rules.</div>
             <div class="bcard-actions"><button class="btn danger" data-delete>Delete</button>${edited ? '<button class="btn" data-restore>Restore original</button>' : ''}</div>` : ''}
             <div class="bcard-edit"${editable && choices.length ? '' : ' hidden'}>
@@ -311,8 +311,8 @@ export function createUI(root) {
               <div class="bcard-warn" data-warn role="alert" hidden></div>
               <div class="bcard-actions">
                 <button class="btn primary" data-apply>Apply</button>
-                <button class="btn danger" data-delete>Delete</button>
-                ${edited ? '<button class="btn" data-restore>Restore original</button>' : ''}
+                ${actions.onDelete ? '<button class="btn danger" data-delete>Remove</button>' : ''}
+                ${edited && actions.onRestore ? '<button class="btn" data-restore>Restore original</button>' : ''}
               </div>
             </div>`;
           card.querySelector('.bcard-x').addEventListener('click', () => onCardClose());

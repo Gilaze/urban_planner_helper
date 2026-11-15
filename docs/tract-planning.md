@@ -54,4 +54,6 @@ Building footprints are optional. When all four simulator cache pages are presen
 
 Run backend checks with `python -m unittest discover -s backend/tests -v`. The real-data browser flow is tract selection → service selection → best-three dropdown → site marker/preview → height slider.
 
+Empty source-indicated vacant lots also open a standalone building card from the map, with the planner drawer closed. The card offers the five service concepts that fit the lot and existing zoning checks, a sketch-height control, Apply/Remove, and a shortcut to its containing tract. Footprints come from the same site-fit API; placed sketches remain in the current map session and do not modify source data.
+
 Browser checks use a loaded real-data release and planning index. Run `npm run typecheck` and `npm test` in `tests/integration/browser/`. If using installed Chrome instead of a Playwright-managed browser, set `PLAYWRIGHT_CHANNEL=chrome`. The suite covers 1440×900 and 1280×720, the fixed suggestion tick, the vacant-only filter, drawer state, error states and the WebGL fallback.

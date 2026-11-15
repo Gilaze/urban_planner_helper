@@ -168,13 +168,13 @@ export function createParcelScene(scene, projection, groundAt, terrain) {
         arrow.center.set(.5, -(pinHeight + arrow.userData.stack * 54 + bounce) / 44);
       }
     },
-    draw(parcel, massing) {
-      for (const child of [...group.children]) {
-        group.remove(child);
+    draw(parcel, massing, destination = group) {
+      for (const child of [...destination.children]) {
+        destination.remove(child);
         child.geometry.dispose();
       }
       for (const rings of polygons(parcel?.geometry)) {
-        drawOutline(rings, outlineMaterial, (x, z) => groundAt(x, z) + 0.4);
+        drawOutline(rings, outlineMaterial, (x, z) => groundAt(x, z) + 0.4, destination);
       }
       for (const [outer, ...holes] of polygons(massing?.geometry)) {
         const toShape = (ring) => ring.slice(0, -1).map(([lon, lat]) => {
@@ -190,8 +190,8 @@ export function createParcelScene(scene, projection, groundAt, terrain) {
           position.setY(i, position.getY(i) + groundAt(position.getX(i), position.getZ(i)) + 0.15);
         }
         geometry.computeVertexNormals();
-        group.add(new THREE.Mesh(geometry, volumeMaterial));
-        drawOutline([outer, ...holes], roofMaterial, (x, z) => groundAt(x, z) + massing.height_m + 0.2);
+        destination.add(new THREE.Mesh(geometry, volumeMaterial));
+        drawOutline([outer, ...holes], roofMaterial, (x, z) => groundAt(x, z) + massing.height_m + 0.2, destination);
       }
     },
 

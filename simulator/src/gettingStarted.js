@@ -8,7 +8,7 @@ const STEPS = [
   },
   {
     section: '2 of 3 · Navigation', title: 'Explore the map',
-    text: 'Drag to pan, scroll to zoom, and use the bottom buttons to change your view. Select a red vacant building to jump to its tract.',
+    text: 'Drag to pan, scroll to zoom, and use the bottom buttons to change your view. Select a red vacant building or lot to add a building or jump to its tract.',
     media: 'navigation', caption: 'Moving the map and switching between camera views.',
   },
   {

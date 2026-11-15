@@ -15,6 +15,7 @@ import {
 import { createEdits } from './edits.js';
 import { createPlanner } from './planner.js';
 import { createParcelScene } from './parcelScene.js';
+import { createVacantLotEditor } from './vacantLotEditor.js';
 import GeometryWorker from './geometryWorker.js?worker';
 
 const CHUNK = 1000;      // metres per mesh chunk (frustum-culling granularity)
@@ -268,6 +269,7 @@ async function boot() {
       landmarks.place();
       if (selected >= 0) select(selected); // base heights change with the hills toggle
       planner.redraw();
+      vacantEditor?.redraw();
       const t = cam.controls.target;
       const dy = elevOfJS(shared, sampleGround(t.x, t.z)) - t.y;
       t.y += dy;
@@ -296,6 +298,7 @@ async function boot() {
   // Click a building: yellow glow + info card (type and lot status, never location)
   // -------------------------------------------------------------------------
   let selected = -1;
+  let vacantEditor = null;
   const raycaster = new THREE.Raycaster();
   const ndc = new THREE.Vector2();
   const groundAt = (x, z) => elevOfJS(shared, sampleGround(x, z));
@@ -304,7 +307,10 @@ async function boot() {
     draw: parcels.draw,
     drawAreas: parcels.drawAreas,
     drawAvailableSites: parcels.drawAvailableSites,
-    setPickingSite(enabled) { renderer.domElement.classList.toggle('choosing-site', enabled); },
+    setPickingSite(enabled) {
+      if (enabled) vacantEditor?.clear();
+      renderer.domElement.classList.toggle('choosing-site', enabled);
+    },
     setOnlyVacant(enabled) {
       shared.uOnlyVacant.value = enabled ? 1 : 0;
       if (enabled && selected >= 0 && data.vacancy?.[selected] !== 2) select(-1);
@@ -347,6 +353,7 @@ async function boot() {
   });
   const colorOf = (renderId) => (meta.types.find((t) => t.id === renderId) || { color: '#ccc' }).color;
   const CHOICES = BUILDING_RULES.map((r) => ({ ...r, color: colorOf(r.render) }));
+  vacantEditor = createVacantLotEditor({ scene, projection: proj, groundAt, parcels, hud, planner, choices: CHOICES });
   edits.onChange((n) => hud.setEditCount(n, () => { edits.resetAll(); if (selected >= 0) select(selected); }));
   const originalHeight = (b) => buildingIndex.h[b] +
     (buildingIndex.kind[b] === 3 ? buildingIndex.roof[b] : buildingIndex.kind[b] === 1 ? buildingIndex.roof[b] * 0.5 : 0);
@@ -364,6 +371,7 @@ async function boot() {
   }
 
   function select(b) {
+    vacantEditor?.clear();
     selected = b;
     if (b < 0) {
       highlight.clear();
@@ -444,13 +452,15 @@ async function boot() {
       if (point) planner.pick(point);
       return;
     }
+    const sketchPoint = vacantEditor.hitPoint(raycaster);
+    if (sketchPoint) { select(-1); vacantEditor.pick(sketchPoint); return; }
     select(building);
     if (building < 0) {
       const point = parcels.groundPoint(raycaster.ray);
-      if (point) planner.pick(point);
+      if (point) vacantEditor.pick(point);
     }
   });
-  window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && selected >= 0) select(-1); });
+  window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && (selected >= 0 || vacantEditor.active)) select(-1); });
 
   function setMode(id) {
     currentMode = id;
@@ -600,6 +610,7 @@ async function boot() {
       hud.placeBuilding((p.x + 1) / 2 * window.innerWidth, (1 - p.y) / 2 * window.innerHeight, onScreen);
     }
     parcels.updateLabels(camera, window.innerHeight);
+    vacantEditor.update(camera);
     blur.render(scene, camera, focusPt, R, clearOn ? 3.2 * ratio : 0, outline, mpp);
     highlight.render(camera);
     requestAnimationFrame(frame);

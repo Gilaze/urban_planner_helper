@@ -256,6 +256,44 @@ test('choosing a custom lot pulses only compatible vacancies and clears them on 
   expect(await page.evaluate(() => (window as any).__sf.scene.getObjectByName('available-vacant-sites').children.length)).toBe(0);
 });
 
+test('empty vacant land supports building sketches and a tract shortcut with the planner closed', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('sf-sim-getting-started-seen', '1');
+    localStorage.setItem('sf-sim-drawer:planner', '0');
+    localStorage.setItem('sf-sim-drawer:map-key', '0');
+  });
+  await page.goto('/');
+  await page.waitForFunction(() => Boolean((window as any).__sf));
+  await expect(page.locator('.loader')).toHaveCount(0, { timeout: 30000 });
+  const response = await page.request.get('/api/v1/parcels/sf%3A5338053');
+  expect(response.ok()).toBe(true);
+  const feature = await response.json();
+  const [lon, lat] = feature.properties.representative_point.coordinates;
+  await page.evaluate(({lon, lat}) => (window as any).__sf.jump(lon, lat, 180, 'topdown'), {lon, lat});
+  await page.waitForTimeout(1200);
+  const viewport = page.viewportSize()!;
+  await page.mouse.click(viewport.width / 2, viewport.height / 2);
+  const card = page.getByRole('dialog', { name: 'Building details' });
+  await expect(card).toContainText('Vacant land', { timeout: 15000 });
+  await expect(page.locator('.drawer.right .drawer-tab')).toHaveAttribute('aria-expanded', 'false');
+  await expect(card.locator('[data-type]')).toBeVisible();
+  await card.locator('[data-hnum]').fill('15');
+  await card.locator('[data-apply]').click();
+  const sketchCount = () => page.evaluate(() => (window as any).__sf.scene.getObjectByName('vacant-lot-sketches').children.length);
+  await expect.poll(sketchCount).toBe(1);
+  await expect(card).toContainText('Edited');
+  await card.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(card).toBeHidden();
+  await page.mouse.click(viewport.width / 2, viewport.height / 2);
+  await expect(card).toBeVisible();
+  await expect(card).toContainText('Edited');
+  await card.locator('[data-delete]').click();
+  await expect.poll(sketchCount).toBe(0);
+  await card.getByTestId('jump-to-tract').click();
+  await expect(page.locator('.drawer.right .drawer-tab')).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.getByTestId('area-selector')).toHaveValue('06075061200');
+});
+
 test('Getting Started opens on the first visit, remembers it, and reopens from the top-left title', async ({ page }) => {
   await page.goto('/');
   const guide = page.getByTestId('getting-started-dialog');
