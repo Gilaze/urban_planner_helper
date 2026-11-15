@@ -32,9 +32,9 @@ The built data is not in git. It derives partly from the hackathon's Bright Data
 
 | Field | Value |
 |---|---|
-| data_version | `0.1.0+2026-11-14.2+ad464d957df7` |
-| Size | 61 MB zipped, 228 MB unzipped |
-| SHA-256 | `1e11abd557ee06e3c255651fd446674e5a68bf1642b8c42b07f2e8e69eb0bfc2` |
+| data_version | `0.1.1+2026-11-15.1+ad464d957df7` |
+| Size | 60 MB zipped, 228 MB unzipped |
+| SHA-256 | `9abdbba4a727bcb61b6a938fe85a3629485c72272034a0fb553c75c7fa5e4104` |
 
 Check the download with `shasum -a 256 parcel-planner-data.zip`.
 
