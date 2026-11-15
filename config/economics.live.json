@@ -1,52 +1,92 @@
 {
-  "version": "sf-unavailable-1",
+  "version": "sf-economic-scenarios-2025-v2",
   "mode": "live",
   "seed": 42,
   "categories": {
     "bank_credit_union": {
-      "taxable_sales_usd_per_year": null,
-      "local_retention": null,
-      "operating_fte": null,
-      "source": "https://data.sf.gov/d/wv5m-vpq2",
+      "taxable_sales_usd_per_year": {
+        "low": 0,
+        "mode": 0,
+        "high": 0
+      },
+      "local_retention": 0.01,
+      "operating_fte": {
+        "low": 20.28,
+        "mode": 27.04,
+        "high": 33.8
+      },
+      "source": "https://data.bls.gov/cew/data/api/2025/a/area/06075.csv | https://cdtfa.ca.gov/dataportal/dataset.htm?url=LRBQtrAllocBradleyBurns",
       "geography": "San Francisco",
-      "year": null,
-      "notes": "The assessor roll supplies dated property valuation context. Category-level taxable sales, local sales-tax retention and operating FTE require separate evidence."
+      "year": 2025,
+      "notes": "Commercial bank branch (QCEW NAICS 522110). Scenario assumes no taxable retail sales. Typical FTE assumes one 40-hour FTE per job. Low and high use 75% and 125% of typical for each estimate. Local sales tax uses the 1% Bradley–Burns allocation before adjustments."
     },
     "clinic": {
-      "taxable_sales_usd_per_year": null,
-      "local_retention": null,
-      "operating_fte": null,
-      "source": "https://data.sf.gov/d/wv5m-vpq2",
+      "taxable_sales_usd_per_year": {
+        "low": 0,
+        "mode": 0,
+        "high": 0
+      },
+      "local_retention": 0.01,
+      "operating_fte": {
+        "low": 7.02,
+        "mode": 9.37,
+        "high": 11.71
+      },
+      "source": "https://data.bls.gov/cew/data/api/2025/a/area/06075.csv | https://cdtfa.ca.gov/dataportal/dataset.htm?url=LRBQtrAllocBradleyBurns",
       "geography": "San Francisco",
-      "year": null,
-      "notes": "The assessor roll supplies dated property valuation context. Category-level taxable sales, local sales-tax retention and operating FTE require separate evidence."
+      "year": 2025,
+      "notes": "Physician office (QCEW NAICS 621111). Scenario assumes no taxable retail sales. Typical FTE assumes one 40-hour FTE per job. Low and high use 75% and 125% of typical for each estimate. Local sales tax uses the 1% Bradley–Burns allocation before adjustments."
     },
     "grocery": {
-      "taxable_sales_usd_per_year": null,
-      "local_retention": null,
-      "operating_fte": null,
-      "source": "https://data.sf.gov/d/wv5m-vpq2",
+      "taxable_sales_usd_per_year": {
+        "low": 440352,
+        "mode": 587137,
+        "high": 733921
+      },
+      "local_retention": 0.01,
+      "operating_fte": {
+        "low": 16.43,
+        "mode": 21.91,
+        "high": 27.38
+      },
+      "source": "https://data.bls.gov/cew/data/api/2025/a/area/06075.csv | https://cdtfa.ca.gov/dataportal/dataset.htm?url=TaxSalesAllCities | https://cdtfa.ca.gov/dataportal/dataset.htm?url=LRBQtrAllocBradleyBurns",
       "geography": "San Francisco",
-      "year": null,
-      "notes": "The assessor roll supplies dated property valuation context. Category-level taxable sales, local sales-tax retention and operating FTE require separate evidence."
+      "year": 2025,
+      "notes": "Supermarket (QCEW NAICS 445110). Sales use San Francisco food and beverage store taxable transactions divided by average quarterly outlets. Typical FTE assumes one 40-hour FTE per job. Low and high use 75% and 125% of typical for each estimate. Local sales tax uses the 1% Bradley–Burns allocation before adjustments."
     },
     "pharmacy": {
-      "taxable_sales_usd_per_year": null,
-      "local_retention": null,
-      "operating_fte": null,
-      "source": "https://data.sf.gov/d/wv5m-vpq2",
-      "geography": "San Francisco",
-      "year": null,
-      "notes": "The assessor roll supplies dated property valuation context. Category-level taxable sales, local sales-tax retention and operating FTE require separate evidence."
+      "taxable_sales_usd_per_year": {
+        "low": 713260,
+        "mode": 951014,
+        "high": 1188767
+      },
+      "local_retention": 0.01,
+      "operating_fte": {
+        "low": 8.11,
+        "mode": 10.81,
+        "high": 13.51
+      },
+      "source": "https://data.bls.gov/cew/data/api/2025/a/area/06075.csv | https://cdtfa.ca.gov/dataportal/dataset.htm?url=TaxSalesStatewide | https://cdtfa.ca.gov/dataportal/dataset.htm?url=LRBQtrAllocBradleyBurns",
+      "geography": "San Francisco County staffing and California taxable sales",
+      "year": 2025,
+      "notes": "Pharmacy (QCEW NAICS 456110). Sales use statewide pharmacy and drugstore taxable transactions divided by average quarterly permits as a proxy. Typical FTE assumes one 40-hour FTE per job. Low and high use 75% and 125% of typical for each estimate. Local sales tax uses the 1% Bradley–Burns allocation before adjustments."
     },
     "school": {
-      "taxable_sales_usd_per_year": null,
-      "local_retention": null,
-      "operating_fte": null,
-      "source": "https://data.sf.gov/d/wv5m-vpq2",
+      "taxable_sales_usd_per_year": {
+        "low": 0,
+        "mode": 0,
+        "high": 0
+      },
+      "local_retention": 0.01,
+      "operating_fte": {
+        "low": 41.44,
+        "mode": 55.25,
+        "high": 69.06
+      },
+      "source": "https://data.bls.gov/cew/data/api/2025/a/area/06075.csv | https://cdtfa.ca.gov/dataportal/dataset.htm?url=LRBQtrAllocBradleyBurns",
       "geography": "San Francisco",
-      "year": null,
-      "notes": "The assessor roll supplies dated property valuation context. Category-level taxable sales, local sales-tax retention and operating FTE require separate evidence."
+      "year": 2025,
+      "notes": "Local-government elementary or secondary school (QCEW NAICS 611110). Scenario assumes no taxable retail sales. Typical FTE assumes one 40-hour FTE per job. Low and high use 75% and 125% of typical for each estimate. Local sales tax uses the 1% Bradley–Burns allocation before adjustments."
     }
   }
 }
