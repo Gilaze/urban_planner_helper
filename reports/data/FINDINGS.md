@@ -17,7 +17,7 @@ The current generated reports come from a `--skip-census` build, so ACS covariat
 - **Review predictions are clamped at log1p = 0.** Unclamped model outputs could be negative, which the backend schema correctly rejects.
 - **SF host moved:** `data.sfgov.org` now returns 301 to `data.sf.gov`. Backend's parcel provider should use the new host.
 - **Reviews coverage is tiny.** 213,536 parsed reviews cover 6,108 place IDs, but only 139 of them are in the Places export. `review_summary.parquet` is therefore nearly all zeros, and joined review counts measure sample coverage only. 42,184 reviews have rating 0 (no star value) and are excluded from `mean_rating`.
-- **Schools have no review signal.** `reviews_count` is 0 for every school record (476 labeled rows across all three cities), so school is marked as a degenerate target. School review activity is null with no source, rather than a fabricated 0.
+- **Schools have no review signal.** `reviews_count` is 0 for every school record (476 labeled rows across all three cities), so school is marked as a degenerate target. School review activity is null with `source = unavailable`, rather than a fabricated 0.
 
 ## Model (without covariates)
 
