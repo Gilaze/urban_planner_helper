@@ -421,15 +421,15 @@ col = mix(col, forestCol, forest);
 col = mix(col, sandCol, sand);
 col = mix(col, seabed, 1.0 - smoothstep(-0.2, 0.7, vH));
 if (uVacancyMode > 0.5) {
-  // vacant lots: diagonal red hatching with a solid border so empty parcels stand out
+  // vacant lots: solid red border with a faint diagonal hatch inside, so big parcels
+  // (e.g. freeway right-of-way) read as outlined ground rather than a wash of red
   float vm = texture2D(uVacant, luv).r;
   float lot = crisp(vm);
   float border = lot * (1.0 - smoothstep(0.62, 0.9, vm));
-  float hatch = step(0.5, fract((vWPos.x + vWPos.z) / 5.0));
+  float hatch = step(0.75, fract((vWPos.x + vWPos.z) / 6.0));
   vec3 vc = uVacColors[2];
-  vec3 fill = mix(mix(vc, vec3(1.0), 0.55), vc, hatch * 0.6);
-  col = mix(col, fill, lot * 0.9);
-  col = mix(col, vc * 0.8, border);
+  col = mix(col, vc, lot * (0.08 + 0.22 * hatch));
+  col = mix(col, vc * 0.85, border);
 }
 diffuseColor.rgb = col;
 `;
