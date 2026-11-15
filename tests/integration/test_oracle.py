@@ -110,6 +110,12 @@ def test_eliminated_positively_weighted_dimension_has_null_ranks():
     assert result["reason"] == "no_weighted_available_objective"
 
 
+def test_large_finite_weights_rescale_without_overflow():
+    result = rank({"clinic": metrics()}, {"need": 1e308, "economic": 0, "sustainability": 1e308})
+    assert result["effective_weights"] == {"need": .5, "economic": 0, "sustainability": .5}
+    assert result["alternatives"][0]["total"] == 50
+
+
 def test_priority_can_exceed_100_without_changing_unweighted_pareto():
     result = rank({"clinic": metrics(need=100, economic=100, sustainability=100)}, priorities={"clinic": 2})
     assert result["alternatives"][0]["total"] == pytest.approx(400 / 3)

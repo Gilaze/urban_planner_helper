@@ -5,9 +5,11 @@ parcel. The API owns ranking; Data owns source cleaning and review-activity
 predictions; Frontend owns the map and controls. This directory owns independent
 checks and release evidence. It does not implement any of those product modules.
 
-The starting commit (`cb642e1`) contains only `IMPLEMENTATION_PLAN.md`. Consequently
-the scoring oracle, data audits and test harness can run now; product integration
-and presentation-machine acceptance remain blocked until those modules arrive.
+The starting commit (`cb642e1`) contained only `IMPLEMENTATION_PLAN.md`. After
+syncing with `main` at `2e4724d`, the Backend schema 1.0 contract and fixture API
+are available. `published_api.py` maps that contract to independent checks and
+the browser fixtures now use the published payloads. Frontend, real Data exports
+and presentation-machine acceptance remain pending.
 
 ## Run from a clean checkout
 
@@ -72,22 +74,50 @@ benchmark. Every failure includes an owner, reproduction, expected behavior,
 impact and affected categories where applicable. Fixes to product modules go to
 their owners.
 
+For the currently published Backend fixture, start its server using the root
+README, then run the checker with its matching **source** fixture:
+
+```sh
+python -m tests.integration.verify_release \
+  --mode fixture \
+  --api-base-url http://127.0.0.1:8000/api/v1 \
+  --source-fixture contracts/fixture-inputs.json \
+  --artifact-dir tests/integration/fixtures/artifacts \
+  --report-dir reports/verification/synced-main
+```
+
+`--source-fixture` independently projects the supplied population, service and
+proposal coordinates into EPSG:26910 and checks raw metrics for all five
+candidates over HTTP. It is for a matching, coverage-supported synthetic source
+fixture, not arbitrary live source records. The checker artifact fixtures and
+Backend fixture are separate synthetic datasets; this run does not prove a
+shared live artifact release. The current run records 29 passes, zero failures,
+and three missing-evidence blockers. Exact midpoint percentile parity is also
+checked against the published single-parcel fixture examples.
+
 The optional pytest product entry points use the same checks:
 
 ```sh
 PARCEL_API_BASE_URL=http://127.0.0.1:8000/api/v1 \
-PARCEL_ORACLE_CASES=tests/integration/fixtures/oracle_cases.json \
+PARCEL_SOURCE_FIXTURE=contracts/fixture-inputs.json \
 python -m pytest -c tests/integration/pytest.ini tests/integration/test_live_api.py -m live -q
 ```
 
-## Hour-3 handoff: provisional payload adapter
+## Published API and remaining handoff
 
-**Backend has not published OpenAPI or `contracts/` yet.** The fixture wire names
-here are proposed checker conventions. They are not an additional product spec.
-At handoff, map the real payload into `api_checks.py` and update the browser
-fixtures/hooks with Frontend. Keep expected math independent of backend code.
-Do not change production code just to satisfy an arbitrary checker field name.
-Record this agreement in `payload_agreement` in the manual evidence.
+**The actual wire contract is `contracts/openapi.json`.** Schema 1.0 requests use
+`objective_weights` and `category_priorities`; comparisons have top-level
+`schema_version`, `data_version`, `model_version`, `assumption_version`,
+`parcel_source` and shared `massing`. Raw metrics live in each alternative's
+`need`, `economic` and `sustainability` objects. The API runner detects the
+published health payload and selects `published_api.py`. Frontend hooks still
+need agreement with its owner. Record that review in `payload_agreement` in the
+manual evidence.
+
+The older schema below is retained **only as an internal checker fixture
+format**, to test failure detection before any product exists. It is not the
+Backend wire contract. Keep expected math independent of backend code, and map
+Data exports explicitly when their full canonical schema is available.
 
 `fixtures/comparison.json` is the full proposed response. It has `parcel_id`,
 `versions` (`schema`, `data`, `model`, `assumptions`), `mode`, `freshness`,

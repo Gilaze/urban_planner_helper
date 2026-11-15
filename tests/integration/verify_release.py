@@ -48,6 +48,7 @@ def main(argv=None):
     parser.add_argument("--bbox", default="-122.43,37.76,-122.40,37.79")
     parser.add_argument("--parcel-id")
     parser.add_argument("--oracle-cases", type=Path, help="Only use cases actually loaded by the backend under test")
+    parser.add_argument("--source-fixture", type=Path, help="Derive oracle cases from matching Backend fixture input records")
     parser.add_argument("--browser-results", type=Path, help="Playwright JSON report from the real app")
     parser.add_argument("--provider-results", type=Path, help="JSON report from the production provider probe driver")
     parser.add_argument("--manual-evidence", type=Path, help="Presentation-machine observations; see README")
@@ -55,6 +56,8 @@ def main(argv=None):
     args = parser.parse_args(argv)
     if args.timeout <= 0:
         parser.error("--timeout must be positive")
+    if args.oracle_cases and args.source_fixture:
+        parser.error("Use either --oracle-cases or --source-fixture")
     report = Report(args.mode)
     reproduction = "python -m tests.integration.verify_release"
     try:
@@ -76,6 +79,9 @@ def main(argv=None):
     if args.api_base_url:
         try:
             cases = read_json(args.oracle_cases) if args.oracle_cases else []
+            if args.source_fixture:
+                from .published_api import fixture_cases
+                cases = fixture_cases(args.source_fixture)
             run_api_checks(Api(args.api_base_url, args.timeout), report, bbox=args.bbox, parcel_id=args.parcel_id, oracle_cases=cases)
             if not cases:
                 report.add("api.oracle_cases", "BLOCKED", "Backend + Checker", "No matching backend-loaded oracle cases supplied.", reproduction,

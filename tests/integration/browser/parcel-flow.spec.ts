@@ -4,8 +4,10 @@ import { readFileSync } from 'node:fs';
 // These hooks are the proposed hour-3 handoff to Frontend. Change this adapter
 // when its actual accessible controls are published; never ship a checker UI.
 const candidates = ['clinic', 'pharmacy', 'grocery', 'bank_credit_union', 'school'];
-const comparisonFixture = JSON.parse(readFileSync(new URL('../fixtures/comparison.json', import.meta.url), 'utf8'));
-const parcelFixture = JSON.parse(readFileSync(new URL('../fixtures/provider_records.json', import.meta.url), 'utf8'));
+const comparisonFixture = JSON.parse(readFileSync(new URL('../../../contracts/examples/compare.json', import.meta.url), 'utf8'));
+const parcelCollection = JSON.parse(readFileSync(new URL('../../../contracts/examples/parcels.json', import.meta.url), 'utf8'));
+const firstParcel = parcelCollection.features[0];
+const parcelFixture = [firstParcel, { ...firstParcel, id: 'sf:fixture-002', properties: { ...firstParcel.properties, parcel_id: 'sf:fixture-002' } }];
 
 async function openParcel(page: Page) {
   await page.goto('/');
@@ -22,8 +24,7 @@ async function openParcel(page: Page) {
 
 async function stubParcelList(page: Page) {
   await page.route('**/api/v1/parcels?**', route => route.fulfill({ json: {
-    type: 'FeatureCollection', limit: 100, truncated: false, source_version: 'checker-v1', freshness: 'fresh',
-    features: parcelFixture.slice(0, 2).map((p: any) => ({ type: 'Feature', geometry: p.geometry, properties: p })),
+    ...parcelCollection, features: parcelFixture,
   } }));
 }
 
@@ -60,18 +61,18 @@ test('parcel selection, preview and reset', async ({ page }) => {
   const before = requests.length;
   await setRange(page, 'objective-need', 2);
   const changedResponse = page.waitForResponse(response => response.url().includes('/scenarios/compare') && response.request().method() === 'POST'
-    && response.request().postDataJSON().weights?.need === 2 && response.request().postDataJSON().priorities?.clinic === 2);
+    && response.request().postDataJSON().objective_weights?.need === 2 && response.request().postDataJSON().category_priorities?.clinic === 2);
   await setRange(page, 'priority-clinic', 2);
   const changed = await (await changedResponse).json();
   for (const row of changed.alternatives) {
     if (row.rank !== null) await expect(page.getByTestId(`alternative-${row.category_id}`)).toHaveAttribute('data-rank', String(row.rank));
   }
-  await expect.poll(() => requests.slice(before).some(r => r.parcel_id === parcelId && r.weights.need === 2 && r.priorities?.clinic === 2)).toBeTruthy();
+  await expect.poll(() => requests.slice(before).some(r => r.parcel_id === parcelId && r.objective_weights.need === 2 && r.category_priorities?.clinic === 2)).toBeTruthy();
   await page.getByRole('button', { name: /^reset$/i }).click();
   for (const dimension of ['need', 'economic', 'sustainability']) await expect(page.getByTestId(`objective-${dimension}`)).toHaveValue('1');
   for (const category of candidates) await expect(page.getByTestId(`priority-${category}`)).toHaveValue('1');
-  await expect.poll(() => requests.at(-1)?.weights).toEqual({ need: 1, economic: 1, sustainability: 1 });
-  await expect.poll(() => requests.at(-1)?.priorities).toEqual(Object.fromEntries(candidates.map(c => [c, 1])));
+  await expect.poll(() => requests.at(-1)?.objective_weights).toEqual({ need: 1, economic: 1, sustainability: 1 });
+  await expect.poll(() => requests.at(-1)?.category_priorities).toEqual(Object.fromEntries(candidates.map(c => [c, 1])));
   await expect(page.getByTestId('raw-metrics-clinic')).toContainText(/m|USD|FTE|population/i);
   await checkLayout(page);
 });
@@ -92,13 +93,14 @@ test('stale snapshot label', async ({ page }) => {
   await page.route('**/api/v1/parcels**', async route => {
     const response = await route.fetch();
     const data = await response.json();
-    data.freshness = 'stale';
-    if (data.features) for (const f of data.features) f.properties.freshness = 'stale';
+    data.source.freshness = 'stale';
     await route.fulfill({ response, json: data });
   });
   await page.route('**/api/v1/scenarios/compare', async route => {
     const response = await route.fetch();
-    await route.fulfill({ response, json: { ...await response.json(), freshness: 'stale' } });
+    const data = await response.json();
+    data.parcel_source.freshness = 'stale';
+    await route.fulfill({ response, json: data });
   });
   await openParcel(page);
   await expect(page.getByTestId('data-freshness')).toContainText(/stale|last verified|cached snapshot/i);
@@ -106,7 +108,7 @@ test('stale snapshot label', async ({ page }) => {
 
 test('unavailable API preserves usable controls', async ({ page }) => {
   await page.route('**/api/v1/scenarios/compare', route => route.fulfill({ status: 503, json: {
-    detail: { code: 'missing_artifacts', message: 'Required scoring artifacts unavailable' },
+    error: { code: 'artifacts_unavailable', message: 'Required scoring artifacts unavailable' },
   } }));
   await page.goto('/');
   const selector = page.getByTestId('parcel-selector');
@@ -121,10 +123,10 @@ test('unavailable API preserves usable controls', async ({ page }) => {
 
 test('late comparison cannot replace current selection', async ({ page }) => {
   await stubParcelList(page);
-  const ids = parcelFixture.slice(0, 2).map((p: any) => p.parcel_id);
+  const ids = parcelFixture.map((p: any) => p.id);
   await page.route('**/api/v1/parcels/*', route => {
     const id = decodeURIComponent(new URL(route.request().url()).pathname.split('/').at(-1)!);
-    return route.fulfill({ json: { ...parcelFixture.find((p: any) => p.parcel_id === id), source_version: 'checker-v1', freshness: 'fresh', quality_flags: [] } });
+    return route.fulfill({ json: { ...parcelFixture.find((p: any) => p.id === id), source: parcelCollection.source, scoring_available: true, scoring_reason: null } });
   });
   let releaseFirst!: () => void;
   const firstGate = new Promise<void>(resolve => { releaseFirst = resolve; });
@@ -174,10 +176,8 @@ test('invalid geometry uses outline fallback', async ({ page }) => {
   await page.route('**/api/v1/scenarios/compare', async route => {
     const response = await route.fetch();
     const data = await response.json();
-    for (const alternative of data.alternatives) {
-      alternative.proposal.geometry = null;
-      alternative.reason_codes.push('invalid_geometry');
-    }
+    data.massing.geometry = null;
+    data.massing.reason = 'invalid_geometry';
     await route.fulfill({ response, json: data });
   });
   await openParcel(page);
@@ -191,14 +191,20 @@ test('unavailable metric shows reason and raw values', async ({ page }) => {
     const response = await route.fetch();
     const data = await response.json();
     data.active_dimensions = ['need', 'sustainability'];
+    data.unavailable_dimensions = ['economic'];
     data.effective_weights = { need: .5, economic: 0, sustainability: .5 };
     for (const row of data.alternatives) {
       row.normalized.economic = null;
-      row.reason_codes.push('missing_economic_input');
+      row.normalized.operating_fte = null;
+      row.economic.operating_fte = null;
+      row.economic.reason = 'missing_economic_input';
       row.total = (row.normalized.need + row.normalized.sustainability) / 2;
     }
     data.alternatives.sort((a: any, b: any) => b.total - a.total || a.category_id.localeCompare(b.category_id));
     data.alternatives.forEach((a: any, index: number) => { a.rank = index + 1; });
+    for (const row of data.alternatives) row.pareto = !data.alternatives.some((other: any) =>
+      other.normalized.need >= row.normalized.need && other.normalized.sustainability >= row.normalized.sustainability &&
+      (other.normalized.need > row.normalized.need || other.normalized.sustainability > row.normalized.sustainability));
     await route.fulfill({ response, json: data });
   });
   await openParcel(page);

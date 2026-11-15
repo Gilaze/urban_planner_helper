@@ -1,0 +1,327 @@
+{
+  "created_at": "2026-11-15T04:27:15.842509+00:00",
+  "mode": "fixture",
+  "release_accepted": false,
+  "checks": [
+    {
+      "id": "checker.hand_calculations",
+      "status": "PASS",
+      "owner": "Checker",
+      "detail": "........................................                                 [100%]\n40 passed in 0.03s",
+      "reproduction": "python -m tests.integration.verify_release",
+      "expected": "All independent hand-calculated scoring oracle checks pass.",
+      "impact": "checker integrity",
+      "categories": []
+    },
+    {
+      "id": "artifacts.manifest",
+      "status": "PASS",
+      "owner": "Data",
+      "detail": "Source attribution, vintage, units and fixture labeling present.",
+      "reproduction": "python -m tests.integration.verify_release --artifact-dir 'tests/integration/fixtures/artifacts'",
+      "expected": "Versioned source manifest with checksums and explicit units.",
+      "impact": "provenance",
+      "categories": []
+    },
+    {
+      "id": "artifacts.parcels",
+      "status": "PASS",
+      "owner": "Data",
+      "detail": "1 rows; unique grain ('parcel_id',); null counts {'area_m2': 0, 'existing_use': 0, 'geometry': 0, 'parcel_id': 0, 'representative_point': 0, 'source_apns': 0, 'source_vintage': 0, 'vacancy_status': 0, 'zoning': 1}.",
+      "reproduction": "python -m tests.integration.verify_release --artifact-dir 'tests/integration/fixtures/artifacts'",
+      "expected": "Valid columns, types, keys, coordinates and provenance.",
+      "impact": "data integrity",
+      "categories": []
+    },
+    {
+      "id": "artifacts.places",
+      "status": "PASS",
+      "owner": "Data",
+      "detail": "20 rows; unique grain ('place_id',); null counts {'city': 0, 'closure_status': 0, 'latitude': 0, 'longitude': 0, 'place_id': 0, 'primary_category': 0, 'reviews_count': 0, 'service_tags': 0}.",
+      "reproduction": "python -m tests.integration.verify_release --artifact-dir 'tests/integration/fixtures/artifacts'",
+      "expected": "Valid columns, types, keys, coordinates and provenance.",
+      "impact": "data integrity",
+      "categories": []
+    },
+    {
+      "id": "artifacts.review_summary",
+      "status": "PASS",
+      "owner": "Data",
+      "detail": "15 rows; unique grain ('place_id',); null counts {'mean_rating': 0, 'place_id': 0, 'sampled_review_count': 0, 'valid_date_end': 0, 'valid_date_start': 0}.",
+      "reproduction": "python -m tests.integration.verify_release --artifact-dir 'tests/integration/fixtures/artifacts'",
+      "expected": "Valid columns, types, keys, coordinates and provenance.",
+      "impact": "data integrity",
+      "categories": []
+    },
+    {
+      "id": "artifacts.demographics",
+      "status": "PASS",
+      "owner": "Data",
+      "detail": "1 rows; unique grain ('geoid',); null counts {'geoid': 0, 'geometry': 0, 'income_moe': 1, 'land_area_m2': 0, 'median_gross_rent_usd': 0, 'median_household_income_usd': 1, 'population': 0, 'population_moe': 0, 'rent_moe': 0, 'representative_point': 0, 'source_vintage': 0}.",
+      "reproduction": "python -m tests.integration.verify_release --artifact-dir 'tests/integration/fixtures/artifacts'",
+      "expected": "Valid columns, types, keys, coordinates and provenance.",
+      "impact": "data integrity",
+      "categories": []
+    },
+    {
+      "id": "artifacts.place_features",
+      "status": "PASS",
+      "owner": "Data",
+      "detail": "20 rows; unique grain ('place_id',); null counts {'category_id': 0, 'place_id': 0, 'split': 0, 'target': 0}.",
+      "reproduction": "python -m tests.integration.verify_release --artifact-dir 'tests/integration/fixtures/artifacts'",
+      "expected": "Valid columns, types, keys, coordinates and provenance.",
+      "impact": "data integrity",
+      "categories": []
+    },
+    {
+      "id": "artifacts.parcel_features",
+      "status": "PASS",
+      "owner": "Data",
+      "detail": "5 rows; unique grain ('parcel_id', 'category_id'); null counts {'category_id': 0, 'parcel_id': 0}.",
+      "reproduction": "python -m tests.integration.verify_release --artifact-dir 'tests/integration/fixtures/artifacts'",
+      "expected": "Valid columns, types, keys, coordinates and provenance.",
+      "impact": "data integrity",
+      "categories": []
+    },
+    {
+      "id": "joins.physical_parcels",
+      "status": "PASS",
+      "owner": "Data",
+      "detail": "APNs assigned to multiple physical parcels: []",
+      "reproduction": "python -m tests.integration.verify_release --artifact-dir 'tests/integration/fixtures/artifacts'",
+      "expected": "One physical-lot mapping per source APN.",
+      "impact": "join cardinality",
+      "categories": []
+    },
+    {
+      "id": "joins.places_reviews",
+      "status": "PASS",
+      "owner": "Data",
+      "detail": "Left join retains 20 Places rows; 0 unmatched review IDs; 5 Places rows have no sampled reviews.",
+      "reproduction": "python -m tests.integration.verify_release --artifact-dir 'tests/integration/fixtures/artifacts'",
+      "expected": "Review summary is unique before left join; unmatched IDs reported.",
+      "impact": "coverage",
+      "categories": []
+    },
+    {
+      "id": "joins.training_places",
+      "status": "PASS",
+      "owner": "Data",
+      "detail": "Unmatched or recategorized feature IDs: []",
+      "reproduction": "python -m tests.integration.verify_release --artifact-dir 'tests/integration/fixtures/artifacts'",
+      "expected": "One feature row maps to one deduplicated Places row.",
+      "impact": "join cardinality",
+      "categories": []
+    },
+    {
+      "id": "joins.parcel_scenarios",
+      "status": "PASS",
+      "owner": "Data",
+      "detail": "Missing 0 scenarios; orphan 0 scenarios.",
+      "reproduction": "python -m tests.integration.verify_release --artifact-dir 'tests/integration/fixtures/artifacts'",
+      "expected": "Exactly one row per physical parcel and candidate, including unavailable metrics.",
+      "impact": "comparison coverage",
+      "categories": []
+    },
+    {
+      "id": "coverage.supply",
+      "status": "PASS",
+      "owner": "Data",
+      "detail": "Observed city/category counts: {'Berkeley:bank_credit_union': 1, 'Berkeley:clinic': 1, 'Berkeley:grocery': 1, 'Berkeley:pharmacy': 1, 'Berkeley:school': 1, 'Oakland:bank_credit_union': 2, 'Oakland:clinic': 2, 'Oakland:grocery': 2, 'Oakland:pharmacy': 2, 'Oakland:school': 2, 'San Francisco:bank_credit_union': 1, 'San Francisco:clinic': 1, 'San Francisco:grocery': 1, 'San Francisco:pharmacy': 1, 'San Francisco:school': 1}; closures: {'open': 20}; 4 multi-tag places.",
+      "reproduction": "python -m tests.integration.verify_release --artifact-dir 'tests/integration/fixtures/artifacts'",
+      "expected": "Manifest city/category and closure counts match canonical Places.",
+      "impact": "coverage",
+      "categories": []
+    },
+    {
+      "id": "coverage.boundaries",
+      "status": "PASS",
+      "owner": "Data",
+      "detail": "Boundary declaration: 1600 m; city edges preserved: True. This checks the declaration; spatial spot checks are separate.",
+      "reproduction": "python -m tests.integration.verify_release --artifact-dir 'tests/integration/fixtures/artifacts'",
+      "expected": "Population/service coverage includes both 800 m 2SFCA steps at city edges.",
+      "impact": "coverage",
+      "categories": []
+    },
+    {
+      "id": "model.features",
+      "status": "PASS",
+      "owner": "Data",
+      "detail": "Predictor order, missingness, spatial parity and focal/closure exclusion checked for 25 rows.",
+      "reproduction": "python -m tests.integration.verify_release --artifact-dir 'tests/integration/fixtures/artifacts'",
+      "expected": "No review-derived predictors; independently projected neighbor features.",
+      "impact": "model integrity",
+      "categories": []
+    },
+    {
+      "id": "model.evaluation",
+      "status": "PASS",
+      "owner": "Data",
+      "detail": "Recalculated selection and final metrics separately; selected category_baseline. Common rows: Berkeley 5, SF 5. See model_metrics.json for per-category errors, coverage, worst errors and slices; slices <30 are insufficient.",
+      "reproduction": "python -m tests.integration.verify_release --artifact-dir 'tests/integration/fixtures/artifacts'",
+      "expected": "Correct splits, train-only transforms/baselines, common rows and model selection gate.",
+      "impact": "model integrity",
+      "categories": []
+    },
+    {
+      "id": "scoring.frozen_percentiles",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Checked 5 frozen SF scenario rows, midpoint ties and economic component averaging.",
+      "reproduction": "python -m tests.integration.verify_release --artifact-dir 'tests/integration/fixtures/artifacts'",
+      "expected": "One versioned fixed reference universe; missing economic components propagate null.",
+      "impact": "scoring integrity",
+      "categories": []
+    },
+    {
+      "id": "api.health",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Ready fixture API; versions {'schema_version': '1.0', 'data_version': 'synthetic-sf-1', 'model_version': 'synthetic-review-1', 'assumption_version': 'synthetic-economics-1'}.",
+      "reproduction": "python -m tests.integration.verify_release --api-base-url 'http://127.0.0.1:8765/api/v1'",
+      "expected": "Ready API with explicit mode and loaded versions.",
+      "impact": "API contract",
+      "categories": []
+    },
+    {
+      "id": "api.metadata",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Published schema 1.0 check passed.",
+      "reproduction": "python -m tests.integration.verify_release --api-base-url 'http://127.0.0.1:8765/api/v1'",
+      "expected": "Five categories, defaults, units, sources and coverage.",
+      "impact": "API contract",
+      "categories": []
+    },
+    {
+      "id": "api.parcels",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Published schema 1.0 check passed.",
+      "reproduction": "python -m tests.integration.verify_release --api-base-url 'http://127.0.0.1:8765/api/v1'",
+      "expected": "Capped, deduplicated parcels with freshness and source version.",
+      "impact": "API contract",
+      "categories": []
+    },
+    {
+      "id": "api.services",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Published schema 1.0 check passed.",
+      "reproduction": "python -m tests.integration.verify_release --api-base-url 'http://127.0.0.1:8765/api/v1'",
+      "expected": "Active deduplicated supply with category filtering.",
+      "impact": "API contract",
+      "categories": []
+    },
+    {
+      "id": "api.parcel_detail",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Published schema 1.0 check passed.",
+      "reproduction": "python -m tests.integration.verify_release --api-base-url 'http://127.0.0.1:8765/api/v1'",
+      "expected": "Canonical parcel detail with vacancy/hypothetical labeling.",
+      "impact": "API contract",
+      "categories": []
+    },
+    {
+      "id": "api.comparison",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Default/repeat/reweight/unavailable-weight/reset pass; cached timings [0.9, 0.78, 0.78, 0.83] ms.",
+      "reproduction": "python -m tests.integration.verify_release --api-base-url 'http://127.0.0.1:8765/api/v1'",
+      "expected": "Independent ranking/Pareto, unavailable axes, clipped massing and deterministic cached comparisons.",
+      "impact": "API contract",
+      "categories": []
+    },
+    {
+      "id": "api.errors",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Published schema 1.0 check passed.",
+      "reproduction": "python -m tests.integration.verify_release --api-base-url 'http://127.0.0.1:8765/api/v1'",
+      "expected": "Structured unknown-parcel and invalid bbox/weight/priority errors.",
+      "impact": "API contract",
+      "categories": []
+    },
+    {
+      "id": "api.oracle.sf:fixture-001.clinic",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Published schema 1.0 check passed.",
+      "reproduction": "python -m tests.integration.verify_release --api-base-url 'http://127.0.0.1:8765/api/v1'",
+      "expected": "Raw need/travel agrees with independently projected fixture source records.",
+      "impact": "API contract",
+      "categories": []
+    },
+    {
+      "id": "api.oracle.sf:fixture-001.pharmacy",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Published schema 1.0 check passed.",
+      "reproduction": "python -m tests.integration.verify_release --api-base-url 'http://127.0.0.1:8765/api/v1'",
+      "expected": "Raw need/travel agrees with independently projected fixture source records.",
+      "impact": "API contract",
+      "categories": []
+    },
+    {
+      "id": "api.oracle.sf:fixture-001.grocery",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Published schema 1.0 check passed.",
+      "reproduction": "python -m tests.integration.verify_release --api-base-url 'http://127.0.0.1:8765/api/v1'",
+      "expected": "Raw need/travel agrees with independently projected fixture source records.",
+      "impact": "API contract",
+      "categories": []
+    },
+    {
+      "id": "api.oracle.sf:fixture-001.bank_credit_union",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Published schema 1.0 check passed.",
+      "reproduction": "python -m tests.integration.verify_release --api-base-url 'http://127.0.0.1:8765/api/v1'",
+      "expected": "Raw need/travel agrees with independently projected fixture source records.",
+      "impact": "API contract",
+      "categories": []
+    },
+    {
+      "id": "api.oracle.sf:fixture-001.school",
+      "status": "PASS",
+      "owner": "Backend",
+      "detail": "Published schema 1.0 check passed.",
+      "reproduction": "python -m tests.integration.verify_release --api-base-url 'http://127.0.0.1:8765/api/v1'",
+      "expected": "Raw need/travel agrees with independently projected fixture source records.",
+      "impact": "API contract",
+      "categories": []
+    },
+    {
+      "id": "release.browser",
+      "status": "BLOCKED",
+      "owner": "Frontend + Checker",
+      "detail": "No browser results supplied",
+      "reproduction": "python -m tests.integration.verify_release",
+      "expected": "Measured browser checks against the integrated product.",
+      "impact": "release blocker",
+      "categories": []
+    },
+    {
+      "id": "release.provider",
+      "status": "BLOCKED",
+      "owner": "Backend + Checker",
+      "detail": "No provider results supplied",
+      "reproduction": "python -m tests.integration.verify_release",
+      "expected": "Measured provider checks against the integrated product.",
+      "impact": "release blocker",
+      "categories": []
+    },
+    {
+      "id": "release.presentation_review",
+      "status": "BLOCKED",
+      "owner": "Checker",
+      "detail": "No presentation-machine evidence supplied",
+      "reproduction": "python -m tests.integration.verify_release",
+      "expected": "Completed presentation-machine evidence; see manual_evidence.example.json.",
+      "impact": "release blocker",
+      "categories": []
+    }
+  ]
+}

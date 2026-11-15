@@ -130,6 +130,15 @@ def validate_collection(payload, *, services=False):
 
 
 def run_api_checks(api, report: Report, *, bbox="-122.43,37.76,-122.40,37.79", parcel_id=None, oracle_cases=()):
+    try:
+        _, health_data, _ = api.request("GET", "/health")
+    except Exception:
+        health_data = {}
+    if not isinstance(health_data, dict):
+        health_data = {}
+    if isinstance(health_data.get("versions"), dict) and "schema_version" in health_data["versions"]:
+        from .published_api import run_checks
+        return run_checks(api, report, bbox=bbox, parcel_id=parcel_id, oracle_cases=oracle_cases)
     reproduction = f"python -m tests.integration.verify_release --api-base-url '{api.base_url}'"
     def probe(id, callback, expected):
         try:

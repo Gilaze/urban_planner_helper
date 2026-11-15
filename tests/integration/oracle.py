@@ -10,6 +10,7 @@ import hashlib
 import math
 import random
 import statistics
+from fractions import Fraction
 from collections.abc import Mapping, Sequence
 
 CANDIDATES = ("clinic", "pharmacy", "grocery", "bank_credit_union", "school")
@@ -166,8 +167,8 @@ def rank(alternatives: Mapping[str, Mapping[str, float | None]], weights=None, p
             if v is not None and not 0 <= number(v) <= 100:
                 raise ValueError("Normalized metrics must be in [0, 100]")
     active = [d for d in DIMENSIONS if all(a[d] is not None for a in alternatives.values())]
-    denominator = sum(weights[d] for d in active)
-    effective = {d: weights[d] / denominator if d in active and denominator else 0.0 for d in DIMENSIONS}
+    denominator = sum(Fraction(weights[d]) for d in active)
+    effective = {d: float(Fraction(weights[d]) / denominator) if d in active and denominator else 0.0 for d in DIMENSIONS}
     rows = []
     for category, metrics in alternatives.items():
         dominated = any(

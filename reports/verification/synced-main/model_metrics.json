@@ -1,0 +1,288 @@
+{
+  "selection": {
+    "evaluation_city": "Berkeley",
+    "evaluation_rows": 5,
+    "common_rows": 5,
+    "metrics": {
+      "category_baseline": {
+        "categories": {
+          "bank_credit_union": {
+            "n": 1,
+            "log_count_rmse": 0.013179466246350025,
+            "spearman": null
+          },
+          "clinic": {
+            "n": 1,
+            "log_count_rmse": 0.051379866978884525,
+            "spearman": null
+          },
+          "grocery": {
+            "n": 1,
+            "log_count_rmse": 0.01884171691719727,
+            "spearman": null
+          },
+          "pharmacy": {
+            "n": 1,
+            "log_count_rmse": 0.029179807592791374,
+            "spearman": null
+          },
+          "school": {
+            "n": 1,
+            "log_count_rmse": 0.009739302861382804,
+            "spearman": null
+          }
+        },
+        "macro_rmse": 0.0244640321193212
+      },
+      "category_city_baseline": {
+        "categories": {
+          "bank_credit_union": {
+            "n": 1,
+            "log_count_rmse": 0.013179466246350025,
+            "spearman": null
+          },
+          "clinic": {
+            "n": 1,
+            "log_count_rmse": 0.051379866978884525,
+            "spearman": null
+          },
+          "grocery": {
+            "n": 1,
+            "log_count_rmse": 0.01884171691719727,
+            "spearman": null
+          },
+          "pharmacy": {
+            "n": 1,
+            "log_count_rmse": 0.029179807592791374,
+            "spearman": null
+          },
+          "school": {
+            "n": 1,
+            "log_count_rmse": 0.009739302861382804,
+            "spearman": null
+          }
+        },
+        "macro_rmse": 0.0244640321193212
+      }
+    },
+    "slices": {
+      "income_usd:low": {
+        "n": 0,
+        "status": "insufficient",
+        "metrics": null
+      },
+      "income_usd:high": {
+        "n": 5,
+        "status": "insufficient",
+        "metrics": null
+      },
+      "population_density_per_km2:low": {
+        "n": 0,
+        "status": "insufficient",
+        "metrics": null
+      },
+      "population_density_per_km2:high": {
+        "n": 5,
+        "status": "insufficient",
+        "metrics": null
+      }
+    },
+    "worst_errors": [
+      {
+        "stage": "selection",
+        "approach": "category_baseline",
+        "place_id": "clinic-v",
+        "category_id": "clinic",
+        "city": "Berkeley",
+        "actual_log_count": 2.772588722239781,
+        "prediction_log_count": 2.7212088552608966
+      },
+      {
+        "stage": "selection",
+        "approach": "category_baseline",
+        "place_id": "pharmacy-v",
+        "category_id": "pharmacy",
+        "city": "Berkeley",
+        "actual_log_count": 3.044522437723423,
+        "prediction_log_count": 3.0153426301306316
+      },
+      {
+        "stage": "selection",
+        "approach": "category_baseline",
+        "place_id": "grocery-v",
+        "category_id": "grocery",
+        "city": "Berkeley",
+        "actual_log_count": 3.258096538021482,
+        "prediction_log_count": 3.239254821104285
+      },
+      {
+        "stage": "selection",
+        "approach": "category_baseline",
+        "place_id": "bank_credit_union-v",
+        "category_id": "bank_credit_union",
+        "city": "Berkeley",
+        "actual_log_count": 3.4339872044851463,
+        "prediction_log_count": 3.4208077382387962
+      },
+      {
+        "stage": "selection",
+        "approach": "category_baseline",
+        "place_id": "school-v",
+        "category_id": "school",
+        "city": "Berkeley",
+        "actual_log_count": 3.58351893845611,
+        "prediction_log_count": 3.573779635594727
+      }
+    ],
+    "coverage_by_category": {
+      "clinic": 1,
+      "pharmacy": 1,
+      "grocery": 1,
+      "bank_credit_union": 1,
+      "school": 1
+    }
+  },
+  "final": {
+    "evaluation_city": "San Francisco",
+    "evaluation_rows": 5,
+    "common_rows": 5,
+    "metrics": {
+      "category_baseline": {
+        "categories": {
+          "bank_credit_union": {
+            "n": 1,
+            "log_count_rmse": 0.3946541920039488,
+            "spearman": null
+          },
+          "clinic": {
+            "n": 1,
+            "log_count_rmse": 0.6613984822453651,
+            "spearman": null
+          },
+          "grocery": {
+            "n": 1,
+            "log_count_rmse": 0.4554755286828258,
+            "spearman": null
+          },
+          "pharmacy": {
+            "n": 1,
+            "log_count_rmse": 0.5389965007326869,
+            "spearman": null
+          },
+          "school": {
+            "n": 1,
+            "log_count_rmse": 0.3483066942682158,
+            "spearman": null
+          }
+        },
+        "macro_rmse": 0.4797662795866085
+      },
+      "category_city_baseline": {
+        "categories": {
+          "bank_credit_union": {
+            "n": 1,
+            "log_count_rmse": 0.3946541920039488,
+            "spearman": null
+          },
+          "clinic": {
+            "n": 1,
+            "log_count_rmse": 0.6613984822453651,
+            "spearman": null
+          },
+          "grocery": {
+            "n": 1,
+            "log_count_rmse": 0.4554755286828258,
+            "spearman": null
+          },
+          "pharmacy": {
+            "n": 1,
+            "log_count_rmse": 0.5389965007326869,
+            "spearman": null
+          },
+          "school": {
+            "n": 1,
+            "log_count_rmse": 0.3483066942682158,
+            "spearman": null
+          }
+        },
+        "macro_rmse": 0.4797662795866085
+      }
+    },
+    "slices": {
+      "income_usd:low": {
+        "n": 0,
+        "status": "insufficient",
+        "metrics": null
+      },
+      "income_usd:high": {
+        "n": 5,
+        "status": "insufficient",
+        "metrics": null
+      },
+      "population_density_per_km2:low": {
+        "n": 0,
+        "status": "insufficient",
+        "metrics": null
+      },
+      "population_density_per_km2:high": {
+        "n": 5,
+        "status": "insufficient",
+        "metrics": null
+      }
+    },
+    "worst_errors": [
+      {
+        "stage": "final",
+        "approach": "category_baseline",
+        "place_id": "clinic-t",
+        "category_id": "clinic",
+        "city": "San Francisco",
+        "actual_log_count": 3.4339872044851463,
+        "prediction_log_count": 2.772588722239781
+      },
+      {
+        "stage": "final",
+        "approach": "category_baseline",
+        "place_id": "pharmacy-t",
+        "category_id": "pharmacy",
+        "city": "San Francisco",
+        "actual_log_count": 3.58351893845611,
+        "prediction_log_count": 3.044522437723423
+      },
+      {
+        "stage": "final",
+        "approach": "category_baseline",
+        "place_id": "grocery-t",
+        "category_id": "grocery",
+        "city": "San Francisco",
+        "actual_log_count": 3.713572066704308,
+        "prediction_log_count": 3.258096538021482
+      },
+      {
+        "stage": "final",
+        "approach": "category_baseline",
+        "place_id": "bank_credit_union-t",
+        "category_id": "bank_credit_union",
+        "city": "San Francisco",
+        "actual_log_count": 3.828641396489095,
+        "prediction_log_count": 3.4339872044851463
+      },
+      {
+        "stage": "final",
+        "approach": "category_baseline",
+        "place_id": "school-t",
+        "category_id": "school",
+        "city": "San Francisco",
+        "actual_log_count": 3.9318256327243257,
+        "prediction_log_count": 3.58351893845611
+      }
+    ],
+    "coverage_by_category": {
+      "clinic": 1,
+      "pharmacy": 1,
+      "grocery": 1,
+      "bank_credit_union": 1,
+      "school": 1
+    }
+  }
+}
