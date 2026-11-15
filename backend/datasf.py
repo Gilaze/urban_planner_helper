@@ -53,7 +53,7 @@ class DataSF:
             except (httpx.HTTPStatusError, ValueError):
                 raise ProviderUnavailable("DataSF returned a failed or malformed response") from None
             # SODA v3 can wrap rows in a response object. Each row is a keyed record.
-            rows = payload.get("data") if isinstance(payload, dict) else payload
+            rows = payload.get("data", payload.get("rows")) if isinstance(payload, dict) else payload
             if not isinstance(rows, list) or len(rows) > size or any(not isinstance(row, dict) for row in rows):
                 raise ProviderUnavailable("DataSF did not return a bounded list of records")
             return rows
@@ -144,6 +144,9 @@ class DataSFParcels:
 
     def _save(self, key, entry):
         with self._lock:
+            existing = self._cache.get(key)
+            if existing is not None and existing.retrieved_at > entry.retrieved_at:
+                return
             self._cache[key] = entry
             self._cache.move_to_end(key)
             if len(self._cache) > 2048:
@@ -175,10 +178,7 @@ class DataSFParcels:
         (parcels, truncated), source = self._get(("bbox", bounds, limit), load)
         if source.freshness == "live":
             for parcel in parcels:
-                key = ("parcel", parcel.id)
-                existing = self._lookup(key)
-                if existing is None or existing.retrieved_at <= source.retrieved_at:
-                    self._save(key, Cached(parcel, source.retrieved_at, monotonic()))
+                self._save(("parcel", parcel.id), Cached(parcel, source.retrieved_at, monotonic()))
         return parcels, truncated, source
 
     def detail(self, parcel_id):

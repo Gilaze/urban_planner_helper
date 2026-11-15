@@ -33,7 +33,8 @@
     "description": "Synthetic population and service catchments within illustrative San Francisco bounds.",
     "population_points": 8,
     "scored_parcels": 1,
-    "service_locations": 5
+    "service_locations": 5,
+    "snapshot_parcels": 1
   },
   "data_version": "synthetic-sf-1",
   "mode": "fixture",

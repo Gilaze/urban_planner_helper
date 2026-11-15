@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from pydantic import model_validator
+from shapely import equals_exact
 from shapely.geometry import box, shape
 from shapely.strtree import STRtree
 
@@ -44,12 +45,17 @@ class ReleaseInputs(StrictModel):
     services: list[ServiceFeature]
     populations: list[Population]
     predictions: dict[ParcelID, dict[Category, ReviewActivity]]
+    eligible_parcel_ids: set[ParcelID] | None = None
 
     @model_validator(mode="after")
     def validate_records(self):
         parcel_ids = {parcel.id for parcel in self.parcels}
         if not parcel_ids or len(parcel_ids) != len(self.parcels):
             raise ValueError("A release needs unique, nonempty parcel records")
+        if self.eligible_parcel_ids is not None and (
+            not self.eligible_parcel_ids or self.eligible_parcel_ids - parcel_ids
+        ):
+            raise ValueError("Eligible parcel IDs must identify a nonempty subset of the snapshot")
         if set(self.predictions) - parcel_ids:
             raise ValueError("Predictions contain unknown parcel IDs")
         if self.model_version is None and self.predictions:
@@ -95,7 +101,7 @@ class FrozenRelease(StrictModel):
     @model_validator(mode="after")
     def validate_indexes(self):
         parcel_ids = {parcel.id for parcel in self.parcels}
-        if not parcel_ids or len(parcel_ids) != len(self.parcels) or parcel_ids != set(self.comparisons):
+        if len(parcel_ids) != len(self.parcels) or not self.comparisons or set(self.comparisons) - parcel_ids:
             raise ValueError("Frozen comparisons must match the parcel snapshot")
         if set(self.need_targets) != set(CATEGORIES):
             raise ValueError("Need targets must cover all categories")
@@ -129,7 +135,7 @@ class Release:
         self.parcels = {parcel.id: parcel for parcel in frozen.parcels}
         self.parcel_shapes = {parcel.id: parcel_shape(parcel) for parcel in frozen.parcels}
         self.parcel_tree = STRtree(list(self.parcel_shapes.values()))
-        self.massing = {parcel.id: massing(parcel) for parcel in frozen.parcels}
+        self.massing = {parcel_id: massing(self.parcels[parcel_id]) for parcel_id in frozen.comparisons}
         self.service_tree = STRtree([shape(service.geometry.model_dump()) for service in frozen.services])
 
     def list_parcels(self, bounds: tuple[float, ...]):
@@ -151,13 +157,16 @@ class Release:
         if snapshot is None:
             return "parcel_not_in_scoring_snapshot"
         frozen_properties = self.parcels[parcel.id].properties
-        if not snapshot.equals(parcel_shape(parcel)):
+        current = parcel_shape(parcel)
+        if not snapshot.equals(current) and not equals_exact(snapshot, current, tolerance=1e-10, normalize=True):
             return "parcel_geometry_changed"
         if (
             parcel.properties.vacancy_status != "unknown"
             and frozen_properties.vacancy_status != parcel.properties.vacancy_status
         ):
             return "parcel_vacancy_status_changed"
+        if parcel.id not in self.frozen.comparisons:
+            return "parcel_not_eligible_for_scoring"
         return None
 
 
@@ -174,6 +183,8 @@ def freeze(inputs: ReleaseInputs, assumptions: Assumptions) -> FrozenRelease:
     comparisons = {}
     references = {metric: [] for metric in BENEFIT_FIELDS}
     for parcel in sorted(inputs.parcels, key=lambda feature: feature.id):
+        if inputs.eligible_parcel_ids is not None and parcel.id not in inputs.eligible_parcel_ids:
+            continue
         spatial_metrics = spatial.score(parcel.properties.representative_point.coordinates)
         predictions = inputs.predictions.get(parcel.id, {})
         comparisons[parcel.id] = {}
@@ -206,7 +217,8 @@ def freeze(inputs: ReleaseInputs, assumptions: Assumptions) -> FrozenRelease:
         sources=inputs.sources,
         coverage={
             **inputs.coverage,
-            "scored_parcels": len(inputs.parcels),
+            "snapshot_parcels": len(inputs.parcels),
+            "scored_parcels": len(comparisons),
             "service_locations": len(inputs.services),
             "population_points": len(inputs.populations),
         },

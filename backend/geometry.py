@@ -11,6 +11,19 @@ TO_METERS = Transformer.from_crs(4326, 26910, always_xy=True)
 TO_WGS84 = Transformer.from_crs(26910, 4326, always_xy=True)
 
 
+def validate_bbox(bbox: str) -> tuple[float, float, float, float]:
+    try:
+        west, south, east, north = (float(value) for value in bbox.split(","))
+    except ValueError:
+        raise ValueError("Expected four comma-separated WGS84 coordinates") from None
+    if not (
+        -180 <= west < east <= 180 and -90 <= south < north <= 90
+        and east - west <= 0.5 and north - south <= 0.5
+    ):
+        raise ValueError("Expected ordered bounds spanning at most 0.5° per axis")
+    return west, south, east, north
+
+
 def validate_wgs84(geometry):
     if geometry.is_empty or not geometry.is_valid or geometry.has_z:
         raise ValueError("Expected nonempty, valid 2D geometry")

@@ -11,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .datasf import DataSF, DataSFParcels, ProviderUnavailable, datasf_client
 from .economics import load_assumptions
-from .geometry import massing
+from .geometry import massing, validate_bbox
 from .ranking import rank
 from .release import ROOT, FrozenRelease, Release, ReleaseInputs, freeze
 from .schemas import (
@@ -70,15 +70,9 @@ def error_response(status: int, detail: ErrorDetail):
 
 def parse_bbox(bbox: str = Query(description="WGS84 west,south,east,north. Maximum span 0.5° per axis.")):
     try:
-        west, south, east, north = (float(value) for value in bbox.split(","))
-    except ValueError:
-        raise APIError(422, "invalid_bbox", "Expected four comma-separated WGS84 coordinates") from None
-    if not (
-        -180 <= west < east <= 180 and -90 <= south < north <= 90
-        and east - west <= 0.5 and north - south <= 0.5
-    ):
-        raise APIError(422, "invalid_bbox", "Expected ordered bounds spanning at most 0.5° per axis")
-    return west, south, east, north
+        return validate_bbox(bbox)
+    except ValueError as exc:
+        raise APIError(422, "invalid_bbox", str(exc)) from None
 
 
 def require_release(request: Request) -> Release:
@@ -115,11 +109,15 @@ def resolve_parcel(parcel_id: str, release: Release | None, provider: DataSFParc
 
 
 def enrich_parcel(parcel, release: Release | None):
-    if release is None or release.scoring_reason(parcel) is not None:
+    if release is None or release.scoring_reason(parcel) not in {None, "parcel_not_eligible_for_scoring"}:
         return parcel
     # Carry over dated assessor fields and the representative point used for scoring.
     frozen = release.parcels[parcel.id].properties
     current = parcel.properties
+    flags = list(current.quality_flags)
+    if frozen.source_apns and "apns_unverified" in flags:
+        flags.remove("apns_unverified")
+    flags.extend(flag for flag in frozen.quality_flags if flag.startswith("assessor_"))
     properties = current.model_copy(update={
         "source_apns": frozen.source_apns,
         "representative_point": frozen.representative_point,
@@ -127,10 +125,7 @@ def enrich_parcel(parcel, release: Release | None):
         "assessed_land_usd": frozen.assessed_land_usd,
         "assessed_improvement_usd": frozen.assessed_improvement_usd,
         "assessment_year": frozen.assessment_year,
-        "quality_flags": [
-            flag for flag in current.quality_flags
-            if flag != "apns_unverified" or not frozen.source_apns
-        ],
+        "quality_flags": list(dict.fromkeys(flags)),
     })
     return parcel.model_copy(update={"properties": properties})
 
