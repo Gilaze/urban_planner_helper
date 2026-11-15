@@ -1,10 +1,10 @@
 # Parcel Planner verification
 
-Generated: 2026-11-15T05:38:57.487131+00:00
+Generated: 2026-11-15T06:07:45.504577+00:00
 
 Mode: **fixture**. Release accepted: **False**.
 
-24 PASS, 0 FAIL, 5 BLOCKED, 1 WARN.
+24 PASS, 3 FAIL, 2 BLOCKED, 1 WARN.
 
 Synthetic checker fixtures only; this does not validate an application or real data release.
 
@@ -69,11 +69,11 @@ Reproduce: `python -m tests.integration.verify_release --data-reports-dir 'repor
 
 Expected: Describe held-out performance and keep SF out of subsequent model selection.
 
-## BLOCKED: data_reports.category_review
+## FAIL: data_reports.category_review
 
 Owner: Data + Checker. Impact: release blocker.
 
-160 sampled rows; 0 accepted, 0 rejected; blank/uncertain verdicts remain unreviewed. Samples alone do not establish classification accuracy.
+160 sampled rows; 80 accepted, 45 rejected, 35 need owner review. Verdicts cover supplied listing labels, not independent facility verification or population accuracy.
 
 Reproduce: `python -m tests.integration.verify_release --data-reports-dir 'reports/data'`
 
@@ -221,7 +221,7 @@ Expected: Canonical parcel detail with vacancy/hypothetical labeling.
 
 Owner: Backend. Impact: API contract.
 
-Default/repeat/reweight/unavailable-weight/reset pass; cached timings [0.87, 0.83, 0.78, 0.8] ms.
+Default/repeat/reweight/unavailable-weight/reset pass; cached timings [3.28, 2.53, 2.81, 2.32] ms.
 
 Reproduce: `python -m tests.integration.verify_release --api-base-url 'http://127.0.0.1:8765/api/v1'`
 
@@ -287,15 +287,15 @@ Reproduce: `python -m tests.integration.verify_release --api-base-url 'http://12
 
 Expected: Raw need/travel agrees with independently projected fixture source records.
 
-## BLOCKED: release.browser
+## FAIL: release.browser
 
 Owner: Frontend + Checker. Impact: release blocker.
 
-No browser results supplied
+Imported reports/verification/current/browser-results.json; acceptance=False.
 
 Reproduce: `python -m tests.integration.verify_release`
 
-Expected: Measured browser checks against the integrated product.
+Expected: All required product checks pass, without skips or checker-only stand-ins.
 
 ## PASS: release.provider
 
@@ -307,12 +307,12 @@ Reproduce: `python -m tests.integration.verify_release`
 
 Expected: All required product checks pass, without skips or checker-only stand-ins.
 
-## BLOCKED: release.presentation_review
+## FAIL: release.presentation_review
 
 Owner: Checker. Impact: release blocker.
 
-No presentation-machine evidence supplied
+Evidence file reports/verification/current/manual-evidence.json; acceptance=False.
 
 Reproduce: `python -m tests.integration.verify_release`
 
-Expected: Completed presentation-machine evidence; see manual_evidence.example.json.
+Expected: Recorded visual/source review on the presentation machine with inspectable evidence.

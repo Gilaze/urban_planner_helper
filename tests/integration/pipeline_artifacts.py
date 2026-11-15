@@ -345,7 +345,28 @@ def audit_normalization_export(directory, features, model, manifest):
                         for k, v in expected.items()), f"{stage}/{category} normalization includes nontraining labels")
 
 
-def audit_pipeline_reports(directory, report):
+def read_category_review(source_path, review_path):
+    """Bind a Checker-owned review to the exact Data sample without editing it."""
+    with Path(source_path).open(newline="") as file:
+        original = list(csv.DictReader(file))
+    with Path(review_path).open(newline="") as file:
+        reviewed = list(csv.DictReader(file))
+    key = lambda row: (row["audit_reason"], row["place_id"])
+    source = {key(row): row for row in original}
+    require(len(source) == len(original), "Duplicate source audit keys")
+    require(len(reviewed) == len(source) and {key(row) for row in reviewed} == set(source),
+            "Review must cover every source sample exactly once")
+    fingerprint = sha256(source_path)
+    for row in reviewed:
+        require(row.get("sample_sha256") == fingerprint, "Review refers to a different source sample")
+        require(all(row.get(field) == value for field, value in source[key(row)].items() if field != "reviewer_verdict"),
+                "Review changes source evidence")
+        require(row["reviewer_verdict"] in {"accept", "reject", "needs_review"}, "Invalid review verdict")
+        require(bool(row.get("reviewer_note", "").strip()), "Review needs an evidence note")
+    return reviewed
+
+
+def audit_pipeline_reports(directory, report, category_review=None):
     """Reconcile committed aggregate reports; never claim raw metric verification."""
     directory = Path(directory)
     command = f"python -m tests.integration.verify_release --data-reports-dir '{directory}'"
@@ -392,14 +413,19 @@ def audit_pipeline_reports(directory, report):
                        "Describe held-out performance and keep SF out of subsequent model selection.", impact="model interpretation")
         with (directory / "category_audit_sample.csv").open(newline="") as file:
             rows = list(csv.DictReader(file))
+        if category_review is not None:
+            rows = read_category_review(directory / "category_audit_sample.csv", category_review)
+            result.update(category_review_path=str(category_review), category_review_sha256=sha256(category_review))
         by_reason = dict(Counter(r["audit_reason"] for r in rows))
         required = {f"candidate:{c}" for c in CANDIDATES} | {"ambiguous", "lookalike:clinic", "lookalike:grocery"}
         require(all(by_reason.get(reason, 0) >= 20 for reason in required), "Category audit sample lacks required candidate/ambiguous/lookalike rows")
         accepted = sum(r["reviewer_verdict"].strip().lower() == "accept" for r in rows)
         rejected = sum(r["reviewer_verdict"].strip().lower() == "reject" for r in rows)
-        result.update(category_audit_rows=len(rows), category_audit_by_reason=by_reason, accepted_verdicts=accepted, rejected_verdicts=rejected)
+        uncertain = sum(r["reviewer_verdict"].strip().lower() == "needs_review" for r in rows)
+        result.update(category_audit_rows=len(rows), category_audit_by_reason=by_reason, accepted_verdicts=accepted,
+                      rejected_verdicts=rejected, uncertain_verdicts=uncertain)
         report.add("data_reports.category_review", "FAIL" if rejected else "PASS" if accepted == len(rows) else "BLOCKED", "Data + Checker",
-                   f"{len(rows)} sampled rows; {accepted} accepted, {rejected} rejected; blank/uncertain verdicts remain unreviewed. Samples alone do not establish classification accuracy.", command,
+                   f"{len(rows)} sampled rows; {accepted} accepted, {rejected} rejected, {uncertain} need owner review. Verdicts cover supplied listing labels, not independent facility verification or population accuracy.", command,
                    "Review mappings against source evidence, resolve rejects, and record accept/reject verdicts.")
         result["source_sha256"] = {name: sha256(directory / name) for name in ("model_report.json", "category_audit_sample.csv")}
     except Exception as exc:

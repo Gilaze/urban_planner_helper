@@ -1,0 +1,48 @@
+{
+  "machine": "macOS arm64, installed Google Chrome 157.0.8103.78; localhost presentation checks",
+  "observed_at": "2026-11-15T06:03:13.097527+00:00",
+  "reviewer": "Codex / Person 4",
+  "scope": "Committed repository inputs only. No real artifacts or externally acquired data used.",
+  "observations": {
+    "privacy": {
+      "status": "PASS",
+      "evidence": "Repository fixture/API schemas expose no reviewer identities or text; test_reviews_aggregate_without_identity passes. This does not verify absent real-data exports."
+    },
+    "attribution": {
+      "status": "NOT_RUN",
+      "evidence": "Simulator remains in its missing-data loader. Source-attribution UI cannot be observed; see browser-smoke.json."
+    },
+    "zoning_language": {
+      "status": "NOT_RUN",
+      "evidence": "No planner parcel details UI is present on main; API fixture checks do not establish rendered wording."
+    },
+    "vacancy_label": {
+      "status": "NOT_RUN",
+      "evidence": "No planner selection/details UI. The fixture API carries hypothetical labels, but the visual presentation is unavailable."
+    },
+    "economic_scenarios": {
+      "status": "NOT_RUN",
+      "evidence": "No comparison/economics panel. Fixture HTTP checks pass, but scenario descriptions are not observed in a product UI."
+    },
+    "boundary_coverage": {
+      "status": "NOT_RUN",
+      "evidence": "Full canonical Census/service artifacts are absent from tracked repository inputs. Synthetic catchment checks cannot certify real boundaries."
+    },
+    "category_audit": {
+      "status": "FAIL",
+      "evidence": "All 160 committed samples reviewed in ../category-review.csv: 80 label-consistent, 45 rejected, 35 require owner evidence. This is not a population accuracy estimate."
+    },
+    "sf_evaluation": {
+      "status": "NOT_RUN",
+      "evidence": "Only historical 0.1.0 aggregate reports exist in the repository; no 0.1.1 frozen predictions were supplied. No actual SF re-evaluation performed."
+    },
+    "payload_agreement": {
+      "status": "NOT_RUN",
+      "evidence": "Simulator code loads city binaries and has no planner API comparison controls. All 16 planned browser flows fail before the core interaction can run."
+    },
+    "geometry_clipping": {
+      "status": "NOT_RUN",
+      "evidence": "No proposal preview UI is available. Backend fixture massing tests pass, but a rendered clipped proposal has not been observed."
+    }
+  }
+}

@@ -12,6 +12,8 @@
   ],
   "reported_sf_selected_common_macro_rmse": 1.5511211924546928,
   "reported_sf_baseline_common_macro_rmse": 1.5097684953193236,
+  "category_review_path": "reports/verification/category-review.csv",
+  "category_review_sha256": "88dbf02bf0810bd10fceb214a9c74169d72fce6aee79c1bf8f0658f71c348ceb",
   "category_audit_rows": 160,
   "category_audit_by_reason": {
     "candidate:clinic": 20,
@@ -23,8 +25,9 @@
     "lookalike:clinic": 20,
     "lookalike:grocery": 20
   },
-  "accepted_verdicts": 0,
-  "rejected_verdicts": 0,
+  "accepted_verdicts": 80,
+  "rejected_verdicts": 45,
+  "uncertain_verdicts": 35,
   "source_sha256": {
     "model_report.json": "2cd3da5338ccd501137781c43f5c9c8b2246c3b520d1e95db989778c30972406",
     "category_audit_sample.csv": "430ddabcb72d04c4cdbd39ce64fca346ba870538ccada4148470ceaa80bd124f"
