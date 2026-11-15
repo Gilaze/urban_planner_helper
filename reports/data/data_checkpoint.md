@@ -1,22 +1,22 @@
 # Data checkpoint
 
-Built: 2026-11-15T04:39:47+00:00
+Built: 2026-11-15T05:44:17+00:00
 
 ## Sources
 
 | Source | Vintage | Rows | Retrieved |
 |---|---|---|---|
-| acs_block_group | 2020-2024 ACS 5-year | 3204 | 2026-11-15T04:39:42+00:00 |
-| acs_tract | 2020-2024 ACS 5-year | 1102 | 2026-11-15T04:39:46+00:00 |
-| google_places | hackathon export | 147429 | 2026-11-15T04:40:18+00:00 |
-| google_reviews | hackathon export | 213536 | 2026-11-15T04:40:18+00:00 |
-| sf_assessor | 2025 | 211547 | 2026-11-15T04:26:39+00:00 |
-| sf_landuse | 2023 | 154476 | 2026-11-15T04:26:04+00:00 |
-| sf_landuse_current | 2026-08-17T00:00:00.000 | 153765 | 2026-11-15T04:26:17+00:00 |
-| sf_parcels | 1794680379 | 227968 | 2026-11-15T04:25:58+00:00 |
-| tiger_block_group | TIGER/Line 2024 |  | 2026-11-15T04:39:38+00:00 |
-| tiger_place | TIGER/Line 2024 |  | 2026-11-15T04:39:38+00:00 |
-| tiger_tract | TIGER/Line 2024 |  | 2026-11-15T04:39:38+00:00 |
+| acs_block_group | 2020-2024 ACS 5-year | 3204 | 2026-11-15T05:44:15+00:00 |
+| acs_tract | 2020-2024 ACS 5-year | 1102 | 2026-11-15T05:44:17+00:00 |
+| google_places | hackathon export | 147429 | 2026-11-15T05:44:47+00:00 |
+| google_reviews | hackathon export | 213536 | 2026-11-15T05:44:47+00:00 |
+| sf_assessor | 2025 | 211547 | 2026-11-15T05:44:10+00:00 |
+| sf_landuse | 2023 | 154476 | 2026-11-15T05:43:34+00:00 |
+| sf_landuse_current | 2026-08-17T00:00:00.000 | 153765 | 2026-11-15T05:43:52+00:00 |
+| sf_parcels | 1794680379 | 227968 | 2026-11-15T05:43:28+00:00 |
+| tiger_block_group | TIGER/Line 2024 |  | 2026-11-15T05:44:10+00:00 |
+| tiger_place | TIGER/Line 2024 |  | 2026-11-15T05:44:10+00:00 |
+| tiger_tract | TIGER/Line 2024 |  | 2026-11-15T05:44:10+00:00 |
 
 ## Parcels
 

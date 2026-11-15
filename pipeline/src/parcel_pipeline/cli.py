@@ -146,6 +146,7 @@ def build(s: Settings, skip_census: bool = False) -> None:
     raw_m = Manifest(s.raw_dir / "raw_manifest.json")
     m = Manifest(rd / "source_manifest.json")
     m.data["sources"] = dict(raw_m.data["sources"])
+    m.data["outputs"] = {}  # each build lists only the files it wrote
     m.data["built_at"] = now()
     checks: dict = {}
 
