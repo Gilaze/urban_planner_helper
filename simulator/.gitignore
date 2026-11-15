@@ -1,0 +1,6 @@
+node_modules/
+dist/
+# downloaded sources and generated binaries (rebuild with: npm run data)
+pipeline/cache/
+pipeline/__pycache__/
+public/data/
