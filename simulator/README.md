@@ -51,10 +51,12 @@ Current counts:
 
 | Class | Buildings | Lots |
 |---|---|---|
-| Vacant lot | 853 | 4,581 |
+| Vacant lot | 850 | 3,809 |
 | Closed businesses | 510 | – |
 | Occupied | 165,589 | 148,285 |
-| Unknown | 6,486 | 2,161 |
+| Unknown | 6,489 | 2,933 |
+
+These counts come from data version `0.1.1+2026-11-15.1+bfa9e1e005fb`, which moves 790 submerged lots from vacant to unknown. `zoning.bin` is left out until a bundle with `height_limit_ft` is published.
 
 21,773 of the 24,909 SF Google Maps places matched a building.
 
