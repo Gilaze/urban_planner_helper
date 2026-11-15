@@ -23,6 +23,13 @@ table. Demographic covariates are then null, the missingness flags are set, and
 Downloads are cached in `data/raw/`. Artifacts go to `data/artifacts/release/`.
 Both directories are gitignored. Reports are written to `reports/data/`.
 
+Pipeline **0.1.1** fixes the four Person 4 regressions. Rebuild canonical tables
+before training/publishing: older assessor totals and evaluation exports are not
+updated by installing the code. With the existing source/Census caches present,
+run `parcel-pipeline build`, then `train`, then `publish`. The committed 0.1.0
+reports remain historical until that rebuild; no actual SF test was rerun as part
+of the code fixes.
+
 | Env var | Default | Purpose |
 |---|---|---|
 | `PIPELINE_DATA_DIR` | `<repo>/data` | Download cache and artifacts |
@@ -82,13 +89,25 @@ column for manual review.
 ## Review-activity model
 
 - Target: `log1p(reviews_count)`, standardized within each category with training mean and std. Predictions are inverted to log-count scale for evaluation.
-- Splits: train on Oakland, select on Berkeley, test once on SF. Rows are training places whose primary group is a candidate and that are not permanently closed.
+- Splits: train on Oakland, select on Berkeley, test once on SF. Rows are training places whose primary group is a candidate and that are not permanently closed. All-zero target categories are identified using Oakland training labels only, then that frozen eligibility rule is applied to the other cities.
 - Estimator: `HistGradientBoostingRegressor` with seed 42, lr 0.05, 200 iterations, min leaf 20, no early stopping. Grid: leaves {15, 31} × L2 {0, 1}.
 - Model categories need at least 100 labeled Oakland places and at least 30 labeled Berkeley places.
 - Gate: macro Berkeley RMSE must be at least 5% better than the category-median baseline. Otherwise the category baseline is shipped.
 - Refit on Oakland plus Berkeley, then a single SF evaluation.
+- Selected evaluation uses the same model-plus-category-baseline policy as parcel serving. Unsupported categories use their available category baseline; categories with no baseline remain null with `source = unavailable`. Frozen evaluation exports include `prediction_source`.
 - Report: log-count RMSE, within-category Spearman, slices by income and density (training-median thresholds, n < 30 marked insufficient), worst errors, sample sizes.
 
 ## Backend handoff
 
-`parcel-pipeline publish` writes the contract projection to `artifacts/person2/`, the input for `python -m backend.build_release --input artifacts/person2`. It omits lots with unusable geometry and lots whose key cannot be expressed as a contract `ParcelID`. Today that is one lot, `4591A011*`, whose key contains an asterisk. The published files pass the backend's own `load_parcels`, `load_services`, `load_predictions` and `Manifest` validators. `spatial_coverage` stays null until the Census build runs.
+`parcel-pipeline publish` writes the contract projection to `artifacts/person2/`, the input for `python -m backend.build_release --input artifacts/person2`. It omits lots with unusable geometry and lots whose key cannot be expressed as a contract `ParcelID`. Today that includes `4591A011*`, whose key contains an asterisk. Census-backed builds populate `spatial_coverage`; an explicitly missing-Census publication removes stale demographics and labels coverage as skipped.
+
+The published `source_manifest.json.outputs` fingerprints the **published** bytes
+and row counts. Its `publication` object preserves the canonical manifest hash,
+canonical data version/output records, publisher version and omissions. The
+canonical files are unchanged. Files are prepared in a staging directory and the
+manifest is installed after its referenced files. Canonical checksum/count
+mismatches are rejected before altering an existing publication.
+
+Physical-lot assessment totals require a known value for every member APN.
+Missing components or unmatched APNs produce null totals; complete zero-valued
+components still sum to zero, with the assessment vintage retained.

@@ -12,6 +12,7 @@ import random
 import re
 import statistics
 import csv
+import tomllib
 from collections import Counter, defaultdict
 from datetime import datetime
 from pathlib import Path
@@ -54,6 +55,12 @@ def sha256(path):
 def require(condition, message):
     if not condition:
         raise ValueError(message)
+
+
+def current_pipeline_version():
+    path = Path(__file__).resolve().parents[2] / "pipeline/pyproject.toml"
+    with path.open("rb") as file:
+        return tomllib.load(file)["project"]["version"]
 
 
 def _validate_row(name, row):
@@ -122,6 +129,11 @@ def audit_pipeline_artifacts(directory, report):
             require(source.get("url") and re.fullmatch(r"[0-9a-f]{64}", source["sha256"]), "Source reference/hash missing")
             require(datetime.fromisoformat(source["retrieved_at"].replace("Z", "+00:00")).tzinfo is not None, "Source retrieval timestamp needs timezone")
         report.add("pipeline.manifest", "PASS", "Data", f"Canonical release {manifest['data_version']}; source fingerprints/versions present.", command, "Versioned native source manifest.", impact="provenance")
+        if report.mode == "release":
+            expected_version = current_pipeline_version()
+            report.add("pipeline.producer_version", "PASS" if manifest["pipeline_version"] == expected_version else "BLOCKED", "Data",
+                       f"Artifact producer={manifest['pipeline_version']}; current fixed pipeline={expected_version}.", command,
+                       "Rebuild canonical outputs with the current pipeline before live sign-off.")
         report.add("pipeline.census_coverage", "FAIL" if manifest["census_skipped"] else "PASS", "Data",
                    f"census_skipped={manifest['census_skipped']}; skipped Census cannot support live access metrics or covariate slices.", command, "Census populated before live release.")
     except Exception as exc:
@@ -251,6 +263,8 @@ def audit_native_model(directory, tables, manifest, report, command):
         import pyarrow.parquet as pq
         for batch in pq.ParquetFile(directory / "review_predictions.parquet").iter_batches(batch_size=4096, columns=["category_id", "source", "predicted_log1p_reviews_count"]):
             for row in batch.to_pylist():
+                expected_source = "model" if model["selected"] == "model" and row["category_id"] in model["model_categories"] else "category_baseline" if row["category_id"] in final_baselines else "unavailable"
+                require(row["source"] == expected_source, "Serving prediction source differs from the selected model/baseline policy")
                 if row["source"] == "category_baseline":
                     expected = final_baselines.get(row["category_id"])
                     require(expected is not None and math.isclose(row["predicted_log1p_reviews_count"], expected, abs_tol=1e-10), "Serving category baseline differs from Oakland+Berkeley training rows")
@@ -269,10 +283,20 @@ def audit_native_model(directory, tables, manifest, report, command):
                 raw = features[row["place_id"]]
                 require(row["city"] == raw["city"] and row["split"] == split and row["category"] == raw["category"] and row["target_log1p_reviews_count"] == raw["target_log1p_reviews_count"], "Evaluation join/target differs")
                 for field in ("pred_category_baseline", "pred_category_city_baseline"):
-                    require(finite(row[field]) and math.isclose(row[field], baselines[row["category"]], abs_tol=1e-10), "Unseen evaluation city baseline not fitted on permitted training rows")
-                require(finite(row["pred_selected"]), "Selected evaluation omits a prediction served through category-baseline fallback")
+                    expected = baselines.get(row["category"])
+                    require(row[field] is None if expected is None else finite(row[field]) and math.isclose(row[field], expected, abs_tol=1e-10), "Unseen evaluation city baseline not fitted on permitted training rows")
+                expected = baselines.get(row["category"])
+                source = "model" if model["selected"] == "model" and row["category"] in model["model_categories"] else "category_baseline" if expected is not None else "unavailable"
+                if source == "unavailable":
+                    require(row["pred_selected"] is None, "Untrained category fabricated an evaluation prediction")
+                else:
+                    require(finite(row["pred_selected"]), "Selected evaluation omits a prediction served through category-baseline fallback")
+                    if source == "category_baseline":
+                        require(math.isclose(row["pred_selected"], expected, abs_tol=1e-10), "Selected evaluation differs from served category baseline")
+                if "prediction_source" in row:
+                    require(row["prediction_source"] == source, "Evaluation prediction source disagrees with serving policy")
             output[stage] = {field: evaluate([{"category_id": r["category"], "actual_log_count": r["target_log1p_reviews_count"],
-                                              "prediction_log_count": r[field]} for r in subset])
+                                              "prediction_log_count": r[field]} for r in subset if r[field] is not None])
                              for field in ("pred_selected", "pred_category_baseline", "pred_category_city_baseline")}
             for field, key in (("pred_selected", "selected"), ("pred_category_baseline", "category_baseline"), ("pred_category_city_baseline", "category_city_baseline")):
                 if key not in model[stage]:
@@ -280,7 +304,9 @@ def audit_native_model(directory, tables, manifest, report, command):
                 for category, advertised in model[stage][key].items():
                     calculated = output[stage][field]["categories"].get(category)
                     if not advertised["n_predicted"]:
+                        require(calculated is None and advertised["rmse_log_count"] is None, "Unavailable evaluation category has contradictory metrics")
                         continue
+                    require(calculated is not None and calculated["n"] == advertised["n_predicted"], "Reported prediction coverage differs from frozen rows")
                     require(calculated is not None and math.isclose(advertised["rmse_log_count"], calculated["log_count_rmse"], abs_tol=1e-8), "Exported RMSE differs from independent recalculation")
                     expected_sp = calculated["spearman"]
                     require(advertised["spearman"] is None if expected_sp is None else math.isclose(advertised["spearman"], expected_sp, abs_tol=1e-8), "Exported Spearman differs")
@@ -319,7 +345,28 @@ def audit_normalization_export(directory, features, model, manifest):
                         for k, v in expected.items()), f"{stage}/{category} normalization includes nontraining labels")
 
 
-def audit_pipeline_reports(directory, report):
+def read_category_review(source_path, review_path):
+    """Bind a Checker-owned review to the exact Data sample without editing it."""
+    with Path(source_path).open(newline="") as file:
+        original = list(csv.DictReader(file))
+    with Path(review_path).open(newline="") as file:
+        reviewed = list(csv.DictReader(file))
+    key = lambda row: (row["audit_reason"], row["place_id"])
+    source = {key(row): row for row in original}
+    require(len(source) == len(original), "Duplicate source audit keys")
+    require(len(reviewed) == len(source) and {key(row) for row in reviewed} == set(source),
+            "Review must cover every source sample exactly once")
+    fingerprint = sha256(source_path)
+    for row in reviewed:
+        require(row.get("sample_sha256") == fingerprint, "Review refers to a different source sample")
+        require(all(row.get(field) == value for field, value in source[key(row)].items() if field != "reviewer_verdict"),
+                "Review changes source evidence")
+        require(row["reviewer_verdict"] in {"accept", "reject", "needs_review"}, "Invalid review verdict")
+        require(bool(row.get("reviewer_note", "").strip()), "Review needs an evidence note")
+    return reviewed
+
+
+def audit_pipeline_reports(directory, report, category_review=None):
     """Reconcile committed aggregate reports; never claim raw metric verification."""
     directory = Path(directory)
     command = f"python -m tests.integration.verify_release --data-reports-dir '{directory}'"
@@ -343,6 +390,12 @@ def audit_pipeline_reports(directory, report):
         require(model["selected"] == ("model" if passed else "category_baseline"), "Selected approach differs from reported gate")
         result.update(reported_data_version=model["data_version"], reported_gate_improvement=gate["relative_improvement"],
                       reported_census_skipped=model["census_skipped"])
+        version = current_pipeline_version()
+        current = model["data_version"].startswith(version + "+")
+        result.update(expected_pipeline_version=version, reports_match_current_pipeline=current)
+        report.add("data_reports.release_version", "PASS" if current else "BLOCKED", "Data",
+                   f"Reports describe {model['data_version']}; fixed pipeline is {version}. Old reports are historical until outputs are rebuilt.", command,
+                   "Regenerate release artifacts and reports with the current pipeline.")
         report.add("data_reports.gate_arithmetic", "PASS", "Data", "Reported per-category RMSE, macro averages, support minimums and Berkeley gate reconcile. This is aggregate arithmetic, not verification of raw predictions.", command,
                    "Reported gate is internally consistent.", impact="reported aggregate consistency")
         report.add("data_reports.census", "BLOCKED" if model["census_skipped"] else "PASS", "Data",
@@ -360,14 +413,19 @@ def audit_pipeline_reports(directory, report):
                        "Describe held-out performance and keep SF out of subsequent model selection.", impact="model interpretation")
         with (directory / "category_audit_sample.csv").open(newline="") as file:
             rows = list(csv.DictReader(file))
+        if category_review is not None:
+            rows = read_category_review(directory / "category_audit_sample.csv", category_review)
+            result.update(category_review_path=str(category_review), category_review_sha256=sha256(category_review))
         by_reason = dict(Counter(r["audit_reason"] for r in rows))
         required = {f"candidate:{c}" for c in CANDIDATES} | {"ambiguous", "lookalike:clinic", "lookalike:grocery"}
         require(all(by_reason.get(reason, 0) >= 20 for reason in required), "Category audit sample lacks required candidate/ambiguous/lookalike rows")
         accepted = sum(r["reviewer_verdict"].strip().lower() == "accept" for r in rows)
         rejected = sum(r["reviewer_verdict"].strip().lower() == "reject" for r in rows)
-        result.update(category_audit_rows=len(rows), category_audit_by_reason=by_reason, accepted_verdicts=accepted, rejected_verdicts=rejected)
+        uncertain = sum(r["reviewer_verdict"].strip().lower() == "needs_review" for r in rows)
+        result.update(category_audit_rows=len(rows), category_audit_by_reason=by_reason, accepted_verdicts=accepted,
+                      rejected_verdicts=rejected, uncertain_verdicts=uncertain)
         report.add("data_reports.category_review", "FAIL" if rejected else "PASS" if accepted == len(rows) else "BLOCKED", "Data + Checker",
-                   f"{len(rows)} sampled rows; {accepted} accepted, {rejected} rejected; blank/uncertain verdicts remain unreviewed. Samples alone do not establish classification accuracy.", command,
+                   f"{len(rows)} sampled rows; {accepted} accepted, {rejected} rejected, {uncertain} need owner review. Verdicts cover supplied listing labels, not independent facility verification or population accuracy.", command,
                    "Review mappings against source evidence, resolve rejects, and record accept/reject verdicts.")
         result["source_sha256"] = {name: sha256(directory / name) for name in ("model_report.json", "category_audit_sample.csv")}
     except Exception as exc:

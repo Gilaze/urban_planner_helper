@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-11-15T05:05:39.842723+00:00",
+  "created_at": "2026-11-15T06:07:45.504577+00:00",
   "mode": "fixture",
   "release_accepted": false,
   "checks": [
@@ -7,7 +7,7 @@
       "id": "checker.hand_calculations",
       "status": "PASS",
       "owner": "Checker",
-      "detail": "........................................                                 [100%]\n40 passed in 0.04s",
+      "detail": "........................................                                 [100%]\n40 passed in 0.03s",
       "reproduction": "python -m tests.integration.verify_release",
       "expected": "All independent hand-calculated scoring oracle checks pass.",
       "impact": "checker integrity",
@@ -20,6 +20,16 @@
       "detail": "[Errno 2] No such file or directory: 'data/artifacts/release/source_manifest.json'",
       "reproduction": "python -m tests.integration.verify_release --artifact-format pipeline --artifact-dir 'data/artifacts/release'",
       "expected": "Full canonical pipeline release, not just serving projection.",
+      "impact": "release blocker",
+      "categories": []
+    },
+    {
+      "id": "data_reports.release_version",
+      "status": "BLOCKED",
+      "owner": "Data",
+      "detail": "Reports describe 0.1.0+2026-11-14.2+ad464d957df7; fixed pipeline is 0.1.1. Old reports are historical until outputs are rebuilt.",
+      "reproduction": "python -m tests.integration.verify_release --data-reports-dir 'reports/data'",
+      "expected": "Regenerate release artifacts and reports with the current pipeline.",
       "impact": "release blocker",
       "categories": []
     },
@@ -55,9 +65,9 @@
     },
     {
       "id": "data_reports.category_review",
-      "status": "BLOCKED",
+      "status": "FAIL",
       "owner": "Data + Checker",
-      "detail": "160 sampled rows; 0 accepted, 0 rejected; blank/uncertain verdicts remain unreviewed. Samples alone do not establish classification accuracy.",
+      "detail": "160 sampled rows; 80 accepted, 45 rejected, 35 need owner review. Verdicts cover supplied listing labels, not independent facility verification or population accuracy.",
       "reproduction": "python -m tests.integration.verify_release --data-reports-dir 'reports/data'",
       "expected": "Review mappings against source evidence, resolve rejects, and record accept/reject verdicts.",
       "impact": "release blocker",
@@ -110,9 +120,9 @@
     },
     {
       "id": "pipeline.sf_label_isolation",
-      "status": "FAIL",
+      "status": "PASS",
       "owner": "Data",
-      "detail": "ValueError: Changing only synthetic SF labels changed Oakland training eligibility: 0 -> 3; degenerate categories ['school'] -> []",
+      "detail": "SF labels cannot affect pre-test category eligibility.",
       "reproduction": "pipeline/.venv/bin/python -m tests.integration.pipeline_probes",
       "expected": "Changing SF test labels never changes Oakland/Berkeley training eligibility.",
       "impact": "release blocker",
@@ -122,9 +132,9 @@
     },
     {
       "id": "pipeline.serving_fallback_evaluation",
-      "status": "FAIL",
+      "status": "PASS",
       "owner": "Data",
-      "detail": "ValueError: Production serves pharmacy category baseline=2, but selected SF evaluation has 0/3 predictions",
+      "detail": "Evaluation and served unsupported-category fallback use identical rows/predictions.",
       "reproduction": "pipeline/.venv/bin/python -m tests.integration.pipeline_probes",
       "expected": "Evaluation includes the baseline fallback actually served for unsupported categories.",
       "impact": "release blocker",
@@ -134,9 +144,9 @@
     },
     {
       "id": "pipeline.partial_assessment",
-      "status": "FAIL",
+      "status": "PASS",
       "owner": "Data",
-      "detail": "ValueError: Two condo APNs include an unknown improvement value, but the parcel reports a complete USD 200000 total with no partial-value label",
+      "detail": "Unknown condo member assessment propagates null to the physical-lot total.",
       "reproduction": "pipeline/.venv/bin/python -m tests.integration.pipeline_probes",
       "expected": "Unknown APN values are null at physical-lot grain, or explicitly labeled partial subtotals.",
       "impact": "release blocker",
@@ -144,9 +154,9 @@
     },
     {
       "id": "pipeline.publication_fingerprint",
-      "status": "FAIL",
+      "status": "PASS",
       "owner": "Data",
-      "detail": "ValueError: publish rewrites/filters parcels.geoparquet but copies the canonical checksum unchanged; published manifest does not fingerprint the served file",
+      "detail": "Published-file fingerprints match the rewritten projection.",
       "reproduction": "pipeline/.venv/bin/python -m tests.integration.pipeline_probes",
       "expected": "Published manifests contain hashes and row counts for the published bytes.",
       "impact": "release blocker",
@@ -206,7 +216,7 @@
       "id": "api.comparison",
       "status": "PASS",
       "owner": "Backend",
-      "detail": "Default/repeat/reweight/unavailable-weight/reset pass; cached timings [1.02, 0.96, 0.87, 0.83] ms.",
+      "detail": "Default/repeat/reweight/unavailable-weight/reset pass; cached timings [3.28, 2.53, 2.81, 2.32] ms.",
       "reproduction": "python -m tests.integration.verify_release --api-base-url 'http://127.0.0.1:8765/api/v1'",
       "expected": "Independent ranking/Pareto, unavailable axes, clipped massing and deterministic cached comparisons.",
       "impact": "API contract",
@@ -274,11 +284,11 @@
     },
     {
       "id": "release.browser",
-      "status": "BLOCKED",
+      "status": "FAIL",
       "owner": "Frontend + Checker",
-      "detail": "No browser results supplied",
+      "detail": "Imported reports/verification/current/browser-results.json; acceptance=False.",
       "reproduction": "python -m tests.integration.verify_release",
-      "expected": "Measured browser checks against the integrated product.",
+      "expected": "All required product checks pass, without skips or checker-only stand-ins.",
       "impact": "release blocker",
       "categories": []
     },
@@ -294,11 +304,11 @@
     },
     {
       "id": "release.presentation_review",
-      "status": "BLOCKED",
+      "status": "FAIL",
       "owner": "Checker",
-      "detail": "No presentation-machine evidence supplied",
+      "detail": "Evidence file reports/verification/current/manual-evidence.json; acceptance=False.",
       "reproduction": "python -m tests.integration.verify_release",
-      "expected": "Completed presentation-machine evidence; see manual_evidence.example.json.",
+      "expected": "Recorded visual/source review on the presentation machine with inspectable evidence.",
       "impact": "release blocker",
       "categories": []
     }

@@ -133,6 +133,7 @@ def test_native_field_mapping_geometry_features_and_metrics(native_release):
     ("place_features.parquet", lambda rows: rows[0].update(same_category_count_400m=99), "pipeline.sampled_geometry_features"),
     ("review_predictions.parquet", lambda rows: rows[0].update(source="unavailable"), "pipeline.table.review_predictions.parquet"),
     ("review_predictions.parquet", lambda rows: rows[0].update(predicted_log1p_reviews_count=999), "pipeline.exported_model_metrics"),
+    ("review_predictions.parquet", lambda rows: rows[0].update(predicted_log1p_reviews_count=None, source="unavailable"), "pipeline.exported_model_metrics"),
     ("splits.parquet", lambda rows: rows[0].update(split="test"), "pipeline.joins_splits_targets"),
     ("place_eval_predictions.parquet", lambda rows: rows[0].update(pred_selected=None), "pipeline.exported_model_metrics"),
 ])
@@ -186,3 +187,37 @@ def test_native_normalization_evidence_can_close_or_fail_its_gate(native_release
     audit_pipeline_artifacts(native_release, report)
     check = next(c for c in report.checks if c.id == "pipeline.normalization_exports")
     assert check.status == ("FAIL" if include_test_id else "PASS"), check.detail
+
+
+def test_native_evaluation_allows_null_only_without_a_training_baseline(native_release):
+    import pyarrow.parquet as pq
+    from .pipeline_artifacts import audit_native_model
+    features = [r for r in pq.read_table(native_release / "place_features.parquet").to_pylist()
+                if r["category"] != "clinic" or r["split"] == "test"]
+    predictions = [r for r in pq.read_table(native_release / "place_eval_predictions.parquet").to_pylist()
+                   if r["category"] != "clinic" or r["stage"] == "test"]
+    for row in predictions:
+        if row["category"] == "clinic":
+            row.update(pred_selected=None, pred_category_baseline=None, pred_category_city_baseline=None, prediction_source="unavailable")
+    served = pq.read_table(native_release / "review_predictions.parquet").to_pylist()
+    for row in served:
+        if row["category_id"] == "clinic":
+            row.update(predicted_log1p_reviews_count=None, source="unavailable")
+    write_table(native_release, "review_predictions.parquet", served)
+    model = read_json(native_release / "model_report.json")
+    for stage in ("validation", "test"):
+        for field in ("selected", "category_baseline", "category_city_baseline"):
+            model[stage][field]["clinic"] = {"n": int(stage == "test"), "n_predicted": 0, "rmse_log_count": None, "spearman": None}
+    (native_release / "model_report.json").write_text(json.dumps(model))
+    report = Report("fixture")
+    metrics = audit_native_model(native_release,
+                {"place_features.parquet": features, "place_eval_predictions.parquet": predictions},
+                read_json(native_release / "source_manifest.json"), report, "test")
+    assert any(c.id == "pipeline.exported_model_metrics" and c.status == "PASS" for c in report.checks), [(c.id, c.detail) for c in report.checks]
+    assert "clinic" not in metrics["test"]["pred_selected"]["categories"]
+
+
+def test_live_native_audit_blocks_previous_pipeline_versions(native_release):
+    report = Report("release")
+    audit_pipeline_artifacts(native_release, report)
+    assert any(c.id == "pipeline.producer_version" and c.status == "BLOCKED" for c in report.checks)

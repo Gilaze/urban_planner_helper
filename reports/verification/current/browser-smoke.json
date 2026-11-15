@@ -1,0 +1,80 @@
+{
+  "browser": "157.0.8103.78",
+  "browserPath": "installed Google Chrome",
+  "browserPlugin": "absent",
+  "fallback": "Browser plugin not available; existing Playwright and installed Chrome used without downloading a browser.",
+  "sourcePolicy": "repository-only",
+  "pages": [
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "url": "http://127.0.0.1:5173/",
+      "title": "San Francisco 3D City Model",
+      "bodyText": "San Francisco\nBuilding the city\u2026\nCould not load the city data.\nUnexpected token '<', \"<!doctype \"... is not valid JSON\nRun \"npm run data\" first, then reload.",
+      "frameworkOverlay": 0,
+      "horizontalOverflow": false,
+      "plannerControls": {
+        "parcelSelector": 0,
+        "comparisonResults": 0,
+        "needWeight": 0
+      },
+      "consoleErrors": [
+        "SyntaxError: Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      ],
+      "dataResponses": [
+        {
+          "url": "http://127.0.0.1:5173/data/meta.json",
+          "status": 200,
+          "contentType": "text/html"
+        }
+      ],
+      "screenshot": "/private/tmp/parcel-p4-repository-only/simulator-1440x900.png",
+      "screenshot_sha256": "f6c897e30143cdbc6bb555ce17e239377d384e80cb6f133293040298e9a059e5"
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "url": "http://127.0.0.1:5173/",
+      "title": "San Francisco 3D City Model",
+      "bodyText": "San Francisco\nBuilding the city\u2026\nCould not load the city data.\nUnexpected token '<', \"<!doctype \"... is not valid JSON\nRun \"npm run data\" first, then reload.",
+      "frameworkOverlay": 0,
+      "horizontalOverflow": false,
+      "plannerControls": {
+        "parcelSelector": 0,
+        "comparisonResults": 0,
+        "needWeight": 0
+      },
+      "consoleErrors": [
+        "SyntaxError: Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      ],
+      "dataResponses": [
+        {
+          "url": "http://127.0.0.1:5173/data/meta.json",
+          "status": 200,
+          "contentType": "text/html"
+        }
+      ],
+      "screenshot": "/private/tmp/parcel-p4-repository-only/simulator-1280x720.png",
+      "screenshot_sha256": "1a689069d8f5c2f14302f0873fddb55029b78a66f0da95419d098f08931513c2"
+    }
+  ],
+  "source_sha256": {
+    "simulator/src/camera.js": "693dc487d49b3c501533ad4e4aefc7d36eeb8c783f0aa2e28ef066b6de8ba4f6",
+    "simulator/src/data.js": "5728eb7554b126ec53be92b431202ab5559b22905bda16cb8468282d70eaa913",
+    "simulator/src/focusBlur.js": "b1bfad9076808ecca24f3b5fa69ef63984602b9384b904442a09f2758268fa43",
+    "simulator/src/geometryWorker.js": "4be9c8df7ab6dbdcc43236c4cad8e8e652c51455a5acf58562a1e675d7cb0601",
+    "simulator/src/main.js": "bd568e6d800419f86028e50feb11c532bde48d8586ff81843cd387a4caad950d",
+    "simulator/src/materials.js": "702f40dddd8ab4c218f694ecf2e514b3a2c18d93e8ef9637cca5dc15f27de9cc",
+    "simulator/src/style.css": "a8a633486fc04ebffda9e6ab87f591970de281f8981c5cfcc19393e836aec156",
+    "simulator/src/ui.js": "31ef10d6cfc7a7cb56462a0c18071c92386672736c04e7975eed7b4dde185389",
+    "simulator/src/world.js": "99f83b7a52883da78931ee749b190401d347aacca75dfbbd3ac173641355d988",
+    "simulator/package-lock.json": "b8f9316c50522a92796ee321335b1bdcba2ba8b3af9f91e4fa3ea72ae2838879",
+    "simulator/index.html": "2960d4c5952e3f535a6d371fa1b9bef1fa1bdf13912cb0397eb597360e5bfba7",
+    "tests/integration/browser/parcel-flow.spec.ts": "d04d27b33f2731e2879b2d23bddaddceeb08b49859f86cced29190d805456e4d",
+    "tests/integration/browser/playwright.config.ts": "d5ba958131466f0c8abb41b9746272c7e7057aa69133c8ab1032513c9fd55b34"
+  }
+}

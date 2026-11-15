@@ -49,9 +49,9 @@
     },
     {
       "id": "pipeline.sf_label_isolation",
-      "status": "FAIL",
+      "status": "PASS",
       "owner": "Data",
-      "detail": "ValueError: Changing only synthetic SF labels changed Oakland training eligibility: 0 -> 3; degenerate categories ['school'] -> []",
+      "detail": "SF labels cannot affect pre-test category eligibility.",
       "reproduction": "pipeline/.venv/bin/python -m tests.integration.pipeline_probes",
       "expected": "Changing SF test labels never changes Oakland/Berkeley training eligibility.",
       "impact": "release blocker",
@@ -61,9 +61,9 @@
     },
     {
       "id": "pipeline.serving_fallback_evaluation",
-      "status": "FAIL",
+      "status": "PASS",
       "owner": "Data",
-      "detail": "ValueError: Production serves pharmacy category baseline=2, but selected SF evaluation has 0/3 predictions",
+      "detail": "Evaluation and served unsupported-category fallback use identical rows/predictions.",
       "reproduction": "pipeline/.venv/bin/python -m tests.integration.pipeline_probes",
       "expected": "Evaluation includes the baseline fallback actually served for unsupported categories.",
       "impact": "release blocker",
@@ -73,9 +73,9 @@
     },
     {
       "id": "pipeline.partial_assessment",
-      "status": "FAIL",
+      "status": "PASS",
       "owner": "Data",
-      "detail": "ValueError: Two condo APNs include an unknown improvement value, but the parcel reports a complete USD 200000 total with no partial-value label",
+      "detail": "Unknown condo member assessment propagates null to the physical-lot total.",
       "reproduction": "pipeline/.venv/bin/python -m tests.integration.pipeline_probes",
       "expected": "Unknown APN values are null at physical-lot grain, or explicitly labeled partial subtotals.",
       "impact": "release blocker",
@@ -83,9 +83,9 @@
     },
     {
       "id": "pipeline.publication_fingerprint",
-      "status": "FAIL",
+      "status": "PASS",
       "owner": "Data",
-      "detail": "ValueError: publish rewrites/filters parcels.geoparquet but copies the canonical checksum unchanged; published manifest does not fingerprint the served file",
+      "detail": "Published-file fingerprints match the rewritten projection.",
       "reproduction": "pipeline/.venv/bin/python -m tests.integration.pipeline_probes",
       "expected": "Published manifests contain hashes and row counts for the published bytes.",
       "impact": "release blocker",
@@ -93,13 +93,13 @@
     }
   ],
   "source_sha256": {
-    "pipeline/src/parcel_pipeline/model.py": "56e1e3dd84b851161c05a2a815d746ac6ebcabf84a583802b6ab99cb44762d53",
+    "pipeline/src/parcel_pipeline/model.py": "ab8e8167f1144a3d99749ce5cfe79c55b423d64b00ec1ffb5917084e352f69eb",
     "pipeline/src/parcel_pipeline/features.py": "1df12a1eccdeec5f26fbf7256f4d9d5e93052fa4f8c5f76c2d1a3008b322560a",
-    "pipeline/src/parcel_pipeline/cli.py": "e5954b6d1441e4d106f0df4befa1cdf2c5049843bf0f1cb80c2fe200b1cef4dd",
-    "pipeline/src/parcel_pipeline/sources/sf.py": "165c661d98cb5c168e2470fe925cd1e024fa3361aedf7e06229248b6f4f3a137",
+    "pipeline/src/parcel_pipeline/cli.py": "6865320301447b28b91b65996b45060be3f4ea2b46f7026156d0a7a0e6c8731b",
+    "pipeline/src/parcel_pipeline/sources/sf.py": "3ed221857a0c6d0975bdf697569d2ab6a38393c52d03e8c9fb4dd3cd04369cfd",
     "pipeline/src/parcel_pipeline/settings.py": "5c10ff235c37cb5262207b7d09cc5710453dc8718e830fad80b861a43b495c2c",
     "pipeline/src/parcel_pipeline/sources/census.py": "9c6ca20103c1291248c7356eb4c822aa67d3856ea3ac3a161bbcd3e3a781a5a4",
-    "pipeline/uv.lock": "921fc7908dd46f45e5dfa1fb1620378406301e22ab10bd9c156872b56f4fb44f",
+    "pipeline/uv.lock": "67537bc2031380660252fca31959aabbff2cf384bb199c9770c32811bf1d506a",
     "config/categories.yaml": "722c4ca5824c4567c30e085753e86e10458cd1db047ca9ec0b1945f9f2621ac7"
   }
 }

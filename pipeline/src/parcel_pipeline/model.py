@@ -91,6 +91,16 @@ class ReviewActivityModel:
         return out
 
 
+def selected_predictions(df: pd.DataFrame, baseline: Baselines, model: ReviewActivityModel | None = None):
+    """Apply the same model/category-baseline policy in evaluation and serving."""
+    category = baseline.predict_category(df)
+    learned = model.predict_log_count(df) if model is not None else np.full(len(df), np.nan)
+    available_model = ~np.isnan(learned)
+    predicted = np.where(available_model, learned, category)
+    source = np.where(available_model, "model", np.where(~np.isnan(category), "category_baseline", "unavailable"))
+    return predicted, source
+
+
 # ---------------------------------------------------------------- metrics
 def rmse(y: np.ndarray, p: np.ndarray) -> float | None:
     m = ~(np.isnan(y) | np.isnan(p))
@@ -156,10 +166,10 @@ def worst_errors(df: pd.DataFrame, pred_col: str, n: int = 10) -> list[dict]:
 def train_and_evaluate(place_features: pd.DataFrame, candidates: list[str]) -> dict:
     """Run the full selection protocol. Returns a dict of results and fitted objects."""
     lab = place_features[place_features["labeled"]].copy()
-    # A category whose labeled counts are all zero in every split carries no
-    # review-activity signal (collection artifact, e.g. schools in the Bright
-    # Data export). Treat it as unlabeled so no baseline of 0 is fabricated.
-    degenerate = sorted(c for c, g in lab.groupby("category") if (g[TARGET] == 0).all())
+    # Freeze target-quality decisions on Oakland alone. Held-out labels must
+    # never change training eligibility, including for all-zero collections.
+    training_labels = lab[lab["split"] == "train"]
+    degenerate = sorted(c for c, g in training_labels.groupby("category") if (g[TARGET] == 0).all())
     lab = lab[~lab["category"].isin(degenerate)]
     train, valid, test = (lab[lab["split"] == s] for s in ("train", "validation", "test"))
 
@@ -175,6 +185,7 @@ def train_and_evaluate(place_features: pd.DataFrame, candidates: list[str]) -> d
         "labeled_counts": counts, "unlabeled_rows": int((~place_features["labeled"]).sum()),
         "model_categories": model_cats, "unsupported_categories": unsupported,
         "degenerate_target_categories": degenerate,
+        "target_quality_fit_on": "train (Oakland) only",
         "gate": {"metric": "macro-average Berkeley category log-count RMSE",
                  "required_improvement_vs_category_baseline": GATE_IMPROVEMENT},
     }
@@ -212,8 +223,9 @@ def train_and_evaluate(place_features: pd.DataFrame, candidates: list[str]) -> d
     selected = "model" if passed else "category_baseline"
     report["selected"] = selected
     thr_valid = fit_slice_thresholds(train)
-    v["pred_selected"] = (ReviewActivityModel(best["params"], model_cats).fit(train).predict_log_count(v)
-                          if passed else v["pred_category_baseline"])
+    selection_model = ReviewActivityModel(best["params"], model_cats).fit(train) if passed else None
+    v["pred_selected"], v["prediction_source"] = selected_predictions(v, base1, selection_model)
+    report["validation"]["selected"] = per_category(v, "pred_selected", candidates)
     report["validation"]["slices"] = slice_metrics(v, "pred_selected", thr_valid)
 
     # Stage 2: refit on Oakland + Berkeley, evaluate SF exactly once.
@@ -223,7 +235,7 @@ def train_and_evaluate(place_features: pd.DataFrame, candidates: list[str]) -> d
     t = test.copy()
     t["pred_category_baseline"] = base2.predict_category(t)
     t["pred_category_city_baseline"] = base2.predict_category_city(t)
-    t["pred_selected"] = final_model.predict_log_count(t) if passed else t["pred_category_baseline"]
+    t["pred_selected"], t["prediction_source"] = selected_predictions(t, base2, final_model)
     report["test"] = {
         "evaluated_once": True,
         "selected": per_category(t, "pred_selected", candidates),
@@ -243,27 +255,19 @@ def train_and_evaluate(place_features: pd.DataFrame, candidates: list[str]) -> d
 
     eval_preds = pd.concat([
         v.assign(stage="validation")[["place_id", "category", "city", "split", "stage", TARGET, "pred_selected",
-                                      "pred_category_baseline", "pred_category_city_baseline"]],
+                                      "pred_category_baseline", "pred_category_city_baseline", "prediction_source"]],
         t.assign(stage="test")[["place_id", "category", "city", "split", "stage", TARGET, "pred_selected",
-                                "pred_category_baseline", "pred_category_city_baseline"]],
+                                "pred_category_baseline", "pred_category_city_baseline", "prediction_source"]],
     ], ignore_index=True)
     return {"report": report, "final_model": final_model, "baselines": base2, "selected": selected,
             "eval_predictions": eval_preds, "model_categories": model_cats}
 
 
 def predict_parcels(parcel_features: pd.DataFrame, result: dict) -> pd.DataFrame:
-    base: Baselines = result["baselines"]
-    out = parcel_features[["parcel_id", "category"]].rename(columns={"category": "category_id"})
-    baseline = base.predict_category(parcel_features)
-    if result["selected"] == "model":
-        pred = result["final_model"].predict_log_count(parcel_features)
-        # Categories outside the model fall back to the category baseline.
-        source = np.where(~np.isnan(pred), "model", np.where(~np.isnan(baseline), "category_baseline", None))
-        pred = np.where(np.isnan(pred), baseline, pred)
-    else:
-        pred = baseline
-        source = np.where(~np.isnan(baseline), "category_baseline", None)
+    out = parcel_features[["parcel_id", "category"]].rename(columns={"category": "category_id"}).copy()
+    model = result["final_model"] if result["selected"] == "model" else None
+    pred, source = selected_predictions(parcel_features, result["baselines"], model)
     out["predicted_log1p_reviews_count"] = pred
     out["predicted_reviews_count"] = np.expm1(pred)
-    out["source"] = np.where(pd.isna(source), "unavailable", source).astype(str)
+    out["source"] = source
     return out.reset_index(drop=True)

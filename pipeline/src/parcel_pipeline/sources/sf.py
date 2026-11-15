@@ -284,13 +284,13 @@ def build_physical_parcels(
     lots["site_label"] = np.where(lots["vacancy_status"] == "source_indicated_vacant",
                                   "source_indicated_vacancy", "hypothetical")
 
-    # Assessor: APN grain -> sum values over all member APNs (condos), keep nulls.
+    # An unknown member APN value makes that physical-lot total unknown.
     apn_to_lot = lots[["mapblklot", "source_apns"]].explode("source_apns").rename(columns={"source_apns": "apn"})
     a = apn_to_lot.merge(assessor, on="apn", how="left")
     matched = a["assessor_roll_year"].notna()
 
     def _sum_or_null(s: pd.Series) -> float | None:
-        return s.sum() if s.notna().any() else np.nan
+        return s.sum() if s.notna().all() else np.nan
 
     agg = a.groupby("mapblklot").agg(
         assessed_land_usd=("assessed_land_value_usd", _sum_or_null),
