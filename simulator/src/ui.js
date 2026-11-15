@@ -21,6 +21,40 @@ const el = (tag, cls, html) => {
   return e;
 };
 
+/**
+ * A panel docked to the left or right edge. A tab on its inner edge slides it away (leaving
+ * only the tab) and back out again; the open state is remembered per drawer.
+ */
+function createDrawer(parent, { side, label, key, openByDefault = true }) {
+  const storeKey = `sf-sim-drawer:${key}`;
+  let open = openByDefault;
+  try {
+    const saved = localStorage.getItem(storeKey);
+    if (saved != null) open = saved === '1';
+  } catch { /* storage blocked: use the default */ }
+  const drawer = el('section', `drawer ${side}`);
+  drawer.setAttribute('aria-label', label);
+  drawer.innerHTML = `
+    <button class="drawer-tab" type="button" aria-expanded="${open}">
+      <span class="drawer-chev" aria-hidden="true"></span><span class="drawer-label">${label}</span>
+    </button>
+    <div class="drawer-sheet"><div class="drawer-head">${label}</div><div class="drawer-body"></div></div>`;
+  const tab = drawer.querySelector('.drawer-tab');
+  const body = drawer.querySelector('.drawer-body');
+  const set = (v) => {
+    open = v;
+    drawer.classList.toggle('collapsed', !open);
+    tab.setAttribute('aria-expanded', String(open));
+    tab.title = `${open ? 'Hide' : 'Show'} ${label}`;
+    drawer.querySelector('.drawer-sheet').inert = !open;
+    try { localStorage.setItem(storeKey, open ? '1' : '0'); } catch { /* ignore */ }
+  };
+  tab.addEventListener('click', () => set(!open));
+  set(open);
+  parent.appendChild(drawer);
+  return { drawer, body, setOpen: set, isOpen: () => open };
+}
+
 export function createUI(root) {
   const loader = el('div', 'loader');
   loader.innerHTML = `
@@ -55,12 +89,15 @@ export function createUI(root) {
       // ---- title
       const title = el('div', 'panel title');
       title.innerHTML = `
-        <div class="t1">San Francisco <span>3D city model</span></div>
+        <div class="t1">SF 3D Model</div>
         <div class="t2">${stats.buildings.toLocaleString()} buildings · ${(stats.tris / 1e6).toFixed(1)}M triangles · ${stats.trees.toLocaleString()} trees</div>`;
       hud.appendChild(title);
 
       // ---- legend: colour by building type or by parcel vacancy
-      const legend = el('div', 'panel legend');
+      // ---- left drawer: map key (building type / vacancy legend) + controls
+      const narrow = window.innerWidth < 1100;
+      const left = createDrawer(hud, { side: 'left', label: 'Map key', key: 'map-key', openByDefault: !narrow });
+      const legend = el('div', 'legend');
       const tabs = el('div', 'legend-tabs');
       tabs.innerHTML = '<button data-mode="type" class="on">Building type</button><button data-mode="vacancy">Vacancy</button>';
       legend.appendChild(tabs);
@@ -101,7 +138,7 @@ export function createUI(root) {
       vacSec.appendChild(el('div', 'legend-note',
         '<b>Vacant lot</b>: the team Parcel Planner release marks the parcel vacant (empty ones are hatched red on the ground). <b>Closed businesses</b>: every Google Maps business in the building is closed (Drive Places data).'));
       legend.appendChild(vacSec);
-      hud.appendChild(legend);
+      left.body.appendChild(legend);
 
       let colorBy = 'type';
       const setColorBy = (mode) => {
@@ -181,8 +218,16 @@ export function createUI(root) {
       hud.appendChild(bar);
 
       // ---- help + attribution
-      hud.appendChild(el('div', 'panel help',
-        '<b>Click</b> building info · <b>Drag</b> pan · <b>Wheel</b> zoom · <b>Q/E</b> rotate · <b>WASD</b> move · <b>1–5</b> camera · <b>V</b> vacancy'));
+      const help = el('details', 'drawer-help');
+      help.innerHTML = `<summary>Controls</summary><ul>
+        <li><b>Click</b> a building for its info (edit vacant ones)</li><li><b>Drag</b> pan · <b>Wheel</b> zoom</li>
+        <li><b>Q / E</b> rotate · <b>WASD</b> move</li><li><b>1–5</b> camera views · <b>V</b> vacancy colours</li></ul>`;
+      left.body.appendChild(help);
+
+      // ---- right drawer: the Parcel Planner panel (created by planner.js) is docked into it
+      const right = createDrawer(hud, { side: 'right', label: 'Parcel Planner', key: 'planner', openByDefault: true });
+      const plannerPanel = root.parentElement?.querySelector('aside.planner') || document.querySelector('aside.planner');
+      if (plannerPanel) right.body.appendChild(plannerPanel);
       // Data credits, collapsed behind a small button (OpenStreetMap's licence needs visible credit).
       const attrib = el('div', 'attrib');
       attrib.innerHTML = `<button class="attrib-btn" aria-expanded="false" title="Data sources">ⓘ Sources</button>
@@ -193,6 +238,15 @@ export function createUI(root) {
         attribBtn.setAttribute('aria-expanded', String(!attribList.hidden));
       });
       hud.appendChild(attrib);
+      // Sit in the bottom-right corner; lift above the toolbar only when the toolbar reaches that far right.
+      const placeAttrib = () => {
+        const barRight = bar.getBoundingClientRect().right;
+        const btnLeft = window.innerWidth - 16 - attribBtn.offsetWidth;
+        attrib.classList.toggle('lifted', barRight + 12 > btnLeft);
+      };
+      window.addEventListener('resize', placeAttrib);
+      new ResizeObserver(placeAttrib).observe(bar);
+      placeAttrib();
 
       // ---- building info card (type and lot status only; no address or coordinates)
       const card = el('div', 'panel bcard hidden');

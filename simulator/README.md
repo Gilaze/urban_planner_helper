@@ -28,6 +28,7 @@ npm run dev    # http://localhost:5173
 | `F` / slider | Focus mode on/off and its clear radius (300 m – 4 km) |
 | `O` | Building outlines on/off |
 | Legend | Click a type to hide it, hover to highlight it |
+| Side drawers | The **Map key** (building type / vacancy legend and controls) docks on the left; the **Parcel Planner** docks on the right. Click a drawer's edge tab to slide it away or bring it back. Each drawer remembers whether it was open. |
 | Click a building | Yellow outline and glow, plus a card with its type and vacancy status from `vacancy.bin` (vacant lot / closed businesses / not vacant / unknown). `Esc`, `×` or clicking open ground closes it. The card never shows an address, coordinates or parcel number. |
 | Edit a building (in the card) | **Only vacant buildings can be edited**: a vacant lot, or a building where every listed business is closed (Vacancy view, `V`). Other buildings show their info only. The **Type** list only offers types SF rules allow on that lot: no use the zoning district does not permit, and no Tower where the height limit is under 50 m. If nothing fits, the card says so. Picking a type fills in its default height. **Apply** replaces the building on the same footprint if the height is within the SF limit; **Delete** removes it. **Restore original** undoes one building; **Reset all** (bottom left) undoes every edit. Edits are a local sketch saved in this browser only. |
 

@@ -38,7 +38,7 @@ html, body {
 .title .t1 span { font-weight: 500; color: var(--ink-2); }
 .title .t2 { margin-top: 3px; font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
 
-.legend { top: 96px; left: 16px; padding: 10px 8px 10px 10px; width: 268px; max-height: calc(100% - 190px); overflow: auto; }
+.legend { padding: 2px 0 0; }
 .legend-tabs { display: flex; gap: 2px; padding: 2px; margin: 0 2px 8px; background: rgba(31, 42, 55, 0.06); border-radius: 9px; }
 .legend-tabs button { flex: 1; border: 0; background: transparent; font: inherit; font-size: 12px; font-weight: 650; color: var(--ink-2); padding: 6px 8px; border-radius: 7px; cursor: pointer; }
 .legend-tabs button.on { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(20, 40, 70, 0.15); }
@@ -90,7 +90,8 @@ html, body {
 
 .help { bottom: 78px; left: 16px; padding: 8px 12px; font-size: 12px; color: var(--ink-2); }
 .help b { color: var(--ink); font-weight: 650; }
-.attrib { position: absolute; right: 16px; bottom: 80px; pointer-events: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.attrib { position: absolute; right: 16px; bottom: 18px; pointer-events: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.attrib.lifted { bottom: 80px; }
 .attrib-btn { border: 0; background: rgba(255, 255, 255, 0.7); color: rgba(31, 42, 55, 0.65); font: 600 10.5px system-ui, sans-serif; padding: 3px 8px; border-radius: 99px; cursor: pointer; }
 .attrib-btn:hover { background: #fff; color: var(--ink); }
 .attrib-list { order: -1; background: var(--panel); backdrop-filter: blur(10px); border: 1px solid var(--panel-border); border-radius: 10px; box-shadow: var(--shadow); padding: 8px 10px; display: flex; flex-direction: column; gap: 4px; max-width: 320px; }
@@ -113,6 +114,7 @@ html, body {
 .loader.error .loader-stage { color: #b3261e; font-weight: 600; white-space: pre-wrap; }
 
 .bcard {
+  z-index: 20;
   top: 0; left: 0; width: 240px; padding: 12px 14px 10px;
   border: 1px solid rgba(255, 200, 40, 0.55);
   box-shadow: var(--shadow), 0 0 0 3px rgba(255, 216, 74, 0.22), 0 0 22px rgba(255, 210, 60, 0.35);
@@ -157,7 +159,7 @@ html, body {
 .btn.primary:hover { background: #ffc61a; }
 .btn.danger { background: #fde4e2; color: #a3261c; }
 .btn.danger:hover { background: #fbcfcb; }
-.edits-panel { bottom: 122px; left: 16px; padding: 7px 12px; font-size: 12px; display: flex; gap: 10px; align-items: center; color: var(--ink-2); }
+.edits-panel { bottom: 80px; left: 16px; padding: 7px 12px; font-size: 12px; display: flex; gap: 10px; align-items: center; color: var(--ink-2); }
 .edits-panel.hidden { display: none; }
 .bcard-note { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--panel-border); font-size: 10.5px; color: var(--ink-2); }
 
@@ -202,7 +204,48 @@ html, body {
 .planner-alternative dd { margin: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
 
 @media (max-width: 900px) {
-  .legend { display: none; }
-  .help { display: none; }
   .toolbar { left: 16px; right: 16px; transform: none; overflow-x: auto; }
+}
+
+/* ---- side drawers (map key on the left, Parcel Planner on the right) ---- */
+.drawer {
+  --w: 300px;
+  position: absolute; top: 88px; max-height: calc(100% - 204px); display: flex; width: min(var(--w), calc(100vw - 72px));
+  pointer-events: auto; z-index: 10; transition: transform 0.28s cubic-bezier(.2, .7, .2, 1);
+}
+.drawer.left { left: 16px; }
+.drawer.right { right: 16px; --w: 392px; }
+.drawer.left.collapsed { transform: translateX(calc(-100% - 16px)); }
+.drawer.right.collapsed { transform: translateX(calc(100% + 16px)); }
+.drawer-sheet {
+  flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden;
+  background: var(--panel); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--panel-border); border-radius: 14px; box-shadow: var(--shadow);
+}
+.drawer-head { padding: 12px 14px 0; font-size: 14px; font-weight: 750; letter-spacing: -0.01em; }
+.drawer-body { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 12px; }
+.drawer-tab {
+  position: absolute; top: 14px; display: flex; align-items: center; gap: 6px;
+  writing-mode: vertical-rl; padding: 12px 6px; border: 1px solid var(--panel-border);
+  background: var(--panel); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  box-shadow: var(--shadow); color: var(--ink); font: 650 12px/1 inherit; letter-spacing: 0.02em; cursor: pointer;
+}
+.drawer.left .drawer-tab { left: 100%; border-left: 0; border-radius: 0 10px 10px 0; }
+.drawer.right .drawer-tab { right: 100%; border-right: 0; border-radius: 10px 0 0 10px; transform: rotate(180deg); }
+.drawer-tab:hover { color: var(--accent); }
+.drawer-chev::before { content: '‹'; display: inline-block; font-size: 15px; writing-mode: horizontal-tb; }
+.drawer.left .drawer-chev::before { transform: rotate(-90deg); }
+.drawer.left.collapsed .drawer-chev::before { transform: rotate(90deg); }
+.drawer.right .drawer-chev::before { transform: rotate(-90deg); }
+.drawer.right.collapsed .drawer-chev::before { transform: rotate(90deg); }
+.drawer-help { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--panel-border); font-size: 12px; color: var(--ink-2); }
+.drawer-help summary { cursor: pointer; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; padding: 0 6px; }
+.drawer-help ul { margin: 6px 0 0; padding-left: 22px; line-height: 1.6; }
+.drawer-help b { color: var(--ink); font-weight: 650; }
+/* the Parcel Planner panel docked inside the right drawer */
+.drawer .planner { position: static; width: auto; padding: 0; background: transparent; border: 0; box-shadow: none; backdrop-filter: none; }
+.drawer .planner > details > summary { display: none; }
+.drawer .planner .planner-body { margin-top: 0; }
+@media (max-width: 900px) {
+  .drawer { max-height: calc(100% - 216px); }
 }
