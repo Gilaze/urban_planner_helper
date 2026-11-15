@@ -9,6 +9,7 @@ import { buildTerrain, buildWater, buildBuildingMeshes, buildRoadMeshes, buildLa
 import { createUI, MODES } from './ui.js';
 import { createFocusBlur } from './focusBlur.js';
 import { createBuildingIndex, pickBuilding, buildingParts, createSelectionHighlight } from './picking.js';
+import { createEdits, MIN_HEIGHT_M, MAX_HEIGHT_M } from './edits.js';
 import GeometryWorker from './geometryWorker.js?worker';
 
 const CHUNK = 1000;      // metres per mesh chunk (frustum-culling granularity)
@@ -295,6 +296,15 @@ async function boot() {
   const groundAt = (x, z) => elevOfJS(shared, sampleGround(x, z));
   // in the vacancy view, classes hidden from the legend are not clickable either
   buildingIndex.skip = (b) => shared.uVacancyMode.value === 1 && data.vacancy && shared.uHiddenVac.value[data.vacancy[b]] > 0.5;
+  // User edits: delete a building or replace it with another type and height (local sketch).
+  const edits = createEdits({
+    scene, shared, index: buildingIndex, mats: buildingMats, chunkSize: CHUNK, vacancy: data.vacancy,
+    storageKey: `sf-sim-edits-v1:${meta.buildingCount}`,
+  });
+  edits.onChange((n) => hud.setEditCount(n, () => { edits.resetAll(); if (selected >= 0) select(selected); }));
+  const originalHeight = (b) => buildingIndex.h[b] +
+    (buildingIndex.kind[b] === 3 ? buildingIndex.roof[b] : buildingIndex.kind[b] === 1 ? buildingIndex.roof[b] * 0.5 : 0);
+
   function select(b) {
     selected = b;
     if (b < 0) {
@@ -302,11 +312,21 @@ async function boot() {
       hud.hideBuilding();
       return;
     }
+    const e = edits.get(b);
     highlight.show(buildingParts(buildingIndex, b, shared));
     hud.showBuilding({
-      type: buildingIndex.type[b],
+      type: e && !e.deleted ? e.type : buildingIndex.type[b],
+      heightM: e && !e.deleted ? e.height : originalHeight(b),
       lot: data.vacancy ? data.vacancy[b] : null,
-    }, () => select(-1));
+      edited: !!e,
+      minH: MIN_HEIGHT_M,
+      maxH: MAX_HEIGHT_M,
+    }, {
+      onClose: () => select(-1),
+      onApply: (type, h) => { edits.replace(b, type, h); select(b); },
+      onDelete: () => { edits.remove(b); select(-1); },
+      onRestore: () => { edits.restore(b); select(b); },
+    });
   }
   const canvas = renderer.domElement;
   let down = null;

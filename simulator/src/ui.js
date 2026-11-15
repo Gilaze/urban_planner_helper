@@ -200,21 +200,60 @@ export function createUI(root) {
         0: ['unknown', 'Unknown', 'No land-use record for this lot'],
       };
 
+      // ---- edits panel (appears once the user has changed any building)
+      const editsPanel = el('div', 'panel edits-panel hidden');
+      editsPanel.innerHTML = '<span class="edits-count"></span><button class="link" data-reset>Reset all</button>';
+      hud.appendChild(editsPanel);
+      let onResetAll = () => {};
+      editsPanel.querySelector('[data-reset]').addEventListener('click', () => onResetAll());
+
+      const typeOptions = (sel) => meta.types.map((t, i) => (t.count || i === sel)
+        ? `<option value="${i}"${i === sel ? ' selected' : ''}>${t.label}</option>` : '').join('');
+
       return {
-        showBuilding({ type, lot }, onClose) {
-          onCardClose = onClose;
+        /**
+         * info: { type, lot, heightM, edited, minH, maxH }
+         * actions: { onClose, onApply(type, heightM), onDelete(), onRestore() }
+         */
+        showBuilding({ type, lot, heightM, edited = false, minH = 3, maxH = 350 }, actions) {
+          onCardClose = actions.onClose;
           const t = meta.types[type] || { label: 'Building', color: '#ccc' };
           const [cls, head, sub] = lot == null
             ? ['unknown', 'Unavailable', 'Rebuild data (npm run data) for vacancy']
             : LOT[lot] || LOT[0];
+          const h = Math.round(heightM);
           card.innerHTML = `
             <button class="bcard-x" aria-label="Close">×</button>
-            <div class="bcard-type"><span class="sw" style="--c:${t.color}"></span>${t.label}</div>
+            <div class="bcard-type"><span class="sw" style="--c:${t.color}"></span>${t.label}${edited ? '<span class="pill edited">Edited</span>' : ''}</div>
             <div class="bcard-row"><span class="k">Status</span><span class="pill ${cls}">${head}</span></div>
             <div class="bcard-sub">${sub}</div>
-            <div class="bcard-note">Source: Parcel Planner release (SF land use, Google Maps closures). Exact location is not shown.</div>`;
+            <div class="bcard-edit">
+              <label class="bcard-field"><span class="k">Type</span><select data-type>${typeOptions(type)}</select></label>
+              <label class="bcard-field"><span class="k">Height</span>
+                <input data-hrange type="range" min="${minH}" max="${maxH}" step="1" value="${h}">
+                <span class="hval"><input data-hnum type="number" min="${minH}" max="${maxH}" step="1" value="${h}"> m</span>
+              </label>
+              <div class="bcard-actions">
+                <button class="btn primary" data-apply>Apply</button>
+                <button class="btn danger" data-delete>Delete</button>
+                ${edited ? '<button class="btn" data-restore>Restore original</button>' : ''}
+              </div>
+            </div>
+            <div class="bcard-note">Edits are a local sketch in this browser. Source: Parcel Planner release (SF land use, Google Maps closures). Exact location is not shown.</div>`;
+          const range = card.querySelector('[data-hrange]'), num = card.querySelector('[data-hnum]');
+          range.addEventListener('input', () => { num.value = range.value; });
+          num.addEventListener('input', () => { range.value = num.value; });
           card.querySelector('.bcard-x').addEventListener('click', () => onCardClose());
+          card.querySelector('[data-apply]').addEventListener('click', () =>
+            actions.onApply(Number(card.querySelector('[data-type]').value), Number(num.value)));
+          card.querySelector('[data-delete]').addEventListener('click', () => actions.onDelete());
+          card.querySelector('[data-restore]')?.addEventListener('click', () => actions.onRestore());
           card.classList.remove('hidden');
+        },
+        setEditCount(n, onReset) {
+          onResetAll = onReset;
+          editsPanel.classList.toggle('hidden', n === 0);
+          editsPanel.querySelector('.edits-count').textContent = `${n} building${n === 1 ? '' : 's'} edited`;
         },
         hideBuilding() { card.classList.add('hidden'); },
         /** Anchor the card above the building's screen position (or hide it when off-screen). */

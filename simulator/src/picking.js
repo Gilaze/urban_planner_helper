@@ -77,7 +77,7 @@ export function createBuildingIndex(buf, extent) {
   return { dv, Q, count, extent, G, recOff, type, kind, extra, h, elev, bottom, roof, bbox, cellStart, cellItems, maxTop, stamp: new Uint32Array(count), pass: 0 };
 }
 
-function readRings(index, b) {
+export function readRings(index, b) {
   const { dv, Q, recOff } = index;
   let off = recOff[b];
   const nr = dv.getUint8(off + 1);
@@ -123,6 +123,8 @@ const scaleRing = (p, c, s) => p.map((v, i) => c[i & 1] + (v - c[i & 1]) * s);
 export function buildingParts(index, b, shared) {
   const rings = readRings(index, b);
   const base = elevOfJS(shared, index.elev[b]);
+  const edit = index.override && index.override.get(b);
+  if (edit) return [{ rings, y0: base + Math.min(index.bottom[b], 0), y1: base + edit.height }]; // user replacement: flat roof
   const h = index.h[b], roof = index.roof[b], k = index.kind[b];
   const y0 = base + Math.min(index.bottom[b], 0);
   if (k === 3) {
@@ -220,7 +222,9 @@ export function pickBuilding(index, ray, shared, groundAt) {
       const b = index.cellItems[k];
       if (index.stamp[b] === pass) continue;
       index.stamp[b] = pass;
-      if (hidden[index.type[b]] > 0.5 || (index.skip && index.skip(b))) continue;
+      if (index.deleted && index.deleted.has(b)) continue;
+      const type = index.override && index.override.has(b) ? index.override.get(b).type : index.type[b];
+      if (hidden[type] > 0.5 || (index.skip && index.skip(b))) continue;
       for (const part of buildingParts(index, b, shared)) {
         const t = hitPrism(part, o, d);
         if (t < best) { best = t; bestB = b; }

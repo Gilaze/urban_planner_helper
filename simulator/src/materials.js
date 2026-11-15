@@ -31,10 +31,21 @@ export function createShared(meta, terrain) {
     uSunDir: { value: new THREE.Vector3(-0.55, 0.78, 0.42).normalize() },
     // colour-by-vacancy view: palette indexed by vacancy code (0 unknown, 1 occupied, 2 vacant)
     uVacancyMode: { value: 0 },
+    // user edits: one texel per building (red > 0 = original hidden, deleted or replaced)
+    uEdited: { value: createEditTexture(meta.buildingCount) },
     uVacColors: { value: [new THREE.Color('#E9E4DB'), new THREE.Color('#CFE2F3'), new THREE.Color('#FF5A4F'), new THREE.Color('#FFA43A')] },
     uHiddenVac: { value: new Float32Array(4) },
     uVacant: { value: null },
   };
+}
+
+export const EDIT_TEX_W = 512;
+function createEditTexture(count) {
+  const h = Math.max(1, Math.ceil((count || 1) / EDIT_TEX_W));
+  const tex = new THREE.DataTexture(new Uint8Array(EDIT_TEX_W * h), EDIT_TEX_W, h, THREE.RedFormat, THREE.UnsignedByteType);
+  tex.minFilter = tex.magFilter = THREE.NearestFilter;
+  tex.needsUpdate = true;
+  return tex;
 }
 
 /** JS twin of the GLSL elevOf(): flat mode keeps the sea floor but levels land to 0.6 m. */
@@ -116,6 +127,10 @@ uniform float uHiddenVac[4];
 // Collapse a vertex to a degenerate point when its building is on the wrong side of the clear radius.
 const clearSwitch = (lod) => /* glsl */ `
 {
+  int bid = int(floor(aBid + 0.5));
+  if (bid >= 0 && texelFetch(uEdited, ivec2(bid % ${512}, bid / ${512}), 0).r > 0.5) transformed = vec3(0.0);
+}
+{
   vec2 bCtr = (modelMatrix * vec4(aCtr.x, 0.0, aCtr.y, 1.0)).xz;
   float bD = distance(bCtr, uClearCenter.xz);
   if (${lod ? 'bD <= uClearRadius' : 'bD > uClearRadius'}) transformed = vec3(0.0);
@@ -123,6 +138,8 @@ const clearSwitch = (lod) => /* glsl */ `
 `;
 const CLEAR_HEAD = /* glsl */ `
 attribute vec2 aCtr;
+attribute float aBid; // building index, -1 for user-added buildings
+uniform sampler2D uEdited;
 #ifndef VAC_DECLARED
 uniform float uVacancyMode;
 uniform float uHiddenVac[4];
@@ -286,7 +303,7 @@ const VAC_KEYS = ['uVacancyMode', 'uVacColors', 'uHiddenVac'];
 export function createBuildingMaterials(shared, Q) {
   const mat = new THREE.MeshStandardMaterial({ roughness: 0.84, metalness: 0.0, flatShading: true });
   mat.onBeforeCompile = (shader) => {
-    withShared(shader, shared, ['uTerrain', 'uTime', 'uHeightTex', 'uTerrainInfo', 'uPalette', 'uHidden', 'uFocus', 'uClearCenter', 'uClearRadius', ...VAC_KEYS]);
+    withShared(shader, shared, ['uTerrain', 'uTime', 'uHeightTex', 'uTerrainInfo', 'uPalette', 'uHidden', 'uFocus', 'uClearCenter', 'uClearRadius', 'uEdited', ...VAC_KEYS]);
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', `#include <common>\n${COMMON}\n${BUILDING_VERT_HEAD}\n#define VAC_DECLARED\n${CLEAR_HEAD}`)
       .replace('#include <beginnormal_vertex>', DUMMY_NORMAL)
@@ -301,7 +318,7 @@ export function createBuildingMaterials(shared, Q) {
 
   const depth = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking });
   depth.onBeforeCompile = (shader) => {
-    withShared(shader, shared, ['uTerrain', 'uHeightTex', 'uTerrainInfo', 'uHidden', 'uClearCenter', 'uClearRadius', ...VAC_KEYS]);
+    withShared(shader, shared, ['uTerrain', 'uHeightTex', 'uTerrainInfo', 'uHidden', 'uClearCenter', 'uClearRadius', 'uEdited', ...VAC_KEYS]);
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', `#include <common>\n${COMMON}\nattribute vec4 aUE;\nattribute vec2 aMeta;\nuniform float uHidden[16];\n${CLEAR_HEAD}`)
       .replace('#include <begin_vertex>', buildingDepthBegin(Q));
@@ -312,7 +329,7 @@ export function createBuildingMaterials(shared, Q) {
   // shading only - no window grid, no noise, no shadow lookups.
   const lod = new THREE.MeshLambertMaterial({ flatShading: true });
   lod.onBeforeCompile = (shader) => {
-    withShared(shader, shared, ['uTerrain', 'uHeightTex', 'uTerrainInfo', 'uPalette', 'uHidden', 'uFocus', 'uClearCenter', 'uClearRadius', ...VAC_KEYS]);
+    withShared(shader, shared, ['uTerrain', 'uHeightTex', 'uTerrainInfo', 'uPalette', 'uHidden', 'uFocus', 'uClearCenter', 'uClearRadius', 'uEdited', ...VAC_KEYS]);
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', `#include <common>\n${COMMON}\n${BUILDING_VERT_HEAD}\n#define VAC_DECLARED\n${CLEAR_HEAD}`)
       .replace('#include <beginnormal_vertex>', DUMMY_NORMAL)

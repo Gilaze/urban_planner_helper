@@ -29,6 +29,7 @@ npm run dev    # http://localhost:5173
 | `O` | Building outlines on/off |
 | Legend | Click a type to hide it, hover to highlight it |
 | Click a building | Yellow outline and glow, plus a card with its type and vacancy status from `vacancy.bin` (vacant lot / closed businesses / not vacant / unknown). `Esc`, `×` or clicking open ground closes it. The card never shows an address, coordinates or parcel number. |
+| Edit a building (in the card) | **Type** + **Height** (3–350 m) then **Apply** replaces the building on the same footprint (flat roof, same window style as its type). **Delete** removes it. **Restore original** undoes one building; **Reset all** (bottom left) undoes every edit. Edits are a local sketch: they are saved in this browser only and do not change the data release or the backend. |
 
 In the browser console, `__sf.jump(lon, lat, viewHeightMeters, mode)` moves the camera.
 

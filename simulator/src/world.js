@@ -37,6 +37,33 @@ export function buildWater(mat) {
 }
 
 // ---------------------------------------------------------------------------
+/** One building chunk as a mesh (shared by the city chunks and user-added buildings). */
+export function makeBuildingMesh(c, mats, isLod, chunkSize) {
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(c.pos, 3));
+  g.setAttribute('aUE', new THREE.BufferAttribute(c.ue, 4));
+  g.setAttribute('aMeta', new THREE.BufferAttribute(c.meta, 2));
+  g.setAttribute('aCtr', new THREE.BufferAttribute(c.ctr, 2));
+  g.setAttribute('aBid', new THREE.BufferAttribute(c.bid, 1));
+  g.setIndex(new THREE.BufferAttribute(c.idx, 1));
+  const lo = Math.min(0, c.minY), hi = Math.max(c.maxY, 1);
+  // buildings belong to the chunk of their centroid, so allow generous overhang
+  const reach = chunkSize * 0.5 + 450;
+  g.boundingSphere = new THREE.Sphere(
+    new THREE.Vector3(0, (lo + hi) / 2 / c.Q, 0),
+    Math.hypot(reach, reach, (hi - lo) / 2) / c.Q,
+  );
+  const m = new THREE.Mesh(g, isLod ? mats.lod : mats.mat);
+  if (!isLod) m.customDepthMaterial = mats.depth;
+  m.position.set(c.ox, 0, c.oz);
+  m.scale.setScalar(c.Q);
+  m.castShadow = !isLod;
+  m.receiveShadow = !isLod;
+  m.updateMatrix();
+  m.matrixAutoUpdate = false;
+  return m;
+}
+
 export function buildBuildingMeshes({ full, lod }, mats, chunkSize) {
   const group = new THREE.Group();
   group.name = 'buildings';
@@ -46,27 +73,7 @@ export function buildBuildingMeshes({ full, lod }, mats, chunkSize) {
   const byKey = new Map();
   let tris = 0, verts = 0, lodTris = 0;
   const make = (c, isLod) => {
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(c.pos, 3));
-    g.setAttribute('aUE', new THREE.BufferAttribute(c.ue, 4));
-    g.setAttribute('aMeta', new THREE.BufferAttribute(c.meta, 2));
-    g.setAttribute('aCtr', new THREE.BufferAttribute(c.ctr, 2));
-    g.setIndex(new THREE.BufferAttribute(c.idx, 1));
-    const lo = Math.min(0, c.minY), hi = Math.max(c.maxY, 1);
-    // buildings belong to the chunk of their centroid, so allow generous overhang
-    const reach = chunkSize * 0.5 + 450;
-    g.boundingSphere = new THREE.Sphere(
-      new THREE.Vector3(0, (lo + hi) / 2 / c.Q, 0),
-      Math.hypot(reach, reach, (hi - lo) / 2) / c.Q,
-    );
-    const m = new THREE.Mesh(g, isLod ? mats.lod : mats.mat);
-    if (!isLod) m.customDepthMaterial = mats.depth;
-    m.position.set(c.ox, 0, c.oz);
-    m.scale.setScalar(c.Q);
-    m.castShadow = !isLod;
-    m.receiveShadow = !isLod;
-    m.updateMatrix();
-    m.matrixAutoUpdate = false;
+    const m = makeBuildingMesh(c, mats, isLod, chunkSize);
     const key = `${c.cx},${c.cz}`;
     if (!byKey.has(key)) {
       const rec = { x: c.ox, z: c.oz, full: null, lod: null };
