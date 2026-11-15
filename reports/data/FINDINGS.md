@@ -10,8 +10,11 @@ The current generated reports come from a `--skip-census` build, so ACS covariat
 ## Data facts that affect other workstreams
 
 - **Parcel IDs** are `sf:<mapblklot>`. 227,968 active APNs consolidate to 155,028 physical lots, 9,466 of which have multiple APNs (condos). 262 API records have neither `mapblklot` nor geometry and are dropped. All remaining lot geometries are valid.
-- **Vacancy:** 8,383 lots are `source_indicated_vacant` (land use 2023 `VACANT`), 9,304 are `unknown` (no land-use match or null code) and 137,341 are `not_vacant`. The land-use snapshot is 2023 and archived, and the UI should show that vintage.
+- **Vacancy** combines the explicit 2023 `VACANT` code with the current land-use snapshot (c5ge-t6pj, 2026-08-17), which has no vacancy code of its own. 4,582 lots are `source_indicated_vacant` (4,581 published), 2,161 are `unknown` and 148,285 are `not_vacant`. 3,187 lots coded vacant in 2023 now record use and are treated as developed since.
+- **One lot key is outside the API contract:** `4591A011*` contains an asterisk and fails `ParcelID` `^sf:[A-Za-z0-9_-]{1,64}$`. `publish` omits it. Backend's live provider builds `sf:{mapblklot}` the same way, so it will produce this ID too.
+- **v3 `query.json` endpoints need an app token** (403 without one). The pipeline uses the keyless v2.1 `/resource/<id>.json` endpoints for the same datasets.
 - **Assessor:** the 2025 closed roll matches 211,163 active APNs. 16,543 active APNs have no roll row; their values stay null.
+- **Review predictions are clamped at log1p = 0.** Unclamped model outputs could be negative, which the backend schema correctly rejects.
 - **SF host moved:** `data.sfgov.org` now returns 301 to `data.sf.gov`. Backend's parcel provider should use the new host.
 - **Reviews coverage is tiny.** 213,536 parsed reviews cover 6,108 place IDs, but only 139 of them are in the Places export. `review_summary.parquet` is therefore nearly all zeros, and joined review counts measure sample coverage only. 42,184 reviews have rating 0 (no star value) and are excluded from `mean_rating`.
 - **Schools have no review signal.** `reviews_count` is 0 for every school record (476 labeled rows across all three cities), so school is marked as a degenerate target. School review activity is null with no source, rather than a fabricated 0.

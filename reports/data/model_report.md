@@ -1,6 +1,6 @@
 # Review-activity model report
 
-Data version: `0.1.0+2026-11-14.2+f0ed9fde8752`  
+Data version: `0.1.0+2026-11-14.2+6cbf713c49ee`  
 Estimator: sklearn.ensemble.HistGradientBoostingRegressor (scikit-learn 1.5.2)  
 Census covariates skipped: True
 
@@ -24,8 +24,8 @@ Degenerate target (all labeled counts are 0, treated as unlabeled): ['school']
 |---|---|
 | {'max_leaf_nodes': 15, 'l2_regularization': 0.0} | 1.661 |
 | {'max_leaf_nodes': 15, 'l2_regularization': 1.0} | 1.649 |
-| {'max_leaf_nodes': 31, 'l2_regularization': 0.0} | 1.669 |
-| {'max_leaf_nodes': 31, 'l2_regularization': 1.0} | 1.671 |
+| {'max_leaf_nodes': 31, 'l2_regularization': 0.0} | 1.664 |
+| {'max_leaf_nodes': 31, 'l2_regularization': 1.0} | 1.666 |
 | category baseline | 1.823 |
 
 Gate (≥5% better than category baseline): **passed** — relative improvement 0.096. Selected: **model**.
@@ -34,7 +34,7 @@ Gate (≥5% better than category baseline): **passed** — relative improvement 
 
 | category | n | selected RMSE | selected Spearman | category baseline RMSE | city×category baseline RMSE |
 |---|---|---|---|---|---|
-| clinic | 5693 | 1.061 | -0.091 | 0.987 | 0.987 |
+| clinic | 5693 | 1.060 | -0.091 | 0.987 | 0.987 |
 | pharmacy | 119 | — | — | 1.769 | 1.769 |
 | grocery | 413 | 2.157 | 0.130 | 2.033 | 2.033 |
 | bank_credit_union | 261 | — | — | 1.675 | 1.675 |

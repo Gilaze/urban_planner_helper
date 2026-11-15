@@ -116,16 +116,26 @@ def build_demographics(
     rep = demo.geometry.representative_point()
     rep_wgs = gpd.GeoSeries(rep, crs=METRIC_CRS).to_crs(WGS84)
     demo["rep_lon"], demo["rep_lat"] = rep_wgs.x, rep_wgs.y
+    demo["representative_point"] = gpd.GeoSeries(rep, crs=METRIC_CRS)
     for c in ("population", "median_household_income_usd", "median_gross_rent_usd_month"):
         demo[f"{c}_missing"] = demo[c].isna()
     demo["acs_vintage"] = f"{ACS_YEAR - 4}-{ACS_YEAR} ACS 5-year"
     demo["boundary_vintage"] = f"TIGER/Line {TIGER_YEAR}"
-    demo = demo.to_crs(WGS84).sort_values(["geo_level", "geoid"]).reset_index(drop=True)
-    cols = ["geoid", "geo_level", "county_fips", "geometry", "rep_lon", "rep_lat", "land_area_m2",
+    demo = demo.to_crs(WGS84)
+    demo["representative_point"] = demo["representative_point"].to_crs(WGS84)
+    demo = demo.sort_values(["geo_level", "geoid"]).reset_index(drop=True)
+    cols = ["geoid", "geo_level", "county_fips", "geometry", "representative_point", "rep_lon", "rep_lat",
+            "land_area_m2",
             *ACS_VARS.values(), "population_density_per_km2", "population_missing",
             "median_household_income_usd_missing", "median_gross_rent_usd_month_missing",
             "acs_vintage", "boundary_vintage"]
-    return demo[cols], report
+    demo = demo[cols]
+    # Block groups and tracts overlap: return them separately so consumers never
+    # double-count residents. Block groups carry population for access; tracts
+    # carry model covariates.
+    bg = demo[demo["geo_level"] == "block_group"].reset_index(drop=True)
+    tracts = demo[demo["geo_level"] == "tract"].reset_index(drop=True)
+    return bg, tracts, report
 
 
 def city_boundaries(tiger_place: gpd.GeoDataFrame, names: tuple[str, ...]) -> gpd.GeoDataFrame:

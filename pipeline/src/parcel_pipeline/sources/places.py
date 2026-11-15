@@ -62,9 +62,9 @@ def clean_places_chunk(raw: pd.DataFrame, cats: CategoryConfig, row_offset: int 
     perm, temp = _bool(df["permanently_closed"]), _bool(df["temporarily_closed"])
     df["closure_status"] = np.select(
         [perm.fillna(False).to_numpy(bool), temp.fillna(False).to_numpy(bool), (perm.isna() | temp.isna()).to_numpy(bool)],
-        ["permanently_closed", "temporarily_closed", "unknown"], default="open",
+        ["closed_permanently", "closed_temporarily", "unknown"], default="active",
     )
-    df["is_current_supply"] = df["closure_status"].isin(["open", "unknown"])
+    df["is_current_supply"] = df["closure_status"].isin(["active", "unknown"])
     df["closure_status_unknown"] = df["closure_status"] == "unknown"
 
     classified = [cats.classify(c, a, n) for c, a, n in zip(df["category"], df["all_categories"], df["name"])]
@@ -109,9 +109,10 @@ def assign_city(places: pd.DataFrame, city_bounds: gpd.GeoDataFrame) -> pd.DataF
 
 
 def finalize_places(df: pd.DataFrame) -> pd.DataFrame:
-    cols = ["place_id", "name", "lon", "lat", "city", "address_city", "source_category", "primary_category",
+    cols = ["place_id", "name", "longitude", "latitude", "city", "address_city", "source_category", "primary_category",
             "service_tags", "closure_status", "closure_status_unknown", "is_current_supply", "reviews_count",
             "_source_row"]
+    df = df.rename(columns={"lon": "longitude", "lat": "latitude"})
     return df[cols].rename(columns={"_source_row": "source_row"}).sort_values("place_id").reset_index(drop=True)
 
 

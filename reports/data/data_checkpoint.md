@@ -1,16 +1,17 @@
 # Data checkpoint
 
-Built: 2026-11-15T04:16:25+00:00
+Built: 2026-11-15T04:26:41+00:00
 
 ## Sources
 
 | Source | Vintage | Rows | Retrieved |
 |---|---|---|---|
-| google_places | hackathon export | 147429 | 2026-11-15T04:16:52+00:00 |
-| google_reviews | hackathon export | 213536 | 2026-11-15T04:16:52+00:00 |
-| sf_assessor | 2025 | 211547 | 2026-11-15T04:12:01+00:00 |
-| sf_landuse | 2023 | 154476 | 2026-11-15T04:11:43+00:00 |
-| sf_parcels | 1794680379 | 227968 | 2026-11-15T04:11:35+00:00 |
+| google_places | hackathon export | 147429 | 2026-11-15T04:27:12+00:00 |
+| google_reviews | hackathon export | 213536 | 2026-11-15T04:27:12+00:00 |
+| sf_assessor | 2025 | 211547 | 2026-11-15T04:26:39+00:00 |
+| sf_landuse | 2023 | 154476 | 2026-11-15T04:26:04+00:00 |
+| sf_landuse_current | 2026-08-17T00:00:00.000 | 153765 | 2026-11-15T04:26:17+00:00 |
+| sf_parcels | 1794680379 | 227968 | 2026-11-15T04:25:58+00:00 |
 | tiger_block_group | TIGER/Line 2024 |  | 2026-11-15T04:12:03+00:00 |
 | tiger_place | TIGER/Line 2024 |  | 2026-11-15T04:12:04+00:00 |
 | tiger_tract | TIGER/Line 2024 |  | 2026-11-15T04:12:03+00:00 |
@@ -22,13 +23,15 @@ Built: 2026-11-15T04:16:25+00:00
 - Active APNs 227,706 -> physical lots 155,028 (9,466 multi-APN)
 - Geometry quality: {'valid': 155028}
 - Land use matched lots: 154,177; land-use rows without an active lot: 298
-- Vacancy status: {'not_vacant': 137341, 'unknown': 9304, 'source_indicated_vacant': 8383}
+- Vacancy status: {'not_vacant': 148285, 'source_indicated_vacant': 4582, 'unknown': 2161}
+- Vacancy evidence: {'current snapshot records use': 144806, '2023 VACANT code and no recorded use in current snapshot': 4582, '2023 VACANT but current snapshot records use (developed since)': 3187, 'no recorded use in current snapshot; no explicit vacancy code': 915, 'no land-use record': 632, '2023 VACANT code; lot absent from current snapshot': 614, '2023 land use records use; lot absent from current snapshot': 292}
+- Current land use (c5ge-t6pj) matched lots: 153,490
 - Assessor roll ['2025']: matched APNs 211,163, unmatched active APNs 16,543, roll rows without active APN 384
 
 ## Places and reviews
 
 - Input rows 147,429; rejected {'missing_place_id': 0, 'invalid_coordinates': 0, 'invalid_reviews_count_set_null': 0}; duplicates removed 0
-- Closure status: {'open': 132143, 'permanently_closed': 12167, 'temporarily_closed': 3045, 'unknown': 74}
+- Closure status: {'active': 132143, 'closed_permanently': 12167, 'closed_temporarily': 3045, 'unknown': 74}
 - reviews_count missing 33; zero 85,000
 - Address city vs spatial city disagreements: 101
 - Reviews: 213,536 rows over 6,108 place IDs; matched 139, unmatched 5,969; invalid ratings 42,184

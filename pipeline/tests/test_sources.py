@@ -25,7 +25,8 @@ def lots():
     parcels = sf.parse_parcel_records(_load("sf_parcels_api.json"))
     landuse = sf.parse_landuse_records(_load("sf_landuse_api.json"))
     assessor = sf.parse_assessor_records(_load("sf_assessor_api.json"), "2025")
-    out, report = sf.build_physical_parcels(parcels, landuse, assessor, "2026-11-01")
+    current = sf.parse_current_landuse_records(_load("sf_landuse_current_api.json"))
+    out, report = sf.build_physical_parcels(parcels, landuse, assessor, "2026-11-01", current_landuse=current)
     return out.set_index("parcel_id"), report
 
 
@@ -58,19 +59,34 @@ def test_condo_apns_consolidate_to_one_physical_lot(lots):
     lot = out.loc["sf:0025032"]
     assert list(lot["source_apns"]) == ["0025032", "0025033"]
     assert lot["apn_count"] == 2
-    assert lot["assessed_land_value_usd"] == 250000  # summed across condo APNs, 2024 row ignored
-    assert lot["assessed_improvement_value_usd"] == 200000  # null member does not null the sum
+    assert lot["assessed_land_usd"] == 250000  # summed across condo APNs, 2024 row ignored
+    assert lot["assessed_improvement_usd"] == 200000  # null member does not null the sum
     assert report["condo_lots"] == 1
     assert "sf:0001001" not in out.index  # inactive parcel dropped
 
 
-def test_vacancy_status_uses_explicit_code_only(lots):
+def test_vacancy_requires_2023_code_and_no_current_use(lots):
     out, _ = lots
     assert out.loc["sf:0012003A", "vacancy_status"] == "source_indicated_vacant"
     assert out.loc["sf:0012003A", "site_label"] == "source_indicated_vacancy"
-    assert out.loc["sf:0025032", "vacancy_status"] == "not_vacant"  # duplicate null land-use row ignored
+    assert out.loc["sf:0025032", "vacancy_status"] == "not_vacant"
+    assert out.loc["sf:0025032", "existing_use"] == "residential"
+    # No current use but no explicit vacancy code -> unknown; analytical rows ignored.
     assert out.loc["sf:3702001", "vacancy_status"] == "unknown"
+    assert out.loc["sf:3702001", "existing_use"] == "no recorded use"
     assert out.loc["sf:3702001", "site_label"] == "hypothetical"
+    assert out.loc["sf:9999001", "vacancy_status"] == "unknown"
+
+
+def test_2023_vacant_lot_developed_since_is_not_vacant():
+    parcels = sf.parse_parcel_records(_load("sf_parcels_api.json"))
+    landuse = sf.parse_landuse_records(_load("sf_landuse_api.json"))
+    current = sf.parse_current_landuse_records([
+        {"mapblklot": "0012003A", "ludb_id": "x", "geography_type": "parcel", "resunits": "40"}])
+    out, _ = sf.build_physical_parcels(parcels, landuse, sf.parse_assessor_records([], "2025"), None,
+                                       current_landuse=current)
+    row = out.set_index("parcel_id").loc["sf:0012003A"]
+    assert row["vacancy_status"] == "not_vacant" and "developed since" in row["vacancy_evidence"]
 
 
 def test_geometry_quality_and_representative_point(lots):
@@ -81,7 +97,7 @@ def test_geometry_quality_and_representative_point(lots):
     v = out.loc["sf:0012003A"]
     assert v["geometry"].contains(__import__("shapely").Point(v["rep_lon"], v["rep_lat"]))
     assert 1500 < v["area_m2"] < 2500  # ~44 m x ~44 m
-    assert pd.isna(out.loc["sf:9999001", "assessed_land_value_usd"])  # missing enrichment stays null
+    assert pd.isna(out.loc["sf:9999001", "assessed_land_usd"])  # missing enrichment stays null
 
 
 def test_join_report(lots):
@@ -107,9 +123,9 @@ def test_places_validation(places):
 
 def test_closure_status(places):
     df, _ = places
-    assert df.loc["P4", "closure_status"] == "permanently_closed" and not df.loc["P4", "is_current_supply"]
+    assert df.loc["P4", "closure_status"] == "closed_permanently" and not df.loc["P4", "is_current_supply"]
     assert df.loc["P3", "closure_status"] == "unknown" and df.loc["P3", "is_current_supply"]
-    assert df.loc["P1", "closure_status"] == "open"
+    assert df.loc["P1", "closure_status"] == "active"
 
 
 def test_places_dedupe_prefers_complete_then_source_order():

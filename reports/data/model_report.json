@@ -26,13 +26,13 @@
     "fit_on": "train+validation (Oakland + Berkeley)"
   },
   "census_skipped": true,
-  "data_version": "0.1.0+2026-11-14.2+f0ed9fde8752",
+  "data_version": "0.1.0+2026-11-14.2+6cbf713c49ee",
   "degenerate_target_categories": [
     "school"
   ],
   "estimator": "sklearn.ensemble.HistGradientBoostingRegressor (scikit-learn 1.5.2)",
   "gate": {
-    "best_model_macro_rmse": 1.6487111706386295,
+    "best_model_macro_rmse": 1.6486256892558147,
     "best_params": {
       "l2_regularization": 1.0,
       "max_leaf_nodes": 15
@@ -40,7 +40,7 @@
     "category_baseline_macro_rmse": 1.8232346506989452,
     "metric": "macro-average Berkeley category log-count RMSE",
     "passed": true,
-    "relative_improvement": 0.09572189733966019,
+    "relative_improvement": 0.09576878180556381,
     "required_improvement_vs_category_baseline": 0.05
   },
   "grid": {
@@ -163,8 +163,8 @@
       "clinic": {
         "n": 5693,
         "n_predicted": 5693,
-        "rmse_log_count": 1.0612819880179245,
-        "spearman": -0.09055714819296125
+        "rmse_log_count": 1.0600699660455075,
+        "spearman": -0.09067830048657935
       },
       "grocery": {
         "n": 413,
@@ -185,7 +185,7 @@
         "spearman": null
       }
     },
-    "selected_macro_rmse": 1.609015701704346,
+    "selected_macro_rmse": 1.6084096907181376,
     "slices": {
       "median_household_income_usd": {
         "status": "unavailable (no training values)",
@@ -288,7 +288,7 @@
   "validation": {
     "candidates": [
       {
-        "macro_rmse": 1.6613002794462361,
+        "macro_rmse": 1.6611071333066103,
         "params": {
           "l2_regularization": 0.0,
           "max_leaf_nodes": 15
@@ -297,8 +297,8 @@
           "clinic": {
             "n": 699,
             "n_predicted": 699,
-            "rmse_log_count": 1.2692713985739137,
-            "spearman": 0.02929362231635444
+            "rmse_log_count": 1.268885106294662,
+            "spearman": 0.02904625149989263
           },
           "grocery": {
             "n": 49,
@@ -309,7 +309,7 @@
         }
       },
       {
-        "macro_rmse": 1.6487111706386295,
+        "macro_rmse": 1.6486256892558147,
         "params": {
           "l2_regularization": 1.0,
           "max_leaf_nodes": 15
@@ -318,8 +318,8 @@
           "clinic": {
             "n": 699,
             "n_predicted": 699,
-            "rmse_log_count": 1.262187220556741,
-            "spearman": 0.03638894515845506
+            "rmse_log_count": 1.2620162577911112,
+            "spearman": 0.03633653670522746
           },
           "grocery": {
             "n": 49,
@@ -330,7 +330,7 @@
         }
       },
       {
-        "macro_rmse": 1.669144808808611,
+        "macro_rmse": 1.663804311468882,
         "params": {
           "l2_regularization": 0.0,
           "max_leaf_nodes": 31
@@ -339,8 +339,8 @@
           "clinic": {
             "n": 699,
             "n_predicted": 699,
-            "rmse_log_count": 1.2784801603176852,
-            "spearman": 0.032234341104514494
+            "rmse_log_count": 1.2677991656382273,
+            "spearman": 0.034135800117555376
           },
           "grocery": {
             "n": 49,
@@ -351,7 +351,7 @@
         }
       },
       {
-        "macro_rmse": 1.6711308126184736,
+        "macro_rmse": 1.6664352530482325,
         "params": {
           "l2_regularization": 1.0,
           "max_leaf_nodes": 31
@@ -360,8 +360,8 @@
           "clinic": {
             "n": 699,
             "n_predicted": 699,
-            "rmse_log_count": 1.279360551335426,
-            "spearman": 0.008621920199930322
+            "rmse_log_count": 1.2699694321949442,
+            "spearman": 0.010159696507610538
           },
           "grocery": {
             "n": 49,

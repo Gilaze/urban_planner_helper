@@ -21,7 +21,7 @@ def _place(pid, dx, dy, tags, primary=None, current=True, city="Oakland", review
     lon, lat = _pt(dx, dy)
     return {"place_id": pid, "lon": lon, "lat": lat, "service_tags": tags, "is_current_supply": current,
             "primary_category": primary or (tags[0] if tags else "other"), "city": city,
-            "closure_status": "open" if current else "permanently_closed", "reviews_count": reviews}
+            "closure_status": "active" if current else "closed_permanently", "reviews_count": reviews}
 
 
 def test_counts_exclude_focal_and_respect_radii():
@@ -103,8 +103,8 @@ def test_gate_fails_without_signal_and_falls_back_to_baseline():
     assert not res["report"]["gate"]["passed"] and res["selected"] == "category_baseline"
     qf = pf[FEATURE_COLUMNS].head(3).assign(parcel_id=["a", "b", "c"], category=["clinic", "school", "grocery"])
     preds = predict_parcels(qf, res).set_index("parcel_id")
-    assert preds.loc["a", "review_activity_source"] == "category_baseline"
-    assert preds.loc["b", "review_activity_source"] is None and np.isnan(preds.loc["b", "review_activity_log1p"])
+    assert preds.loc["a", "source"] == "category_baseline"
+    assert preds.loc["b", "source"] == "unavailable" and np.isnan(preds.loc["b", "predicted_log1p_reviews_count"])
 
 
 def test_repeat_runs_are_identical():
@@ -129,4 +129,4 @@ def test_all_zero_category_is_unlabeled_not_predicted_zero():
     assert res["report"]["degenerate_target_categories"] == ["grocery"]
     assert "grocery" not in res["model_categories"]
     qf = pf[FEATURE_COLUMNS].head(1).assign(parcel_id=["a"], category=["grocery"])
-    assert predict_parcels(qf, res)["review_activity_source"].iloc[0] is None
+    assert predict_parcels(qf, res)["source"].iloc[0] == "unavailable"

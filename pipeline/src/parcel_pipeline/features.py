@@ -163,7 +163,7 @@ def build_place_features(places: pd.DataFrame, index: SupplyIndex, tracts, split
     elig = places[
         places["city"].isin(split_by_city.keys())
         & places["primary_category"].isin(index.candidates)
-        & (places["closure_status"] != "permanently_closed")
+        & (places["closure_status"] != "closed_permanently")
     ].sort_values("place_id")
     frames = []
     for cat in index.candidates:

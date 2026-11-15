@@ -6,6 +6,7 @@ Steps
   build          Canonical tables + features into data/artifacts/release/.
   train          Review-activity model, predictions and evaluation report.
   audit          Category audit sample for manual review.
+  publish        Copy the backend projection to artifacts/person2 (contracts/README.md).
   all            fetch-sf, fetch-census, build, train, audit.
 """
 
@@ -27,7 +28,7 @@ from . import PIPELINE_VERSION
 from .categories import load_categories
 from .features import FEATURE_COLUMNS, FEATURE_DEFINITIONS, SupplyIndex, build_parcel_features, build_place_features
 from .model import predict_parcels, train_and_evaluate
-from .settings import REPORTS_DIR, SPLIT_BY_CITY, Settings, load_settings
+from .settings import REPO_ROOT, REPORTS_DIR, SPLIT_BY_CITY, Settings, load_settings
 from .sources import census, places as places_src, sf
 from .sources.socrata import SocrataClient, read_jsonl, snapshot
 
@@ -104,6 +105,8 @@ def fetch_sf(s: Settings, max_rows: int | None = None) -> None:
     jobs = [
         ("sf_parcels", sf.PARCELS_ID, dict(order="blklot", select=",".join(sf.PARCEL_FIELDS), where="active=true")),
         ("sf_landuse", sf.LANDUSE_ID, dict(order="mapblklot", select=",".join(sf.LANDUSE_FIELDS))),
+        ("sf_landuse_current", sf.CURRENT_LANDUSE_ID, dict(order="mapblklot,ludb_id",
+                                                           select=",".join(sf.CURRENT_LANDUSE_FIELDS))),
         ("sf_assessor", sf.ASSESSOR_ID, dict(order="parcel_number,row_id", select=",".join(sf.ASSESSOR_FIELDS),
                                              where=f"closed_roll_year='{roll_year}'")),
     ]
@@ -115,6 +118,9 @@ def fetch_sf(s: Settings, max_rows: int | None = None) -> None:
                  query=kw, vintage=roll_year if key == "sf_assessor" else
                  (sf.LANDUSE_VINTAGE if key == "sf_landuse" else meta.get("rowsUpdatedAt")))
         log.info("%s: %d rows", key, n)
+    m.data["sources"]["sf_landuse_current"]["vintage"] = max(
+        (json.loads(line).get("data_as_of", "") for line in (out / "sf_landuse_current.jsonl").open()),
+        default=None)
     m.save()
 
 
@@ -154,13 +160,15 @@ def build(s: Settings, skip_census: bool = False) -> None:
     else:
         acs_bg = pd.read_csv(s.raw_dir / "census" / f"acs_{census.ACS_YEAR}_block_group.csv", dtype={"geoid": str})
         acs_tr = pd.read_csv(s.raw_dir / "census" / f"acs_{census.ACS_YEAR}_tract.csv", dtype={"geoid": str})
-        demo, demo_rep = census.build_demographics(acs_bg, acs_tr, census.load_tiger("block_group", s.raw_dir),
-                                                   census.load_tiger("tract", s.raw_dir))
+        demo, tracts, demo_rep = census.build_demographics(
+            acs_bg, acs_tr, census.load_tiger("block_group", s.raw_dir), census.load_tiger("tract", s.raw_dir))
         p = rd / "demographics.geoparquet"
         demo.to_parquet(p, index=False)
-        m.output(p, len(demo), grain="geoid x geo_level (block_group, tract)")
+        m.output(p, len(demo), grain="geoid (block group); population for access")
+        p = rd / "tract_covariates.geoparquet"
+        tracts.to_parquet(p, index=False)
+        m.output(p, len(tracts), grain="geoid (tract); model covariates")
         checks["demographics"] = demo_rep
-        tracts = demo[demo["geo_level"] == "tract"]
         m.data["census_skipped"] = False
 
     # --- SF parcels
@@ -170,7 +178,9 @@ def build(s: Settings, skip_census: bool = False) -> None:
     roll_year = raw_m.data["sources"].get("sf_assessor", {}).get("vintage")
     assessor = sf.parse_assessor_records(read_jsonl(s.raw_dir / "sf" / "sf_assessor.jsonl"), roll_year)
     parcel_vintage = parcels_raw["data_as_of"].dropna().max() if parcels_raw["data_as_of"].notna().any() else None
-    lots, lot_rep = sf.build_physical_parcels(parcels_raw, landuse, assessor, parcel_vintage)
+    current_lu = sf.parse_current_landuse_records(read_jsonl(s.raw_dir / "sf" / "sf_landuse_current.jsonl"))
+    lots, lot_rep = sf.build_physical_parcels(parcels_raw, landuse, assessor, parcel_vintage,
+                                              current_landuse=current_lu)
     p = rd / "parcels.geoparquet"
     lots.to_parquet(p, index=False)
     m.output(p, len(lots), grain="physical lot (mapblklot)", key="parcel_id")
@@ -201,8 +211,9 @@ def build(s: Settings, skip_census: bool = False) -> None:
     checks["reviews"] = rv_rep
 
     # --- Features
-    index = SupplyIndex(pl, cats.candidates)
-    pf = build_place_features(pl, index, tracts, SPLIT_BY_CITY)
+    pl_xy = pl.rename(columns={"longitude": "lon", "latitude": "lat"})
+    index = SupplyIndex(pl_xy, cats.candidates)
+    pf = build_place_features(pl_xy, index, tracts, SPLIT_BY_CITY)
     p = rd / "place_features.parquet"
     pf.to_parquet(p, index=False)
     m.output(p, len(pf), grain="place_id", feature_columns=FEATURE_COLUMNS)
@@ -256,8 +267,9 @@ def train(s: Settings) -> None:
     rep["census_skipped"] = m.data.get("census_skipped")
 
     preds = predict_parcels(qf, result)
-    preds["model_version"] = f"review-activity/{result['selected']}/{PIPELINE_VERSION}"
-    p = rd / "parcel_predictions.parquet"
+    model_version = f"review-activity/{result['selected']}/{PIPELINE_VERSION}"
+    preds["model_version"] = model_version
+    p = rd / "review_predictions.parquet"
     preds.to_parquet(p, index=False)
     m.output(p, len(preds), grain="parcel_id x category")
     p = rd / "place_eval_predictions.parquet"
@@ -274,9 +286,93 @@ def train(s: Settings) -> None:
     write_json(rd / "model_report.json", rep)
     write_json(REPORTS_DIR / "model_report.json", rep)
     write_model_md(rep)
-    m.data["model"] = {"selected": result["selected"], "gate_passed": rep["gate"]["passed"],
+    m.data["model"] = {"version": model_version, "selected": result["selected"], "gate_passed": rep["gate"]["passed"],
                        "model_categories": result["model_categories"], "report": "reports/data/model_report.json"}
     m.save()
+    write_backend_manifest(rd, m)
+
+
+def write_backend_manifest(rd: Path, m: Manifest) -> dict:
+    """Serving descriptor for backend/build_release.py (see contracts/README.md)."""
+    src = m.data["sources"]
+    parcels = src.get("sf_parcels", {})
+    lots = pd.read_parquet(rd / "parcels.geoparquet", columns=["parcel_id", "vacancy_status", "geometry_quality"])
+    usable = lots[_publishable(lots)]
+    hypothetical = None
+    if not (usable["vacancy_status"] == "source_indicated_vacant").any():
+        hypothetical = str(usable["parcel_id"].min())  # stable choice among verified geometries
+    spatial = None
+    demo_path = rd / "demographics.geoparquet"
+    if demo_path.exists():
+        demo = gpd.read_parquet(demo_path, columns=["geoid", "geometry"])
+        # Block groups for the five retained counties = jointly covered by ACS and
+        # the Places export (whose bounding box contains all five).
+        cover = demo.to_crs("EPSG:26910").geometry.union_all().buffer(0).simplify(25)
+        spatial = json.loads(json.dumps(gpd.GeoSeries([cover], crs="EPSG:26910").to_crs(4326).iloc[0].__geo_interface__))
+    model = m.data.get("model", {})
+    desc = {
+        "data_version": m.data.get("data_version"),
+        "model_version": model.get("version"),
+        "parcel_source_version": f"datasf:{parcels.get('dataset_id', sf.PARCELS_ID)}@{parcels.get('rows_updated_at')}",
+        "parcel_retrieved_at": parcels.get("retrieved_at"),
+        "sources": {k: str(v.get("url")) for k, v in sorted(src.items()) if v.get("url")},
+        "coverage": {
+            "physical_lots": int(len(lots)),
+            "published_lots": int(len(usable)),
+            "lots_excluded_unusable_geometry": int((lots["geometry_quality"] == "unusable").sum()),
+            "lots_excluded_id_outside_contract": int((~lots["parcel_id"].str.match(CONTRACT_PARCEL_ID)).sum()),
+            "source_indicated_vacant_lots": int((usable["vacancy_status"] == "source_indicated_vacant").sum()),
+            "unknown_vacancy_lots": int((usable["vacancy_status"] == "unknown").sum()),
+            "landuse_vintage": f"current {src.get('sf_landuse_current', {}).get('vintage')}; vacancy code {sf.LANDUSE_VINTAGE}",
+            "assessor_roll_year": src.get("sf_assessor", {}).get("vintage"),
+            "census": "skipped" if m.data.get("census_skipped") else "ACS 2020-2024 5-year block groups",
+            "census_counties": "06001,06013,06041,06075,06081",
+            "review_model_selected": model.get("selected"),
+            "category_config_version": m.data.get("category_config_version"),
+        },
+        "spatial_coverage": spatial,
+        "hypothetical_parcel_id": hypothetical,
+    }
+    write_json(rd / "backend_manifest.json", desc)
+    return desc
+
+
+# backend/schemas.py ParcelID pattern. SF has at least one lot key with "*"
+# (4591A011*), which the API contract cannot represent.
+CONTRACT_PARCEL_ID = r"^sf:[A-Za-z0-9_-]{1,64}$"
+
+
+def _publishable(lots: pd.DataFrame) -> pd.Series:
+    return (lots["geometry_quality"] != "unusable") & lots["parcel_id"].str.match(CONTRACT_PARCEL_ID)
+
+
+BACKEND_FILES = ["backend_manifest.json", "parcels.geoparquet", "places.parquet", "demographics.geoparquet",
+                 "review_predictions.parquet", "source_manifest.json"]
+
+
+def publish(s: Settings, out: Path, allow_missing_census: bool = False) -> None:
+    """Copy the backend projection of the release to `out` (default <repo>/artifacts/person2)."""
+    import shutil
+    rd = release_dir(s)
+    missing = [f for f in BACKEND_FILES if not (rd / f).exists()]
+    if missing and allow_missing_census and missing == ["demographics.geoparquet"]:
+        log.warning("publishing WITHOUT demographics.geoparquet; backend_manifest records census=skipped")
+        missing = []
+    if missing:
+        raise SystemExit(f"release is missing {missing}; run build (with Census) and train first")
+    out.mkdir(parents=True, exist_ok=True)
+    lots = gpd.read_parquet(rd / "parcels.geoparquet")
+    keep = _publishable(lots)
+    lots[keep].to_parquet(out / "parcels.geoparquet", index=False)
+    kept_ids = set(lots.loc[keep, "parcel_id"])
+    preds = pd.read_parquet(rd / "review_predictions.parquet")
+    preds[preds["parcel_id"].isin(kept_ids)].to_parquet(out / "review_predictions.parquet", index=False)
+    for f in BACKEND_FILES:
+        if f not in ("parcels.geoparquet", "review_predictions.parquet"):
+            if (rd / f).exists():
+                shutil.copy2(rd / f, out / f)
+    log.info("published %d files to %s (%d lots omitted: unusable geometry or ID outside contract)",
+             len(BACKEND_FILES), out, int((~keep).sum()))
 
 
 def audit(s: Settings, n: int = 20, seed: int = 42) -> None:
@@ -320,6 +416,8 @@ def write_checkpoint_md(checks: dict, m: Manifest) -> None:
               f"- Geometry quality: {p['geometry_quality']}",
               f"- Land use matched lots: {p['landuse_matched_lots']:,}; land-use rows without an active lot: {p['landuse_unmatched_rows']:,}",
               f"- Vacancy status: {p['vacancy_status']}",
+              f"- Vacancy evidence: {p['vacancy_evidence']}",
+              f"- Current land use (c5ge-t6pj) matched lots: {p['current_landuse_matched_lots']:,}",
               f"- Assessor roll {p['assessor_roll_years']}: matched APNs {p['assessor_matched_apns']:,}, "
               f"unmatched active APNs {p['assessor_unmatched_active_apns']:,}, roll rows without active APN "
               f"{p['assessor_rows_without_active_apn']:,}",
@@ -402,7 +500,9 @@ def _slices_md(sl: dict) -> str:
 # ------------------------------------------------------------------ main
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="parcel-pipeline")
-    ap.add_argument("step", choices=["fetch-sf", "fetch-census", "build", "train", "audit", "all"])
+    ap.add_argument("step", choices=["fetch-sf", "fetch-census", "build", "train", "audit", "publish", "all"])
+    ap.add_argument("--out", type=Path, default=REPO_ROOT / "artifacts" / "person2",
+                    help="publish destination for backend/build_release.py --input")
     ap.add_argument("--skip-census", action="store_true", help="build without ACS covariates (flagged in manifest)")
     ap.add_argument("--max-rows", type=int, default=None, help="cap rows per SF dataset (smoke tests)")
     args = ap.parse_args(argv)
@@ -414,6 +514,7 @@ def main(argv: list[str] | None = None) -> int:
         "build": lambda: build(s, args.skip_census),
         "train": lambda: train(s),
         "audit": lambda: audit(s),
+        "publish": lambda: publish(s, args.out, args.skip_census),
     }
     order = ["fetch-sf", "fetch-census", "build", "train", "audit"]
     for name in (order if args.step == "all" else [args.step]):

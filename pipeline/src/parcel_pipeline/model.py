@@ -86,7 +86,8 @@ class ReviewActivityModel:
             z = self.estimator.predict(sub[FEATURE_COLUMNS].to_numpy(float))
             mu = sub["category"].map(lambda c: self.norm[c][0]).to_numpy(float)
             sd = sub["category"].map(lambda c: self.norm[c][1]).to_numpy(float)
-            out[ok] = z * sd + mu
+            # log1p(count) >= 0: clamp so inverted predictions are never negative counts.
+            out[ok] = np.maximum(z * sd + mu, 0.0)
         return out
 
 
@@ -252,7 +253,7 @@ def train_and_evaluate(place_features: pd.DataFrame, candidates: list[str]) -> d
 
 def predict_parcels(parcel_features: pd.DataFrame, result: dict) -> pd.DataFrame:
     base: Baselines = result["baselines"]
-    out = parcel_features[["parcel_id", "category"]].copy()
+    out = parcel_features[["parcel_id", "category"]].rename(columns={"category": "category_id"})
     baseline = base.predict_category(parcel_features)
     if result["selected"] == "model":
         pred = result["final_model"].predict_log_count(parcel_features)
@@ -262,7 +263,7 @@ def predict_parcels(parcel_features: pd.DataFrame, result: dict) -> pd.DataFrame
     else:
         pred = baseline
         source = np.where(~np.isnan(baseline), "category_baseline", None)
-    out["review_activity_log1p"] = pred
-    out["review_activity_count"] = np.expm1(pred)
-    out["review_activity_source"] = source
-    return out
+    out["predicted_log1p_reviews_count"] = pred
+    out["predicted_reviews_count"] = np.expm1(pred)
+    out["source"] = np.where(pd.isna(source), "unavailable", source).astype(str)
+    return out.reset_index(drop=True)
