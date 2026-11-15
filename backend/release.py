@@ -153,7 +153,10 @@ class Release:
         frozen_properties = self.parcels[parcel.id].properties
         if not snapshot.equals(parcel_shape(parcel)):
             return "parcel_geometry_changed"
-        if frozen_properties.vacancy_status != parcel.properties.vacancy_status:
+        if (
+            parcel.properties.vacancy_status != "unknown"
+            and frozen_properties.vacancy_status != parcel.properties.vacancy_status
+        ):
             return "parcel_vacancy_status_changed"
         return None
 
