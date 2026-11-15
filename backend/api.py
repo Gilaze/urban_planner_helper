@@ -117,10 +117,13 @@ def enrich_parcel(parcel, release: Release | None):
     flags = list(current.quality_flags)
     if frozen.source_apns and "apns_unverified" in flags:
         flags.remove("apns_unverified")
+    if frozen.vacancy_status != "unknown" and "vacancy_unverified" in flags:
+        flags.remove("vacancy_unverified")
     flags.extend(flag for flag in frozen.quality_flags if flag.startswith("assessor_"))
     properties = current.model_copy(update={
         "source_apns": frozen.source_apns,
         "representative_point": frozen.representative_point,
+        "vacancy_status": frozen.vacancy_status,
         "zoning": frozen.zoning,
         "assessed_land_usd": frozen.assessed_land_usd,
         "assessed_improvement_usd": frozen.assessed_improvement_usd,
@@ -312,7 +315,7 @@ def create_app(
     def unknown_api_route(remaining: str):
         raise APIError(404, "route_not_found", "No API route matched the request")
 
-    frontend = frontend_dir or ROOT / "frontend/dist"
+    frontend = frontend_dir if frontend_dir is not None else ROOT / "simulator/dist"
     if frontend.is_dir():
         app.mount("/", StaticFiles(directory=frontend, html=True), name="frontend")
     return app

@@ -1,8 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 
-// These hooks are the proposed hour-3 handoff to Frontend. Change this adapter
-// when its actual accessible controls are published; never ship a checker UI.
 const candidates = ['clinic', 'pharmacy', 'grocery', 'bank_credit_union', 'school'];
 const comparisonFixture = JSON.parse(readFileSync(new URL('../../../contracts/examples/compare.json', import.meta.url), 'utf8'));
 const parcelCollection = JSON.parse(readFileSync(new URL('../../../contracts/examples/parcels.json', import.meta.url), 'utf8'));
@@ -58,6 +56,7 @@ test('parcel selection, preview and reset', async ({ page }) => {
   await expect(page.getByTestId('massing-preview')).toContainText(/illustrative/i);
   await page.getByTestId('view-2d').click();
   await expect(page.getByTestId('view-2d')).toHaveAttribute('aria-pressed', 'true');
+  await page.getByText('Ranking weights', { exact: true }).click();
   const before = requests.length;
   await setRange(page, 'objective-need', 2);
   const changedResponse = page.waitForResponse(response => response.url().includes('/scenarios/compare') && response.request().method() === 'POST'
@@ -75,6 +74,69 @@ test('parcel selection, preview and reset', async ({ page }) => {
   await expect.poll(() => requests.at(-1)?.category_priorities).toEqual(Object.fromEntries(candidates.map(c => [c, 1])));
   await expect(page.getByTestId('raw-metrics-clinic')).toContainText(/m|USD|FTE|population/i);
   await checkLayout(page);
+});
+
+test('clicking empty ground opens estimates and renders the proposed volume', async ({ page }) => {
+  const png = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+    'base64',
+  );
+  await page.route('**/data/*', async route => {
+    const name = new URL(route.request().url()).pathname.split('/').at(-1);
+    if (name === 'meta.json') {
+      await route.fulfill({ json: {
+        origin: { lon: -122.435, lat: 37.77, metersPerDegLon: 88000, metersPerDegLat: 111000 },
+        buildingCount: 0, towerThresholdM: 60, types: [], sources: [],
+      } });
+      return;
+    }
+    if (name?.endsWith('.png')) {
+      await route.fulfill({ contentType: 'image/png', body: png });
+      return;
+    }
+    const format = {
+      'terrain.bin': 'SFH1', 'buildings.bin': 'SFB2', 'roads.bin': 'SFR1',
+      'trees.bin': 'SFT1', 'lakes.bin': 'SFL1', 'vacancy.bin': 'SFV1',
+    }[name ?? ''];
+    if (!format) {
+      await route.abort();
+      return;
+    }
+    const buffer = Buffer.alloc(name === 'terrain.bin' ? 24 : name === 'vacancy.bin' ? 8 : 12);
+    buffer.write(format);
+    if (name === 'terrain.bin') {
+      buffer.writeUInt32LE(2, 4);
+      buffer.writeFloatLE(19200, 8);
+      buffer.writeFloatLE(9600, 12);
+    } else if (name !== 'vacancy.bin') {
+      buffer.writeFloatLE(0.25, 8);
+    }
+    await route.fulfill({ contentType: 'application/octet-stream', body: buffer });
+  });
+  await page.goto('/');
+  await page.waitForFunction(() => Boolean((window as any).__sf));
+  const [lon, lat] = firstParcel.properties.representative_point.coordinates;
+  const viewport = page.viewportSize()!;
+  await page.evaluate(([lon, lat]) => {
+    const viewer = (window as any).__sf;
+    viewer.jump(lon, lat, 300, 'topdown');
+    viewer.cam.update(10);
+    viewer.cam.getActiveCamera().updateMatrixWorld();
+  }, [lon, lat]);
+  await page.mouse.click(viewport.width / 2, viewport.height / 2);
+  const results = page.getByTestId('comparison-results');
+  await expect(results).toHaveAttribute('data-parcel-id', firstParcel.id);
+  await expect(results).toHaveAttribute('data-status', 'ready');
+
+  const metrics = page.getByTestId('raw-metrics-clinic');
+  await expect(metrics).toContainText(/Local sales tax \/ year.*\$.*P10–P90/i);
+  await expect(metrics).toContainText(/Operating jobs \(FTE\).*P10–P90/i);
+  await expect(metrics).toContainText(/Predicted Google reviews.*Demo estimate/i);
+  await page.getByTestId('candidate-clinic').click();
+  await expect(page.getByTestId('massing-preview')).toContainText(/Illustrative 7 m building/i);
+  expect(await page.evaluate(() =>
+    (window as any).__sf.scene.getObjectByName('parcel-scenario').children.some((child: any) => child.isMesh)
+  )).toBe(true);
 });
 
 test('keyboard parcel selection', async ({ page }) => {
