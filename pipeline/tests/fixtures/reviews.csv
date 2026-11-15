@@ -1,0 +1,6 @@
+place_id,review_rating,review_date,reviewer_name,review
+P1,5,2024-05-10T23:59:59.999Z,SECRET NAME,great
+P1,3,2024-08-25T17:38:49.458Z,SECRET NAME,ok
+P1,0,not-a-date,SECRET NAME,bad row
+P2,4,2023-01-01T00:00:00Z,SECRET NAME,fine
+PX,5,2024-01-01T00:00:00Z,SECRET NAME,not in places

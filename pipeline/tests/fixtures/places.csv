@@ -1,0 +1,9 @@
+place_id,name,category,all_categories,address,lat,lon,reviews_count,permanently_closed,temporarily_closed,rating
+P1,Main Street Clinic,Medical clinic,"[""Medical clinic"",""Pharmacy""]","1 Main St, Oakland, CA 94612, United States",37.8044,-122.2712,12,False,False,4.5
+P2,Glow Med Spa,Medical clinic,"[""Medical clinic"",""Medical spa""]","2 Main St, Oakland, CA 94612, United States",37.8045,-122.2711,40,False,False,4.9
+P3,Corner Grocery,Grocery store,"[""Grocery store"",""Convenience store""]","3 Main St, Oakland, CA 94612, United States",37.8050,-122.2700,,False,,4.0
+P4,Closed Bank,Bank,"[""Bank""]","4 Main St, Oakland, CA 94612, United States",37.8060,-122.2690,5,True,False,3.0
+P5,Out of box,Pharmacy,"[""Pharmacy""]","Somewhere, CA 90001, United States",34.05,-118.24,7,False,False,4.0
+,No id,Pharmacy,"[""Pharmacy""]","x",37.80,-122.27,1,False,False,4.0
+P6,Bus Stop A,Bus stop,"[""Bus stop""]","Oakland, CA 94612, United States",37.8046,-122.2713,0,False,False,
+P7,Weird count,Pharmacy,"[""Pharmacy""]","7 Main St, Oakland, CA 94612, United States",37.8047,-122.2714,-3,False,False,

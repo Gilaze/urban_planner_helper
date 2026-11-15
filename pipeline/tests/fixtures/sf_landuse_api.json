@@ -1,0 +1,6 @@
+[
+  {"mapblklot": "0012003A", "landuse": "VACANT", "resunits": "0", "totalcomm": "0"},
+  {"mapblklot": "0025032", "landuse": "RESIDENT", "resunits": "12", "totalcomm": "0"},
+  {"mapblklot": "0025032", "landuse": null},
+  {"mapblklot": "8888001", "landuse": "VACANT"}
+]

@@ -1,0 +1,7 @@
+[
+  {"parcel_number": "0012003A", "closed_roll_year": "2025", "use_code": "COMM", "lot_area": "43480.0", "assessed_land_value": "4996037.0", "assessed_improvement_value": "0"},
+  {"parcel_number": "0025032", "closed_roll_year": "2025", "use_code": "CO", "lot_area": "3000", "assessed_land_value": "100000", "assessed_improvement_value": "200000"},
+  {"parcel_number": "0025033", "closed_roll_year": "2025", "use_code": "CO", "lot_area": "3000", "assessed_land_value": "150000", "assessed_improvement_value": null},
+  {"parcel_number": "0025032", "closed_roll_year": "2024", "use_code": "CO", "assessed_land_value": "1"},
+  {"parcel_number": "7777001", "closed_roll_year": "2025", "assessed_land_value": "5"}
+]

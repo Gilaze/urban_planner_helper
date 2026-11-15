@@ -1,0 +1,250 @@
+{
+  "demographics": {
+    "skipped": true
+  },
+  "features": {
+    "covariate_missing_rate_parcels": {
+      "median_gross_rent_usd_month": 1.0,
+      "median_household_income_usd": 1.0,
+      "population_density_per_km2": 1.0
+    },
+    "parcel_rows": 775140,
+    "parcels_without_rep_point": 0,
+    "place_labeled_rows": 10080,
+    "place_rows_by_split_category": {
+      "bank_credit_union": {
+        "test": 261,
+        "train": 75,
+        "validation": 23
+      },
+      "clinic": {
+        "test": 5694,
+        "train": 1970,
+        "validation": 699
+      },
+      "grocery": {
+        "test": 413,
+        "train": 236,
+        "validation": 49
+      },
+      "pharmacy": {
+        "test": 119,
+        "train": 50,
+        "validation": 17
+      },
+      "school": {
+        "test": 260,
+        "train": 170,
+        "validation": 46
+      }
+    }
+  },
+  "parcels": {
+    "active_apns": 227706,
+    "api_records": 227968,
+    "assessor_matched_apns": 211163,
+    "assessor_roll_years": [
+      "2025"
+    ],
+    "assessor_rows": 211547,
+    "assessor_rows_without_active_apn": 384,
+    "assessor_unmatched_active_apns": 16543,
+    "condo_lots": 9466,
+    "current_landuse_matched_lots": 153490,
+    "current_landuse_rows": 153615,
+    "geometry_quality": {
+      "valid": 155028
+    },
+    "grain": {
+      "assessor": "parcel_number x closed_roll_year",
+      "landuse": "mapblklot",
+      "parcels_input": "blklot (APN)",
+      "parcels_output": "mapblklot (physical lot)"
+    },
+    "landuse_matched_lots": 154177,
+    "landuse_rows": 154475,
+    "landuse_unmatched_rows": 298,
+    "lots_with_any_assessor_match": 154051,
+    "physical_lots": 155028,
+    "records_missing_blklot_or_mapblklot": 262,
+    "vacancy_evidence": {
+      "2023 VACANT but current snapshot records use (developed since)": 3187,
+      "2023 VACANT code and no recorded use in current snapshot": 4582,
+      "2023 VACANT code; lot absent from current snapshot": 614,
+      "2023 land use records use; lot absent from current snapshot": 292,
+      "current snapshot records use": 144806,
+      "no land-use record": 632,
+      "no recorded use in current snapshot; no explicit vacancy code": 915
+    },
+    "vacancy_status": {
+      "not_vacant": 148285,
+      "source_indicated_vacant": 4582,
+      "unknown": 2161
+    }
+  },
+  "places": {
+    "address_city_vs_spatial_city_disagree": 101,
+    "closure_status": {
+      "active": 132143,
+      "closed_permanently": 12167,
+      "closed_temporarily": 3045,
+      "unknown": 74
+    },
+    "current_supply_tags_by_city": {
+      "Berkeley": {
+        "alternative_finance": 10,
+        "bank_credit_union": 23,
+        "childcare": 99,
+        "clinic": 745,
+        "dental": 167,
+        "food_assistance": 7,
+        "grocery": 50,
+        "hospital": 40,
+        "library": 7,
+        "mental_health": 1039,
+        "pharmacy": 19,
+        "school": 56,
+        "social_services": 27,
+        "transit": 671
+      },
+      "Oakland": {
+        "alternative_finance": 89,
+        "bank_credit_union": 75,
+        "childcare": 245,
+        "clinic": 2101,
+        "dental": 352,
+        "food_assistance": 35,
+        "grocery": 239,
+        "hospital": 235,
+        "library": 18,
+        "mental_health": 1476,
+        "pharmacy": 49,
+        "school": 189,
+        "social_services": 114,
+        "transit": 1853
+      },
+      "San Francisco": {
+        "alternative_finance": 159,
+        "bank_credit_union": 248,
+        "childcare": 859,
+        "clinic": 6283,
+        "dental": 1394,
+        "food_assistance": 104,
+        "grocery": 428,
+        "hospital": 392,
+        "library": 40,
+        "mental_health": 3945,
+        "pharmacy": 119,
+        "school": 322,
+        "social_services": 237,
+        "transit": 3824
+      },
+      "outside split cities": {
+        "alternative_finance": 1795,
+        "bank_credit_union": 1335,
+        "childcare": 5279,
+        "clinic": 23514,
+        "dental": 7942,
+        "food_assistance": 315,
+        "grocery": 1954,
+        "hospital": 1290,
+        "library": 244,
+        "mental_health": 12098,
+        "pharmacy": 964,
+        "school": 2773,
+        "social_services": 823,
+        "transit": 15494
+      }
+    },
+    "duplicates_removed": 0,
+    "input_rows": 147429,
+    "output_rows": 147429,
+    "places_with_sampled_reviews": 139,
+    "primary_by_city": {
+      "Berkeley": {
+        "alternative_finance": 13,
+        "bank_credit_union": 25,
+        "childcare": 94,
+        "clinic": 751,
+        "dental": 179,
+        "food_assistance": 8,
+        "grocery": 66,
+        "hospital": 29,
+        "library": 7,
+        "mental_health": 1062,
+        "other": 836,
+        "pharmacy": 26,
+        "school": 52,
+        "social_services": 26,
+        "transit": 704
+      },
+      "Oakland": {
+        "alternative_finance": 120,
+        "bank_credit_union": 84,
+        "childcare": 261,
+        "clinic": 2035,
+        "dental": 406,
+        "food_assistance": 38,
+        "grocery": 292,
+        "hospital": 122,
+        "library": 18,
+        "mental_health": 1514,
+        "other": 2211,
+        "pharmacy": 104,
+        "school": 187,
+        "social_services": 119,
+        "transit": 2016
+      },
+      "San Francisco": {
+        "alternative_finance": 177,
+        "bank_credit_union": 338,
+        "childcare": 857,
+        "clinic": 5911,
+        "dental": 1518,
+        "food_assistance": 103,
+        "grocery": 528,
+        "hospital": 286,
+        "library": 39,
+        "mental_health": 4068,
+        "other": 6122,
+        "pharmacy": 215,
+        "school": 295,
+        "social_services": 225,
+        "transit": 4227
+      },
+      "outside split cities": {
+        "alternative_finance": 2022,
+        "bank_credit_union": 1532,
+        "childcare": 5426,
+        "clinic": 23858,
+        "dental": 8788,
+        "food_assistance": 343,
+        "grocery": 2239,
+        "hospital": 1188,
+        "library": 260,
+        "mental_health": 12561,
+        "other": 28653,
+        "pharmacy": 1346,
+        "school": 2479,
+        "social_services": 822,
+        "transit": 17598
+      }
+    },
+    "rejected": {
+      "invalid_coordinates": 0,
+      "invalid_reviews_count_set_null": 0,
+      "missing_place_id": 0
+    },
+    "reviews_count_missing": 33,
+    "reviews_count_zero": 85000
+  },
+  "reviews": {
+    "invalid_date_rows": 0,
+    "invalid_rating_rows": 42184,
+    "matched_place_ids": 139,
+    "matched_review_rows": 2985,
+    "review_rows": 213536,
+    "reviewed_place_ids": 6108,
+    "unmatched_place_ids": 5969
+  }
+}

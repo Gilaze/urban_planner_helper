@@ -1,0 +1,283 @@
+# Parcel Planner category groups.
+#
+# Owned by the Data workstream (Person 2). Bump `version` whenever a group or
+# label assignment changes; the version is recorded in source_manifest.json and
+# on every feature/prediction artifact.
+#
+# Matching rules (see pipeline/src/parcel_pipeline/categories.py):
+#   * Labels are matched exactly after case-folding and collapsing whitespace.
+#     There is no substring matching: keyword matching in the upstream export
+#     already let lookalikes in (e.g. "skin care clinic"), so every label that
+#     maps to a group is listed here explicitly and can be audited.
+#   * primary group  = group of the Places `category` field (used for learning).
+#   * service tags   = deduplicated groups of `category` + `all_categories`
+#                      (used for supply counts and accessibility).
+#   * Anything unlisted maps to `other`.
+#   * `exclude_name_patterns` force a record's primary group to `other` when its
+#     name matches (case-insensitive regex). These catch lookalikes that carry a
+#     legitimate label, such as a med-spa tagged "Medical clinic".
+version: "2026-11-14.2"
+
+candidates: [clinic, pharmacy, grocery, bank_credit_union, school]
+
+groups:
+  clinic:
+    label: Primary care clinic
+    candidate: true
+    labels:
+      - Medical clinic
+      - Clinic
+      - Doctor
+      - Family Doctor
+      - Family practice physician
+      - Internist
+      - Pediatrician
+      - Pediatric clinic
+      - Children Policlinic
+      - Community health center
+      - Free clinic
+      - Walk-in clinic
+      - Urgent care center
+      - Urgent care centre
+      - Emergency care physician
+      - Emergency Clinic
+      - Women's health clinic
+      - Obstetrician-gynecologist
+      - Reproductive health clinic
+      - Family planning clinic
+      - STD clinic
+      - TB clinic
+    exclude_name_patterns:
+      - '\bmed(ical)?[ -]?spa\b'
+      - '\bskin\s*care\b'
+      - '\baesthetic'
+      - '\bbotox\b'
+      - '\blaser\b'
+      - '\bcosmetic\b'
+      - '\bveterinar'
+      - '\banimal\b'
+      - '\bpet\b'
+      - '\bweight\s*loss\b'
+      - '\biv\s*(therapy|drip|lounge)\b'
+  pharmacy:
+    label: Pharmacy
+    candidate: true
+    labels:
+      - Pharmacy
+      - Drug store
+      - Drugstore
+      - Compounding pharmacy
+    exclude_name_patterns:
+      - '\bveterinar'
+      - '\bpet\b'
+      - '\bcannabis\b'
+      - '\bdispensary\b'
+  grocery:
+    label: Grocery store
+    candidate: true
+    labels:
+      - Grocery store
+      - Supermarket
+      - Discount supermarket
+      - Produce market
+      - Gourmet grocery store
+      - Gourmet Grocery Shop
+      - Asian grocery store
+      - Asian Grocery Shop
+      - Indian grocery store
+      - Indian Grocery Shop
+      - Mexican grocery store
+      - Korean grocery store
+      - Japanese grocery store
+      - Japanese supermarket
+      - Chinese supermarket
+      - Filipino grocery store
+      - Italian grocery store
+      - European grocery store
+      - Eastern European grocery store
+      - Russian grocery store
+      - Kosher grocery store
+      - American grocery store
+    # Deliberately NOT grocery: Convenience store, Grocery delivery service
+    # (no storefront), Industrial supermarket, "Shop supermarket furniture store".
+    exclude_name_patterns:
+      - '\bliquor\b'
+      - '\bsmoke\s*shop\b'
+      - '\bvape\b'
+      - '\bgas\b'
+      - '\b7-?eleven\b'
+  bank_credit_union:
+    label: Bank or credit union
+    candidate: true
+    labels:
+      - Bank
+      - Credit union
+      - Credit Union
+      - Federal credit union
+      - Cooperative bank
+      - Savings bank
+    # Deliberately NOT included: Investment bank, Trust bank, Central bank,
+    # Business banking service (not consumer branches).
+    exclude_name_patterns:
+      - '\batm\b'
+  school:
+    label: K-12 school
+    candidate: true
+    labels:
+      - Elementary school
+      - Middle school
+      - High school
+      - Primary school
+      - Secondary school
+      - Secondary School
+      - Intermediate School
+      - K-12 school
+      - Combined primary and secondary school
+      - Comprehensive secondary school
+      - Charter school
+      - Catholic school
+      - Parochial school
+      - Religious school
+      - Faith school
+      - Montessori school
+      - Waldorf school
+      - Special education school
+      - School for the deaf
+      - School for the visually impaired
+      - Preparatory school
+      - Private school
+      - Public school
+      - Independent school
+      - Community school
+      - Bilingual school
+      - International school
+      - Senior high school
+      - Girls' high school
+      - Boys' high school
+      - Government school
+      - State School
+      - National Primary School
+      - National Secondary School
+      - School
+    exclude_name_patterns:
+      - '\bdriving\b'
+      - '\btraffic\b'
+      - '\bbeauty\b'
+      - '\bmartial\b'
+      - '\bdance\b'
+      - '\bmusic\b'
+      - '\bswim'
+      - '\btutor'
+      - '\bparking\b'
+  hospital:
+    label: Hospital
+    labels:
+      - Hospital
+      - General hospital
+      - Medical Center
+      - Children's hospital
+      - Heart hospital
+      - Veterans hospital
+      - Specialized hospital
+      - Maternity hospital
+      - Government hospital
+      - Private hospital
+      - University hospital
+      - Military hospital
+      - Public medical center
+      - Psychiatric hospital
+      - Mental Hospital
+      - Emergency room
+      - Emergency department
+      - Hospital department
+  dental:
+    label: Dental care
+    labels:
+      - Dentist
+      - Dental clinic
+      - Pediatric dentist
+      - Paediatric Dentist
+      - Cosmetic dentist
+      - Emergency dental service
+      - Oral surgeon
+      - Oral and maxillofacial surgeon
+  mental_health:
+    label: Mental health care
+    labels:
+      - Psychologist
+      - Psychotherapist
+      - Psychiatrist
+      - Child psychologist
+      - Child psychiatrist
+      - Child psychotherapist
+      - EMDR psychotherapist
+      - Neuropsychologist
+      - Counselor
+      - Family counselor
+      - Marriage or relationship counselor
+      - Mental health service
+      - Mental Health Services
+      - Mental health clinic
+      - Mental Health Clinic
+      - Mental health
+      - Addiction treatment center
+  food_assistance:
+    label: Food assistance
+    labels:
+      - Food bank
+      - Foodbank
+      - Soup kitchen
+      - Food pantry
+  alternative_finance:
+    label: Alternative financial services
+    labels:
+      - Check cashing service
+      - Money transfer service
+      - Pawn shop
+      - Payday loan service
+      - Loan agency
+  childcare:
+    label: Child care
+    labels:
+      - Day care center
+      - Day Care Center
+      - Child care agency
+      - Child Care Centre
+      - Family day care service
+      - Preschool
+      - Pre-school
+      - Nursery school
+      - Montessori preschool
+      - Bilingual preschool
+      - After school program
+      - After-school programme
+  library:
+    label: Library
+    labels:
+      - Public library
+      - Library
+  transit:
+    label: Transit stop or station
+    labels:
+      - Bus stop
+      - Transit station
+      - Transport hub
+      - Train station
+      - Subway station
+      - Light rail station
+      - Tram stop
+      - Ferry terminal
+  social_services:
+    label: Social services
+    labels:
+      - Social services organization
+      - Social services organisation
+      - Social services
+      - Youth social services organization
+      - Department of Social Services
+      - Social security office
+      - Homeless shelter
+      - Emergency shelter
+  other:
+    label: Other
+    labels: []

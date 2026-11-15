@@ -1,6 +1,16 @@
-.venv/
-__pycache__/
-.pytest_cache/
+# Source downloads, derived artifacts, model binaries, credentials
+/data/
+artifacts/
+*.joblib
+*.pkl
 .env
 .env.*
-artifacts/
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+# Node
+node_modules/
+dist/
+.DS_Store

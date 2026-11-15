@@ -1,0 +1,7 @@
+[
+  {"mapblklot": "0012003A", "ludb_id": "a1", "geography_type": "parcel", "resunits": "0", "cie": "0.0", "retail": "0.0", "total_comm": "0", "parking_lo": false, "garage": false, "open_space": false, "data_as_of": "2026-08-17T00:00:00.000"},
+  {"mapblklot": "0025032", "ludb_id": "a2", "geography_type": "parcel", "resunits": "12", "total_comm": "0", "parking_lo": false, "garage": false, "open_space": false, "data_as_of": "2026-08-17T00:00:00.000"},
+  {"mapblklot": "3702001", "ludb_id": "a3", "geography_type": "parcel", "resunits": "0", "total_comm": "0", "parking_lo": false, "garage": false, "open_space": false, "data_as_of": "2026-08-17T00:00:00.000"},
+  {"mapblklot": "3702001", "ludb_id": "a4", "geography_type": "analytical", "resunits": "50", "data_as_of": "2026-08-17T00:00:00.000"},
+  {"mapblklot": "8888001", "ludb_id": "a5", "geography_type": "parcel", "retail": "500", "total_comm": "500", "data_as_of": "2026-08-17T00:00:00.000"}
+]
