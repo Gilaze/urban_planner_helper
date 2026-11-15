@@ -2,20 +2,27 @@
 
 The built data is not in git. It derives partly from the hackathon's Bright Data exports, which should not be in a public repo, and `release.json` is 170 MB. Download the prebuilt bundle instead of rerunning the pipeline.
 
-1. Download `parcel-planner-data.zip` from the team's [DSS FA26 Datathon Drive folder](https://drive.google.com/drive/folders/1iGJ511t7Enpj9ShRZmMOkOH0FvRjpSut).
+1. Download `parcel-planner-data-0.1.1.zip` from the team's [DSS FA26 Datathon Drive folder](https://drive.google.com/drive/folders/1iGJ511t7Enpj9ShRZmMOkOH0FvRjpSut).
 2. Move it to the repo root (the folder containing `backend/` and `pipeline/`) and unzip it there:
 
    ```bash
    cd urban_planner_helper
-   unzip -o ~/Downloads/parcel-planner-data.zip
+   unzip -o ~/Downloads/parcel-planner-data-0.1.1.zip
    ```
 
    This creates:
 
    ```
-   artifacts/person2/   backend inputs (parcels, places, demographics, review predictions, manifests)
-   artifacts/release.json   frozen backend release built from those inputs
+   artifacts/person2/                     backend inputs: parcels, places, demographics, review predictions,
+                                          backend_manifest.json, source_manifest.json
+   artifacts/release.json                 frozen backend release built from that same export
+   data/artifacts/release/review_activity_model.joblib   fitted review-activity model (clinic, grocery)
+   data/artifacts/release/model_report.json              how the model performed and why it was selected
    ```
+
+   The `.joblib` holds a `parcel_pipeline.model.ReviewActivityModel`. To load it, use the pipeline
+   environment (`cd pipeline && uv sync`), then `joblib.load(...)` and call `.predict_log_count(features)`
+   with the columns listed in `pipeline/src/parcel_pipeline/features.py`.
 
 3. Run the backend on the real data:
 
@@ -32,11 +39,11 @@ The built data is not in git. It derives partly from the hackathon's Bright Data
 
 | Field | Value |
 |---|---|
-| data_version | `0.1.1+2026-11-15.1+ad464d957df7` |
-| Size | 60 MB zipped, 228 MB unzipped |
-| SHA-256 | `9abdbba4a727bcb61b6a938fe85a3629485c72272034a0fb553c75c7fa5e4104` |
+| data_version | `0.1.1+2026-11-15.1+ad464d957df7` (model selected: `review-activity/model/0.1.1`) |
+| Size | 60 MB zipped, 227 MB unzipped (9 files) |
+| SHA-256 | `3131d323931951a78f9b3b9668349aa42ddfd75961c35c91f067da2258d50578` |
 
-Check the download with `shasum -a 256 parcel-planner-data.zip`.
+Check the download with `shasum -a 256 parcel-planner-data-0.1.1.zip`.
 
 ## Rebuilding the bundle (data owner only)
 
@@ -45,7 +52,8 @@ Rebuilding needs the Bright Data CSVs and a Census API key in `.env`. See [pipel
 ```bash
 cd pipeline && uv run parcel-pipeline all && uv run parcel-pipeline publish && cd ..
 python -m backend.build_release --input artifacts/person2 --output artifacts/release.json
-zip -r -X data/bundles/parcel-planner-data.zip artifacts/person2 artifacts/release.json
+zip -X data/bundles/parcel-planner-data-0.1.1.zip artifacts/person2/* artifacts/release.json \
+  data/artifacts/release/review_activity_model.joblib data/artifacts/release/model_report.json
 ```
 
 Then upload the zip to the Drive folder and update the table above.
